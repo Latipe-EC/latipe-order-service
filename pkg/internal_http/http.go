@@ -1,10 +1,9 @@
 package http
 
 import (
+	"github.com/go-resty/resty/v2"
 	"net"
 	"net/http"
-
-	"github.com/go-resty/resty/v2"
 )
 
 type Client interface {
