@@ -2,18 +2,16 @@ package main
 
 import (
 	"fmt"
-	"order-service-rest-api/config"
-	"order-service-rest-api/internal/infrastructure/persistence/db"
+	server "order-service-rest-api/internal"
 )
 
 func main() {
 	fmt.Println("Init application")
-	configuration, err := config.NewConfig()
+	serv, err := server.New()
 	if err != nil {
-		fmt.Printf("\nERROR:%v", err.Error())
+		fmt.Printf("%s", err)
 	}
-	gorm := db.NewMySQLConnection(configuration)
-	if gorm != nil {
-		fmt.Println(gorm.Name())
+	if err := serv.App().Listen(serv.Config().Server.Port); err != nil {
+		fmt.Printf("%s", err)
 	}
 }

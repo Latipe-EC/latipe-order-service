@@ -20,3 +20,19 @@ DB:
     MaxIdleConns: 10
     ConnMaxLifetime: 1799s
     ConnMaxIdleTime: 5s
+  Mongodb:
+    Address:
+    Username:
+    Password:
+    DbName:
+    ConnectTimeout:
+    MaxConnIdleTime:
+    MinPoolSize:
+    MaxPoolSize:
+
+RabbitMQ:
+  Connection:
+  Exchange:
+  Queue:
+  ConsumerName:
+  ProducerName:

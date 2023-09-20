@@ -2,16 +2,21 @@ package config
 
 import (
 	"errors"
+	"github.com/google/wire"
 	"github.com/spf13/viper"
 	"log"
 	"os"
 	"time"
 )
 
+var Set = wire.NewSet(NewConfig)
+
 type Config struct {
 	Server Server
 	DB     DB
 	//Adapters Adapters
+	AdapterService AdapterService
+	RabbitMQ       RabbitMQ
 }
 
 type Server struct {
@@ -45,6 +50,47 @@ type Mysql struct {
 	ConnMaxLifetime time.Duration
 	ConnMaxIdleTime time.Duration
 	Options         string
+}
+
+type Mongodb struct {
+	Address         string
+	Username        string
+	Password        string
+	DbName          string
+	ConnectTimeout  time.Duration
+	MaxConnIdleTime int
+	MinPoolSize     uint64
+	MaxPoolSize     uint64
+}
+
+type RabbitMQ struct {
+	Connection   string
+	Exchange     string
+	Queue        string
+	ConsumerName string
+	ProducerName string
+}
+
+type AdapterService struct {
+	UserService    UserService
+	ProductService ProductService
+	EmailService   EmailService
+}
+
+type UserService struct {
+	BaseURL     string
+	InternalKey string
+}
+
+type ProductService struct {
+	BaseURL     string
+	InternalKey string
+}
+
+type EmailService struct {
+	Email string
+	Host  string
+	Key   string
 }
 
 // Get config path for local or docker
