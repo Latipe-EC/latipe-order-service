@@ -1,49 +1,67 @@
 package message
 
 import (
-	"fmt"
+	"context"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"log"
 	"order-service-rest-api/config"
-	"order-service-rest-api/internal/domain/entities/order"
+	"time"
 )
 
-type ConsumerOrderMessage struct {
-	config     *config.Config
-	connection *amqp.Connection
-	orderRepo  order.Repository
+type ProducerOrderMessage struct {
+	channel *amqp.Channel
+	queue   *amqp.Queue
+	cfg     *config.Config
 }
 
-func NewConsumerOrderMessage(config *config.Config, connect *amqp.Connection, repository order.Repository) *ConsumerOrderMessage {
-	return &ConsumerOrderMessage{
-		config:     config,
-		connection: connect,
-		orderRepo:  repository,
-	}
-}
+var producer ProducerOrderMessage
 
-func (mq ConsumerOrderMessage) ListenMessageQueue() {
-	channel, err := mq.connection.Channel()
-	// declaring consumer with its properties over channel opened
-	msgs, err := channel.Consume(
-		mq.config.RabbitMQ.Queue,        // queue
-		mq.config.RabbitMQ.ConsumerName, // consumer
-		true,                            // auto ack
-		false,                           // exclusive
-		false,                           // no local
-		false,                           // no wait
-		nil,                             //args
-	)
+func InitProducerMessage(config *config.Config) error {
+	conn, err := amqp.Dial(config.RabbitMQ.Connection)
+	failOnError(err, "Failed to connect to RabbitMQ")
+	log.Printf("[%s] Producer has been connected", "INFO")
+
+	producer.cfg = config
+	ch, err := conn.Channel()
 	if err != nil {
-		panic(err)
+		failOnError(err, "Failed to open a channel")
+		return err
+	}
+	producer.channel = ch
+
+	q, err := producer.channel.QueueDeclare(
+		config.RabbitMQ.Queue, // name
+		false,                 // durable
+		false,                 // delete when unused
+		false,                 // exclusive
+		false,                 // no-wait
+		nil,                   // arguments
+	)
+	producer.queue = &q
+	failOnError(err, "Failed to declare a queue")
+
+	return nil
+}
+
+func SendMessage(request interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	body, err := ParseOrderToMessage(&request)
+	if err != nil {
+		return err
 	}
 
-	// handle consumed messages from queue
-	forever := make(chan bool)
-	go func() {
-		for msg := range msgs {
-			fmt.Printf("Received Message: %s\n", msg.Body)
-		}
-	}()
-	fmt.Println("Waiting for messages...")
-	<-forever
+	err = producer.channel.PublishWithContext(ctx,
+		producer.cfg.RabbitMQ.Exchange, // exchange
+		producer.queue.Name,            // routing key
+		false,                          // mandatory
+		false,                          // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        body,
+		})
+	failOnError(err, "Failed to publish a message")
+
+	return nil
 }

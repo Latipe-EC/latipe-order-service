@@ -1,55 +1,54 @@
 package message
 
 import (
-	"context"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"log"
 	"order-service-rest-api/config"
-	"time"
+	"order-service-rest-api/internal/domain/entities/order"
 )
 
-type ProducerOrderMessage struct {
-	config     *config.Config
-	connection *amqp.Connection
+type ConsumerOrderMessage struct {
+	config    *config.Config
+	orderRepo order.Repository
 }
 
-func NewProducerOrderMessage(config *config.Config, connect *amqp.Connection) *ProducerOrderMessage {
-	return &ProducerOrderMessage{
-		config:     config,
-		connection: connect,
+func NewConsumerOrderMessage(config *config.Config, repository order.Repository) *ConsumerOrderMessage {
+	return &ConsumerOrderMessage{
+		config:    config,
+		orderRepo: repository,
 	}
 }
 
-func (mq *ConsumerOrderMessage) SendMessage(request interface{}) error {
-	ch, err := mq.connection.Channel()
-	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
+func (mq ConsumerOrderMessage) ListenMessageQueue() {
+	conn, err := amqp.Dial(mq.config.RabbitMQ.Connection)
+	failOnError(err, "Failed to connect to RabbitMQ")
+	log.Printf("[%s] Comsumer has been connected", "INFO")
 
-	q, err := ch.QueueDeclare(
-		mq.config.RabbitMQ.Queue, // name
-		false,                    // durable
-		false,                    // delete when unused
-		false,                    // exclusive
-		false,                    // no-wait
-		nil,                      // arguments
+	channel, err := conn.Channel()
+	defer channel.Close()
+	defer conn.Close()
+
+	// declaring consumer with its properties over channel opened
+	msgs, err := channel.Consume(
+		mq.config.RabbitMQ.Queue,        // queue
+		mq.config.RabbitMQ.ConsumerName, // consumer
+		true,                            // auto ack
+		false,                           // exclusive
+		false,                           // no local
+		false,                           // no wait
+		nil,                             //args
 	)
-	failOnError(err, "Failed to declare a queue")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	body, err := ParseOrderToMessage(&request)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	err = ch.PublishWithContext(ctx,
-		mq.config.RabbitMQ.Exchange, // exchange
-		q.Name,                      // routing key
-		false,                       // mandatory
-		false,                       // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        body,
-		})
-	failOnError(err, "Failed to publish a message")
-	return nil
+	// handle consumed messages from queue
+
+	for msg := range msgs {
+		log.Printf("[%s] received order message from: %s", "INFO", msg.RoutingKey)
+	}
+
+	log.Printf("[%s] message queue has started", "INFO")
+	log.Printf("[%s] waiting for messages...", "INFO")
+
 }

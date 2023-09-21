@@ -2,13 +2,12 @@ package db
 
 import (
 	"fmt"
-	"gorm.io/driver/mysql"
-	gormDB "gorm.io/gorm"
+	"log"
 	"order-service-rest-api/config"
 	"order-service-rest-api/pkg/db/gorm"
 )
 
-func NewMySQLConnection(configuration *config.Config) *gormDB.DB {
+func NewMySQLConnection(configuration *config.Config) gorm.Gorm {
 	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True&loc=Local",
 		configuration.DB.Mysql.UserName,
 		configuration.DB.Mysql.Password,
@@ -24,12 +23,12 @@ func NewMySQLConnection(configuration *config.Config) *gormDB.DB {
 		ConnMaxIdleTime: configuration.DB.Mysql.ConnMaxIdleTime,
 		DBType:          "mysql",
 	}
-	dial := mysql.Open(cfg.DSN)
-	conn, err := gormDB.Open(dial)
+	conn, err := gorm.New(cfg)
 	if err != nil {
-		fmt.Printf("ERORR:%v", err.Error())
-		return nil
+		panic(err)
 	}
 
+	log.Printf("[%s] Gorm has created database connection", "INFO")
 	return conn
+
 }

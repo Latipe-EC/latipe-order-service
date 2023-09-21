@@ -1,7 +1,7 @@
 package internal_service
 
 type Repository interface {
-	FindByKeyAndValue(key string, value string) (*InternalService, error)
+	FindByClient(clientId string, secretKey string) (*InternalService, error)
 	Save(service InternalService) error
 	Update(service InternalService) error
 }

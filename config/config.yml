@@ -31,8 +31,8 @@ DB:
     MaxPoolSize:
 
 RabbitMQ:
-  Connection:
+  Connection: amqp://guest:guest@localhost:5672/
   Exchange:
-  Queue:
-  ConsumerName:
-  ProducerName:
+  Queue: order_message
+  ConsumerName: create_order_services
+  ProducerName: create_order_services

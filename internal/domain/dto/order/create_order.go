@@ -2,29 +2,31 @@ package order
 
 type CreateOrderRequest struct {
 	Header        BaseHeader
-	Amount        int          `json:"amount"`
-	Discount      int          `json:"discount"`
-	Total         int          `json:"total"`
-	PaymentMethod int          `json:"payment_method"`
-	VoucherCode   string       `json:"voucher_code"`
+	Amount        int          `json:"amount" validate:"required"`
+	Discount      int          `json:"discount" validate:"required"`
+	Total         int          `json:"total" validate:"required"`
+	PaymentMethod int          `json:"payment_method" validate:"required"`
+	VoucherCode   string       `json:"voucher_code" validate:"required"`
 	CreateAt      string       `json:"create_at"`
-	Address       OrderAddress `json:"address"`
-	OrderItems    []OrderItems `json:"order_items"`
+	Address       OrderAddress `json:"address" validate:"required"`
+	OrderItems    []OrderItems `json:"order_items" validate:"required"`
 }
 
 type OrderItems struct {
-	ProductId string `json:"product_id"`
-	OptionId  string `json:"option_id"`
-	Quantity  int    `json:"quantity"`
-	Price     int    `json:"price"`
+	ProductId string `json:"product_id" validate:"required"`
+	OptionId  int    `json:"option_id"`
+	Quantity  int    `json:"quantity" validate:"required"`
+	Price     int    `json:"price" validate:"required"`
 }
 type OrderAddress struct {
-	AddressId     string `json:"address_id"`
-	AddressDetail string `json:"address_detail"`
+	AddressId       string `json:"address_id" validate:"required"`
+	ShippingName    string `json:"shipping_name" validate:"required"`
+	ShippingPhone   string `json:"shipping_phone" validate:"required"`
+	ShippingAddress string `json:"shipping_address" validate:"required"`
 }
 type Delivery struct {
-	DeliveryId    string `json:"delivery_id"`
-	Name          string `json:"name"`
-	Cost          int    `json:"cost"`
-	ReceivingDate string `json:"receiving_date"`
+	DeliveryId    string `json:"delivery_id" validate:"required"`
+	Name          string `json:"name" validate:"required"`
+	Cost          int    `json:"cost" validate:"required"`
+	ReceivingDate string `json:"receiving_date" validate:"required"`
 }
