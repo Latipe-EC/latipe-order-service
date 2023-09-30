@@ -1,0 +1,50 @@
+Server:
+  Name: "Order Worker APIs"
+  AppVersion: 1.0.0
+  BaseURI: 127.0.0.1:5000
+  Port: :5001
+  Mode: local
+  ReadTimeout: 5s
+  WriteTimeout: 5s
+  SSL: true
+  CtxDefaultTimeout: 12s
+  ExpirationLimitTime: 30s
+DB:
+  Mysql:
+    Host: 127.0.0.1
+    Port: 3306
+    UserName: root
+    Password: 123123
+    Database: backend_orders_service
+    MaxOpenConns: 30
+    MaxIdleConns: 10
+    ConnMaxLifetime: 1799s
+    ConnMaxIdleTime: 5s
+  Mongodb:
+    Address:
+    Username:
+    Password:
+    DbName:
+    ConnectTimeout:
+    MaxConnIdleTime:
+    MinPoolSize:
+    MaxPoolSize:
+
+RabbitMQ:
+  Connection: amqp://guest:guest@localhost:5672/
+  Exchange:
+  Queue: order_message
+  ConsumerName: create_order_services
+  ProducerName: create_order_services
+
+AdapterService:
+  UserService:
+    AuthURL: http://localhost:8081
+    UserURL: http://localhost:8181
+    InternalKey:
+  ProductService:
+    BaseURL: http://localhost:8181
+    InternalKey:
+  EmailService:
+    BaseURL: http://localhost:8181
+    InternalKey:
