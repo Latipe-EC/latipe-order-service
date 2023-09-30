@@ -41,6 +41,8 @@ func (OrderStatusLog) TableName() string {
 
 type Order struct {
 	Id             int                 `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
+	UserId         string              `gorm:"not null;type:varchar(250)" json:"user_id"`
+	Username       string              `gorm:"not null;type:varchar(250)" json:"email"`
 	Amount         int                 `gorm:"not null;type:bigint" json:"amount"`
 	Discount       int                 `gorm:"not null;type:int" json:"discount"`
 	Total          int                 `gorm:"not null;type:int" json:"total"`
@@ -50,7 +52,6 @@ type Order struct {
 	VoucherCode    string              `gorm:"not null;type:varchar(250)" json:"voucher_code"`
 	UpdatedAt      time.Time           `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
 	CreatedAt      time.Time           `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
-	PaymentLogID   int                 `gorm:"not null;type:int" json:"payment_log_id"`
 	OrderItem      []*OrderItem        `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_items"`
 	OrderStatusLog []*OrderStatusLog   `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_status_logs"`
 	PaymentLog     *payment.PaymentLog `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"payment_log"`

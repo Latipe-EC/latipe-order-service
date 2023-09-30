@@ -78,7 +78,8 @@ type AdapterService struct {
 }
 
 type UserService struct {
-	BaseURL     string
+	AuthURL     string
+	UserURL     string
 	InternalKey string
 }
 

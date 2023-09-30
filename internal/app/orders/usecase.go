@@ -6,6 +6,8 @@ import (
 )
 
 type Usecase interface {
+	PendingOrder(ctx context.Context, dto *order.CreateOrderRequest) error
+	RollBackQuantity(ctx context.Context, dto *order.CreateOrderRequest) error
 	CreateOrder(ctx context.Context, dto *order.CreateOrderRequest) error
 	GetOrderById(ctx context.Context, dto *order.GetOrderRequest) (*order.GetOrderResponse, error)
 	GetOrderList(ctx context.Context, dto *order.GetOrderListRequest) (*order.GetOrderListResponse, error)

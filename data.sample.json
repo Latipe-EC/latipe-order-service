@@ -1,0 +1,17 @@
+
+"endpoint": "[PACTH] /api/v1/products/quantity"
+dùng header X-INTERNAL-HEADER (cái này gắn hard giá trị luôn tại chỉ dùng cho nội bộ thôi)
+request [
+  {
+    "product_id": "123213",
+    "option_id": "123",
+    "quantity": "123"
+  },
+  {
+    "product_id": "123213",
+    "option_id": "123",
+    "quantity": "123"
+  }
+]
+
+Respone về status 200 hoặc là 400 là được

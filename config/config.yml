@@ -36,3 +36,15 @@ RabbitMQ:
   Queue: order_message
   ConsumerName: create_order_services
   ProducerName: create_order_services
+
+AdapterService:
+  UserService:
+    AuthURL: http://localhost:8081
+    UserURL: http://localhost:8181
+    InternalKey:
+  ProductService:
+    BaseURL: http://localhost:8181
+    InternalKey:
+  EmailService:
+    BaseURL: http://localhost:8181
+    InternalKey:

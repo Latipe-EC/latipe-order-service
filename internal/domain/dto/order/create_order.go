@@ -2,6 +2,7 @@ package order
 
 type CreateOrderRequest struct {
 	Header        BaseHeader
+	UserRequest   UserRequest  `json:"user_request"`
 	Amount        int          `json:"amount" validate:"required"`
 	Discount      int          `json:"discount" validate:"required"`
 	Total         int          `json:"total" validate:"required"`
@@ -10,6 +11,10 @@ type CreateOrderRequest struct {
 	CreateAt      string       `json:"create_at"`
 	Address       OrderAddress `json:"address" validate:"required"`
 	OrderItems    []OrderItems `json:"order_items" validate:"required"`
+}
+type UserRequest struct {
+	UserId   string `json:"user_id"`
+	Username string `json:"username"`
 }
 
 type OrderItems struct {

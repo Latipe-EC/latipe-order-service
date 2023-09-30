@@ -52,13 +52,14 @@ func SendMessage(request interface{}) error {
 		return err
 	}
 
+	log.Printf("[Info]: Send message %v", request)
 	err = producer.channel.PublishWithContext(ctx,
 		producer.cfg.RabbitMQ.Exchange, // exchange
 		producer.queue.Name,            // routing key
 		false,                          // mandatory
 		false,                          // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "application/json",
 			Body:        body,
 		})
 	failOnError(err, "Failed to publish a message")

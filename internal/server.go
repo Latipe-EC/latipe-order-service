@@ -10,9 +10,13 @@ import (
 	"github.com/google/wire"
 	"order-service-rest-api/config"
 	"order-service-rest-api/internal/api"
+	"order-service-rest-api/internal/app"
 	"order-service-rest-api/internal/common/errors"
+	"order-service-rest-api/internal/infrastructure/adapter/productserv"
+	"order-service-rest-api/internal/infrastructure/adapter/userserv"
 	"order-service-rest-api/internal/infrastructure/persistence"
 	"order-service-rest-api/internal/message"
+	"order-service-rest-api/internal/middleware"
 	"order-service-rest-api/internal/router"
 )
 
@@ -30,6 +34,10 @@ func New() (*Server, error) {
 		api.Set,
 		router.Set,
 		persistence.Set,
+		userserv.Set,
+		productserv.Set,
+		app.Set,
+		middleware.Set,
 	)))
 }
 
