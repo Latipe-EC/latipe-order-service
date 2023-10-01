@@ -3,12 +3,16 @@ package order
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 	"order-rest-api/internal/app/orders"
 	"order-rest-api/internal/common/errors"
 	dto "order-rest-api/internal/domain/dto/order"
+	"order-rest-api/internal/message"
 	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/internal/responses"
+	"order-rest-api/pkg/util/pagable"
 	"order-rest-api/pkg/util/valid"
+	"strings"
 )
 
 type OrderApiHandler interface {
@@ -58,12 +62,12 @@ func (o orderApiHandler) CreateOrder(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	/*	if err := message.SendMessage(bodyReq); err != nil {
+	if err := message.SendMessage(bodyReq); err != nil {
 		resp := responses.DefaultError
 		resp.Status = 500
 		resp.Message = "Fail"
 		return resp.JSON(ctx)
-	}*/
+	}
 
 	return responses.DefaultSuccess.JSON(ctx)
 }
@@ -74,11 +78,48 @@ func (o orderApiHandler) UpdateOrderStatus(ctx *fiber.Ctx) error {
 }
 
 func (o orderApiHandler) ListOfOrder(ctx *fiber.Ctx) error {
-	//TODO implement me
-	panic("implement me")
+	context := ctx.Context()
+
+	query, err := pagable.GetQueryFromFiberCtx(ctx)
+	if err != nil {
+		return errors.ErrBadRequest.WithInternalError(err)
+	}
+
+	req := new(dto.GetOrderListRequest)
+	req.Query = query
+
+	result, err := o.orderUsecase.GetOrderList(context, req)
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "Unknown column"):
+			return errors.ErrBadRequest.WithInternalError(err)
+		}
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+	return resp.JSON(ctx)
 }
 
 func (o orderApiHandler) GetOrderById(ctx *fiber.Ctx) error {
-	//TODO implement me
-	panic("implement me")
+	context := ctx.Context()
+	req := new(dto.GetOrderRequest)
+
+	if err := ctx.ParamsParser(req); err != nil {
+		return errors.ErrInternalServer
+	}
+
+	result, err := o.orderUsecase.GetOrderById(context, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return errors.ErrNotFound
+		}
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+	return resp.JSON(ctx)
 }

@@ -26,5 +26,8 @@ func (o orderRouter) Init(root *fiber.Router) {
 	orderRouter := (*root).Group("/orders")
 	{
 		orderRouter.Post("", o.middleware.Authentication.RequiredAuthentication(), o.handler.CreateOrder)
+		orderRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetOrderById)
+		orderRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
+		orderRouter.Patch("/:id/status", o.middleware.Authentication.RequiredAuthentication(), o.handler.CreateOrder)
 	}
 }

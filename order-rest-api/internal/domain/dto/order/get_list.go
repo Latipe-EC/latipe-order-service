@@ -6,8 +6,8 @@ import (
 
 type GetOrderListRequest struct {
 	BaseHeader BaseHeader
-	Query      pagable.Query
+	Query      *pagable.Query
 }
 type GetOrderListResponse struct {
-	Data pagable.ListResponse
+	pagable.ListResponse
 }
