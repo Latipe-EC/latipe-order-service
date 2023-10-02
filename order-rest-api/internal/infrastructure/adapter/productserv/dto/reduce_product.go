@@ -1,14 +1,14 @@
 package dto
 
-const reduceProductUrl = "/api/v1/products/quantity"
+const reduceProductUrl = "/api/v1/products/update-quantity"
 
 type ReduceProductRequest struct {
-	Items []ReduceItem `json:"items"`
+	Items []ReduceItem
 }
 
 type ReduceItem struct {
 	ProductId string `json:"productId"`
-	OptionId  int    `json:"optionId"`
+	OptionId  string `json:"optionId"`
 	Quantity  int    `json:"quantity"`
 }
 

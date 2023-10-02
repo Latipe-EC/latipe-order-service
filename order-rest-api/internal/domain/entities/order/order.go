@@ -10,8 +10,8 @@ type OrderItem struct {
 	OrderID   int       `gorm:"not null;type:bigint" json:"order_id"`
 	Order     *Order    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	ProductID string    `gorm:"not null;type:varchar(255)" json:"product_id"`
-	SellerID  int       `gorm:"not null;type:int" json:"seller_id"`
-	OptionID  int       `gorm:"not null;type:int" json:"option_id" `
+	StoreID   int       `gorm:"not null;type:int" json:"store_id"`
+	OptionID  string    `gorm:"not null;type:varchar(250)" json:"option_id" `
 	Quantity  int       `gorm:"not null;type:int" json:"quantity"`
 	Price     int       `gorm:"not null;type:bigint" json:"price"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
@@ -53,6 +53,7 @@ type Order struct {
 	OrderItem      []*OrderItem      `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_items"`
 	OrderStatusLog []*OrderStatusLog `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_status_logs"`
 	PaymentLog     *PaymentLog       `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"payment_log"`
+	Delivery       *DeliveryOrder    `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"delivery"`
 }
 
 func (Order) TableName() string {

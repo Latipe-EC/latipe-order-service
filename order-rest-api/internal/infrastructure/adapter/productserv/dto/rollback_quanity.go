@@ -1,14 +1,14 @@
 package dto
 
-const rollbackQuantityUrl = "/api/v1/products/quantity"
+const rollbackQuantityUrl = "/api/v1/products/update-quantity"
 
 type RollbackQuantityRequest struct {
-	Items []RollBackItem `json:"items"`
+	Items []RollBackItem
 }
 
 type RollBackItem struct {
 	ProductId string `json:"productId"`
-	OptionId  int    `json:"optionId"`
+	OptionId  string `json:"optionId"`
 	Quantity  int    `json:"quantity"`
 }
 

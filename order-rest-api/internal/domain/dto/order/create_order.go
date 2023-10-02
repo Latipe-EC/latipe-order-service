@@ -10,6 +10,7 @@ type CreateOrderRequest struct {
 	VoucherCode   string       `json:"voucher_code" validate:"required"`
 	CreateAt      string       `json:"create_at"`
 	Address       OrderAddress `json:"address" validate:"required"`
+	Delivery      Delivery     `json:"delivery" validate:"required"`
 	OrderItems    []OrderItems `json:"order_items" validate:"required"`
 }
 type UserRequest struct {
@@ -19,7 +20,7 @@ type UserRequest struct {
 
 type OrderItems struct {
 	ProductId string `json:"product_id" validate:"required"`
-	OptionId  int    `json:"option_id"`
+	OptionId  string `json:"option_id"`
 	Quantity  int    `json:"quantity" validate:"required"`
 	Price     int    `json:"price" validate:"required"`
 }
@@ -30,7 +31,7 @@ type OrderAddress struct {
 	ShippingAddress string `json:"shipping_address" validate:"required"`
 }
 type Delivery struct {
-	DeliveryId    string `json:"delivery_id" validate:"required"`
+	DeliveryId    string `json:"id" validate:"required"`
 	Name          string `json:"name" validate:"required"`
 	Cost          int    `json:"cost" validate:"required"`
 	ReceivingDate string `json:"receiving_date" validate:"required"`

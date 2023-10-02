@@ -17,6 +17,7 @@ func NewGormRepository(client gorm.Gorm) order.Repository {
 		&order.OrderItem{},
 		&order.OrderStatusLog{},
 		&order.PaymentLog{},
+		&order.DeliveryOrder{},
 	)
 	if err != nil {
 		panic(err)

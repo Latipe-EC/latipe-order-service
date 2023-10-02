@@ -61,7 +61,7 @@ func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderReque
 	for _, item := range dto.OrderItems {
 		i := order.OrderItem{
 			ProductID: item.ProductId,
-			SellerID:  0,
+			StoreID:   0,
 			OptionID:  item.OptionId,
 			Quantity:  item.Quantity,
 			Price:     item.Price,
@@ -91,7 +91,25 @@ func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderReque
 	orderDAO.Username = dto.UserRequest.Username
 	orderDAO.UserId = dto.UserRequest.UserId
 
-	err := o.orderRepo.Save(&orderDAO)
+	//create delivery
+	recvTime, err := order.ParseStringToDate(dto.Delivery.ReceivingDate)
+	if err != nil {
+		return err
+	}
+	deli := order.DeliveryOrder{
+		DeliveryId:      dto.Delivery.DeliveryId,
+		DeliveryName:    dto.Delivery.Name,
+		Cost:            dto.Delivery.Cost,
+		AddressId:       dto.Address.AddressId,
+		ShippingName:    dto.Address.ShippingName,
+		ShippingPhone:   dto.Address.ShippingPhone,
+		ShippingAddress: dto.Address.ShippingAddress,
+		ReceivingDate:   *recvTime,
+		Order:           &orderDAO,
+	}
+	orderDAO.Delivery = &deli
+
+	err = o.orderRepo.Save(&orderDAO)
 	if err != nil {
 		reduceReq := prodServDTO.RollbackQuantityRequest{
 			Items: MappingOrderItemForRollback(dto),

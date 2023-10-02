@@ -3,12 +3,12 @@ package dto
 const orderProductUrl = "/api/v1/products/check-in-stock"
 
 type OrderProductRequest struct {
-	Items []ValidateItems `json:"items"`
+	Items []ValidateItems
 }
 
 type OrderProductResponse struct {
-	Products   []Products `json:"products"`
-	TotalPrice int        `json:"totalPrice"`
+	Products   []Product `json:"products"`
+	TotalPrice int       `json:"totalPrice"`
 }
 
 type ValidateItems struct {
@@ -17,15 +17,16 @@ type ValidateItems struct {
 	Quantity  int    `json:"quantity"`
 }
 
-type Products struct {
-	ProductId  string `json:"productId"`
-	Name       string `json:"name"`
-	Quantity   int    `json:"quantity"`
-	Price      int    `json:"price"`
-	Discount   int    `json:"discount"`
-	OptionId   string `json:"optionId"`
-	NameOption string `json:"nameOption"`
-	TotalPrice int    `json:"totalPrice"`
+type Product struct {
+	ProductId        string `json:"id"`
+	Name             string `json:"name"`
+	Image            string `json:"image"`
+	Code             string `json:"code"`
+	Sku              string `json:"sku"`
+	Quantity         int    `json:"quantity"`
+	Price            int    `json:"price"`
+	NameOption       string `json:"nameOption"`
+	PromotionalPrice int    `json:"promotionalPrice"`
 }
 
 func (OrderProductRequest) URL() string {

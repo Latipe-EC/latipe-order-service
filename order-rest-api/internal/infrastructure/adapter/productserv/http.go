@@ -7,7 +7,7 @@ import (
 	"github.com/google/wire"
 	"order-rest-api/config"
 	"order-rest-api/internal/common/errors"
-	dto2 "order-rest-api/internal/infrastructure/adapter/productserv/dto"
+	productDTO "order-rest-api/internal/infrastructure/adapter/productserv/dto"
 	"order-rest-api/pkg/internal_http"
 	"order-rest-api/pkg/util/mapper"
 )
@@ -32,7 +32,7 @@ func NewProductServAdapter(config *config.Config) Service {
 	}
 }
 
-func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *dto2.OrderProductRequest) (*dto2.OrderProductResponse, error) {
+func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *productDTO.OrderProductRequest) (*productDTO.OrderProductResponse, error) {
 	resp, err := h.client.MakeRequest().
 		SetBody(req).
 		SetContext(ctx).
@@ -48,7 +48,7 @@ func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *dto2.OrderPro
 		return nil, err
 	}
 
-	var rawResp dto2.BaseResponse
+	var rawResp productDTO.BaseResponse
 	if err := json.Unmarshal(resp.Body(), &rawResp); err != nil {
 		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
 		return nil, errors.ErrInternalServer
@@ -57,7 +57,7 @@ func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *dto2.OrderPro
 	/*	if rawResp.Code != 0 && resp.StatusCode() != 200 {
 		return nil, errors.ErrorMapping(baseResp.Code)
 	}*/
-	var regResp *dto2.OrderProductResponse
+	var regResp *productDTO.OrderProductResponse
 	err = mapper.BindingStruct(rawResp.Data, &regResp)
 	if err != nil {
 		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
@@ -67,7 +67,7 @@ func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *dto2.OrderPro
 	return regResp, nil
 }
 
-func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *dto2.ReduceProductRequest) (*dto2.ReduceProductResponse, error) {
+func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *productDTO.ReduceProductRequest) (*productDTO.ReduceProductResponse, error) {
 	resp, err := h.client.MakeRequest().
 		SetBody(req).
 		SetContext(ctx).
@@ -83,7 +83,7 @@ func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *dto2.Reduce
 		return nil, err
 	}
 
-	var rawResp dto2.BaseResponse
+	var rawResp productDTO.BaseResponse
 	if err := json.Unmarshal(resp.Body(), &rawResp); err != nil {
 		log.Errorf("[Reduce Quantity]: %s", err)
 		return nil, errors.ErrInternalServer
@@ -92,7 +92,7 @@ func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *dto2.Reduce
 	/*	if rawResp.Code != 0 && resp.StatusCode() != 200 {
 		return nil, errors.ErrorMapping(baseResp.Code)
 	}*/
-	var regResp *dto2.ReduceProductResponse
+	var regResp *productDTO.ReduceProductResponse
 	err = mapper.BindingStruct(rawResp.Data, &regResp)
 	if err != nil {
 		log.Errorf("[%s] [Reduce Quantity]: %s", "ERROR", err)
@@ -102,7 +102,7 @@ func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *dto2.Reduce
 	return regResp, nil
 }
 
-func (h httpAdapter) RollBackQuantityOrder(ctx context.Context, req *dto2.RollbackQuantityRequest) (*dto2.RollbackQuantityResponse, error) {
+func (h httpAdapter) RollBackQuantityOrder(ctx context.Context, req *productDTO.RollbackQuantityRequest) (*productDTO.RollbackQuantityResponse, error) {
 	resp, err := h.client.MakeRequest().
 		SetBody(req).
 		SetContext(ctx).
@@ -118,7 +118,7 @@ func (h httpAdapter) RollBackQuantityOrder(ctx context.Context, req *dto2.Rollba
 		return nil, err
 	}
 
-	var rawResp dto2.BaseResponse
+	var rawResp productDTO.BaseResponse
 	if err := json.Unmarshal(resp.Body(), &rawResp); err != nil {
 		log.Errorf("[%s] [Reduce Quantity]: %s", "ERROR", err)
 		return nil, errors.ErrInternalServer
@@ -127,7 +127,7 @@ func (h httpAdapter) RollBackQuantityOrder(ctx context.Context, req *dto2.Rollba
 	/*	if rawResp.Code != 0 && resp.StatusCode() != 200 {
 		return nil, errors.ErrorMapping(baseResp.Code)
 	}*/
-	var regResp *dto2.RollbackQuantityResponse
+	var regResp *productDTO.RollbackQuantityResponse
 	err = mapper.BindingStruct(rawResp.Data, &regResp)
 	if err != nil {
 		log.Errorf("[%s] [Reduce Quantity]: %s", "ERROR", err)

@@ -44,7 +44,7 @@ AdapterService:
     InternalKey:
   ProductService:
     BaseURL: http://localhost:8181
-    InternalKey:
+    InternalKey: fsf1AQOu6TVn+gNyjv22v9Cu/lW3HDF8QsSweKl5R6Me+rDO2Twyqkdbr8lZpRXkPL0MAcMA8AtgTrJAmSV5yA==
   EmailService:
     BaseURL: http://localhost:8181
     InternalKey:

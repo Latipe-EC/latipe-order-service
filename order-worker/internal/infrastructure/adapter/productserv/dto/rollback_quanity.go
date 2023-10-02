@@ -8,7 +8,7 @@ type RollbackQuantityRequest struct {
 
 type RollbackItem struct {
 	ProductId string `json:"productId"`
-	OptionId  int    `json:"optionId"`
+	OptionId  string `json:"optionId"`
 	Quantity  int    `json:"quantity"`
 }
 
