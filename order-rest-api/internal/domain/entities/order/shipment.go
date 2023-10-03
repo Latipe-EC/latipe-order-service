@@ -3,9 +3,9 @@ package order
 import "time"
 
 type DeliveryOrder struct {
-	Id              int `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
+	Id              int `gorm:"not null;autoIncrement;primaryKey;type:bigint"`
 	OrderType       string
-	DeliveryId      string    `gorm:"not null;type:varchar(255)" json:"payment_transaction"`
+	DeliveryId      string    `gorm:"not null;type:varchar(255)" json:"delivery_id"`
 	DeliveryName    string    `gorm:"not null;type:varchar(255)" json:"delivery_name"`
 	Cost            int       `gorm:"not null;type:int" json:"payment_type"`
 	AddressId       string    `json:"address_id" gorm:"type:varchar(255)"`

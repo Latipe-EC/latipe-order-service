@@ -17,3 +17,16 @@ func MappingOrderItemForReduce(request *order.CreateOrderRequest) []dto.ReduceIt
 	}
 	return items
 }
+
+func MappingOrderItemToGetInfo(request *order.CreateOrderRequest) []dto.ValidateItems {
+	var items []dto.ValidateItems
+	for _, i := range request.OrderItems {
+		product := dto.ValidateItems{
+			ProductId: i.ProductId,
+			OptionId:  i.OptionId,
+			Quantity:  i.Quantity,
+		}
+		items = append(items, product)
+	}
+	return items
+}

@@ -25,7 +25,7 @@ type OrderItems struct {
 	Price     int    `json:"price" validate:"required"`
 }
 type OrderAddress struct {
-	AddressId       string `json:"address_id" validate:"required"`
+	AddressId       string `json:"address_id"`
 	ShippingName    string `json:"shipping_name" validate:"required"`
 	ShippingPhone   string `json:"shipping_phone" validate:"required"`
 	ShippingAddress string `json:"shipping_address" validate:"required"`

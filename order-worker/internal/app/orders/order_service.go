@@ -68,17 +68,18 @@ func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderReque
 	total := 0
 	var orderItems []*order.OrderItem
 	for _, item := range products.Products {
+		total += item.Price
 		i := order.OrderItem{
-			ProductID: item.ProductId,
-			StoreID:   item.StoreId,
-			OptionID:  item.OptionId,
-			Quantity:  item.Quantity,
-			Price:     item.Price,
-			NetPrice:  item.PromotionalPrice,
-			Order:     &orderDAO,
+			ProductID:   item.ProductId,
+			ProductName: item.Name,
+			StoreID:     item.StoreId,
+			OptionID:    item.OptionId,
+			Quantity:    item.Quantity,
+			Price:       item.Price,
+			NetPrice:    item.PromotionalPrice,
+			Order:       &orderDAO,
 		}
 		orderItems = append(orderItems, &i)
-		total += i.Price
 	}
 	orderDAO.OrderItem = orderItems
 
@@ -136,7 +137,7 @@ func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderReque
 			return err
 		}
 
-		log.Printf("[%s] The order created failed : %s", "ERROR")
+		log.Printf("[%s] The order created failed : %s", "ERROR", err)
 		return err
 	}
 	return nil

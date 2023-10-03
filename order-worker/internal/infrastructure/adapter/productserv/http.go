@@ -25,7 +25,7 @@ func NewProductServAdapter(config *config.Config) Service {
 	restyClient := http.New()
 	restyClient.SetRestyClient(
 		restyClient.
-			Resty().
+			Resty().SetDebug(true).
 			SetBaseURL(config.AdapterService.ProductService.BaseURL).
 			SetHeader("X-INTERNAL-SERVICE", config.AdapterService.ProductService.InternalKey))
 	return httpAdapter{
@@ -34,10 +34,9 @@ func NewProductServAdapter(config *config.Config) Service {
 }
 
 func (h httpAdapter) GetProductOrderInfo(req *dto.OrderProductRequest) (*dto.OrderProductResponse, error) {
-	deobiet := dto.OrderProductRequest{Items: req.Items}
 	resp, err := h.client.MakeRequest().
-		SetBody(&deobiet).
-		Get(req.URL())
+		SetBody(req.Items).
+		Post(req.URL())
 
 	if err != nil {
 		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
@@ -55,7 +54,7 @@ func (h httpAdapter) GetProductOrderInfo(req *dto.OrderProductRequest) (*dto.Ord
 	}
 
 	var rawResp dto.BaseResponse
-	if err := json.Unmarshal(resp.Body(), &rawResp); err != nil {
+	if err := json.Unmarshal(resp.Body(), &rawResp.Data); err != nil {
 		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
 		return nil, err
 	}

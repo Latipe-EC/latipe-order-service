@@ -47,8 +47,6 @@ type Order struct {
 	Discount       int               `gorm:"not null;type:int" json:"discount"`
 	Total          int               `gorm:"not null;type:int" json:"total"`
 	Status         int               `gorm:"not null;type:int" json:"status"`
-	AddressID      int               `gorm:"not null;type:bigint" json:"address_id"`
-	AddressDetail  string            `gorm:"not null;type:longtext" json:"address_detail"`
 	VoucherCode    string            `gorm:"not null;type:varchar(250)" json:"voucher_code"`
 	UpdatedAt      time.Time         `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
 	CreatedAt      time.Time         `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`

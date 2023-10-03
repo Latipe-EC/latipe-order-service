@@ -26,7 +26,7 @@ func NewProductServAdapter(config *config.Config) Service {
 		restyClient.
 			Resty().
 			SetBaseURL(config.AdapterService.ProductService.BaseURL).
-			SetHeader("X-INTERNAL-SERVICE", config.AdapterService.ProductService.InternalKey))
+			SetHeader("X-INTERNAL-SERVICE", config.AdapterService.ProductService.InternalKey).SetDebug(true))
 	return httpAdapter{
 		client: restyClient,
 	}
@@ -34,9 +34,9 @@ func NewProductServAdapter(config *config.Config) Service {
 
 func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *productDTO.OrderProductRequest) (*productDTO.OrderProductResponse, error) {
 	resp, err := h.client.MakeRequest().
-		SetBody(req).
+		SetBody(req.Items).
 		SetContext(ctx).
-		Get(req.URL())
+		Post(req.URL())
 
 	if err != nil {
 		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
@@ -69,7 +69,7 @@ func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *productDTO.Or
 
 func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *productDTO.ReduceProductRequest) (*productDTO.ReduceProductResponse, error) {
 	resp, err := h.client.MakeRequest().
-		SetBody(req).
+		SetBody(req.Items).
 		SetContext(ctx).
 		Patch(req.URL())
 

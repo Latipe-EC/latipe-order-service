@@ -6,15 +6,15 @@ type OrderProductRequest struct {
 	Items []ValidateItems
 }
 
-type OrderProductResponse struct {
-	Products   []Product `json:"products"`
-	TotalPrice int       `json:"totalPrice"`
-}
-
 type ValidateItems struct {
 	ProductId string `json:"productId"`
 	OptionId  string `json:"optionId"`
 	Quantity  int    `json:"quantity"`
+}
+
+type OrderProductResponse struct {
+	Products   []Product `json:"products"`
+	TotalPrice int       `json:"totalPrice"`
 }
 
 type Product struct {

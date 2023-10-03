@@ -23,7 +23,7 @@ func NewUserServHttpAdapter(config *config.Config) Service {
 	restyClient := http.New()
 	restyClient.SetRestyClient(
 		restyClient.
-			Resty().SetBaseURL(config.AdapterService.UserService.AuthURL))
+			Resty().SetBaseURL(config.AdapterService.UserService.AuthURL).SetDebug(true))
 
 	return httpAdapter{
 		client: restyClient,

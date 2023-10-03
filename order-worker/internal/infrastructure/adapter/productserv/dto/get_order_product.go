@@ -25,8 +25,8 @@ type Products struct {
 	Discount         int    `json:"discount"`
 	OptionId         string `json:"optionId"`
 	NameOption       string `json:"nameOption"`
-	StoreId          string `json:"store_id"`
-	PromotionalPrice int    `json:"PromotionalPrice"`
+	StoreId          string `json:"storeId"`
+	PromotionalPrice int    `json:"promotionalPrice"`
 }
 
 func (OrderProductRequest) URL() string {
