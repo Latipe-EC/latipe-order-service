@@ -5,17 +5,19 @@ import (
 )
 
 type OrderItem struct {
-	OrderType string
-	Id        int       `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
-	OrderID   int       `gorm:"not null;type:bigint" json:"order_id"`
-	Order     *Order    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	ProductID string    `gorm:"not null;type:varchar(255)" json:"product_id"`
-	StoreID   int       `gorm:"not null;type:int" json:"store_id"`
-	OptionID  string    `gorm:"not null;type:varchar(250)" json:"option_id" `
-	Quantity  int       `gorm:"not null;type:int" json:"quantity"`
-	Price     int       `gorm:"not null;type:bigint" json:"price"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
-	CreatedAt time.Time `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
+	OrderType   string
+	Id          int       `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
+	OrderID     int       `gorm:"not null;type:bigint" json:"order_id"`
+	Order       *Order    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ProductID   string    `gorm:"not null;type:varchar(255)" json:"product_id"`
+	ProductName string    `gorm:"not null;type:varchar(255)" json:"product_name"`
+	StoreID     string    `gorm:"not null;type:varchar(255)" json:"store_id"`
+	OptionID    string    `gorm:"not null;type:varchar(250)" json:"option_id" `
+	Quantity    int       `gorm:"not null;type:int" json:"quantity"`
+	Price       int       `gorm:"not null;type:bigint" json:"price"`
+	NetPrice    int       `gorm:"not null;type:bigint" json:"net_price"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
+	CreatedAt   time.Time `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
 }
 
 func (OrderItem) TableName() string {

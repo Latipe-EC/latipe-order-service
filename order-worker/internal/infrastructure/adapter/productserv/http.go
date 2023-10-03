@@ -1,8 +1,8 @@
 package productserv
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
 	"order-worker/config"
 	"order-worker/internal/infrastructure/adapter/productserv/dto"
 
@@ -33,10 +33,10 @@ func NewProductServAdapter(config *config.Config) Service {
 	}
 }
 
-func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *dto.OrderProductRequest) (*dto.OrderProductResponse, error) {
+func (h httpAdapter) GetProductOrderInfo(req *dto.OrderProductRequest) (*dto.OrderProductResponse, error) {
+	deobiet := dto.OrderProductRequest{Items: req.Items}
 	resp, err := h.client.MakeRequest().
-		SetBody(req).
-		SetContext(ctx).
+		SetBody(&deobiet).
 		Get(req.URL())
 
 	if err != nil {
@@ -46,7 +46,12 @@ func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *dto.OrderProd
 
 	if resp.StatusCode() >= 500 {
 		log.Errorf("[%s] [Get product]: %s", "ERROR", resp.Body())
-		return nil, err
+		return nil, errors.New("internal service request")
+	}
+
+	if resp.StatusCode() >= 400 {
+		log.Errorf("[%s] [Get product]: %s", "ERROR", resp.Body())
+		return nil, errors.New("service bad request")
 	}
 
 	var rawResp dto.BaseResponse
@@ -68,10 +73,9 @@ func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *dto.OrderProd
 	return regResp, nil
 }
 
-func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *dto.ReduceProductRequest) (*dto.ReduceProductResponse, error) {
+func (h httpAdapter) ReduceProductQuantity(req *dto.ReduceProductRequest) (*dto.ReduceProductResponse, error) {
 	resp, err := h.client.MakeRequest().
 		SetBody(req).
-		SetContext(ctx).
 		Patch(req.URL())
 
 	if err != nil {
@@ -103,10 +107,9 @@ func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *dto.ReduceP
 	return regResp, nil
 }
 
-func (h httpAdapter) RollBackQuantityOrder(ctx context.Context, req *dto.RollbackQuantityRequest) (*dto.RollbackQuantityResponse, error) {
+func (h httpAdapter) RollBackQuantityOrder(req *dto.RollbackQuantityRequest) (*dto.RollbackQuantityResponse, error) {
 	resp, err := h.client.MakeRequest().
 		SetBody(req).
-		SetContext(ctx).
 		Patch(req.URL())
 
 	if err != nil {

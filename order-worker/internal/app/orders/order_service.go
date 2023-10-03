@@ -28,7 +28,7 @@ func (o orderService) PendingOrder(ctx context.Context, dto *dto.CreateOrderRequ
 		Items: MappingOrderItemForReduce(dto),
 	}
 
-	if _, err := o.productServ.ReduceProductQuantity(ctx, &reduceReq); err != nil {
+	if _, err := o.productServ.ReduceProductQuantity(&reduceReq); err != nil {
 		return err
 	}
 
@@ -41,7 +41,7 @@ func (o orderService) RollBackQuantity(ctx context.Context, dto *dto.CreateOrder
 		Items: MappingOrderItemForReduce(dto),
 	}
 
-	if _, err := o.productServ.ReduceProductQuantity(ctx, &reduceReq); err != nil {
+	if _, err := o.productServ.ReduceProductQuantity(&reduceReq); err != nil {
 		return err
 	}
 
@@ -56,20 +56,36 @@ func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderReque
 		return err
 	}
 
-	//create items
+	itemReq := MappingOrderItemToValidateItems(dto.OrderItems)
+	productReq := prodServDTO.OrderProductRequest{Items: itemReq}
+
+	products, err := o.productServ.GetProductOrderInfo(&productReq)
+	if err != nil {
+		return err
+	}
+
+	//create items in order
+	total := 0
 	var orderItems []*order.OrderItem
-	for _, item := range dto.OrderItems {
+	for _, item := range products.Products {
 		i := order.OrderItem{
 			ProductID: item.ProductId,
-			StoreID:   0,
+			StoreID:   item.StoreId,
 			OptionID:  item.OptionId,
 			Quantity:  item.Quantity,
 			Price:     item.Price,
+			NetPrice:  item.PromotionalPrice,
 			Order:     &orderDAO,
 		}
 		orderItems = append(orderItems, &i)
+		total += i.Price
 	}
 	orderDAO.OrderItem = orderItems
+
+	//calculate order price
+	orderDAO.Total = total
+	orderDAO.Amount = products.TotalPrice
+	orderDAO.Discount = total - products.TotalPrice
 
 	//create log
 	var logs []*order.OrderStatusLog
@@ -115,7 +131,7 @@ func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderReque
 			Items: MappingOrderItemForRollback(dto),
 		}
 
-		if _, err := o.productServ.RollBackQuantityOrder(ctx, &reduceReq); err != nil {
+		if _, err := o.productServ.RollBackQuantityOrder(&reduceReq); err != nil {
 			log.Printf("[%s] Rollback product quantity was failed : %v", "ERROR", err)
 			return err
 		}

@@ -30,3 +30,16 @@ func MappingOrderItemForRollback(request *order.CreateOrderRequest) []dto.Rollba
 	}
 	return items
 }
+
+func MappingOrderItemToValidateItems(items []order.OrderItems) []dto.ProductItem {
+	var results []dto.ProductItem
+	for _, i := range items {
+		reqItem := dto.ProductItem{
+			ProductId: i.ProductId,
+			OptionId:  i.OptionId,
+			Quantity:  i.Quantity,
+		}
+		results = append(results, reqItem)
+	}
+	return results
+}
