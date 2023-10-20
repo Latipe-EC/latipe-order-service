@@ -1,5 +1,5 @@
 Server:
-  Name: "Order Worker APIs"
+  Name: "Order Service APIs"
   AppVersion: 1.0.0
   BaseURI: 127.0.0.1:5000
   Port: :5001
@@ -11,10 +11,10 @@ Server:
   ExpirationLimitTime: 30s
 DB:
   Mysql:
-    Host: 127.0.0.1
+    Host: 172.20.74.176
     Port: 3306
     UserName: root
-    Password: 123123
+    Password: 123123@Dat
     Database: backend_orders_service
     MaxOpenConns: 30
     MaxIdleConns: 10
@@ -30,6 +30,13 @@ DB:
     MinPoolSize:
     MaxPoolSize:
 
+Cache:
+  Redis:
+    Address: localhost
+    Port: 6379
+    Password:
+    DB: 0
+
 RabbitMQ:
   Connection: amqp://guest:guest@localhost:5672/
   Exchange:
@@ -39,14 +46,12 @@ RabbitMQ:
 
 AdapterService:
   UserService:
-    AuthURL: http://localhost:8081
-    UserURL: http://localhost:8181
+    AuthURL: http://172.20.64.1:8081
+    UserURL: http://172.20.64.1:8181
     InternalKey:
   ProductService:
-    BaseURL: http://localhost:8645
+    BaseURL: http://172.20.64.1:8645
     InternalKey: fsf1AQOu6TVn+gNyjv22v9Cu/lW3HDF8QsSweKl5R6Me+rDO2Twyqkdbr8lZpRXkPL0MAcMA8AtgTrJAmSV5yA==
   EmailService:
-    StmpHost: smtp.gmail.com
-    StmpPort: 583
-    Email:
-    SecretKey:
+    BaseURL: http://172.20.64.1:8181
+    InternalKey:

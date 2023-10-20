@@ -14,6 +14,7 @@ var Set = wire.NewSet(NewConfig)
 type Config struct {
 	Server Server
 	DB     DB
+	Cache  Cache
 	//Adapters Adapters
 	AdapterService AdapterService
 	RabbitMQ       RabbitMQ
@@ -37,6 +38,17 @@ type Server struct {
 
 type DB struct {
 	Mysql Mysql
+}
+
+type Cache struct {
+	Redis Redis
+}
+
+type Redis struct {
+	Address  string
+	Port     int
+	Password string
+	DB       int
 }
 
 type Mysql struct {

@@ -10,7 +10,6 @@ WORKER_MAIN_FILE = ./cmd/main.go
 WORKER_SERVER_FILE = ./internal/server.go
 
 setup:
-	go mod tidy
 	go install github.com/google/wire/cmd/wire@latest
 	go install github.com/swaggo/swag/cmd/swag@latest
 

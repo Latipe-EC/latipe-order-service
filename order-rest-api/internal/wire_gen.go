@@ -21,6 +21,7 @@ import (
 	"order-rest-api/internal/middleware"
 	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/internal/router"
+	"order-rest-api/pkg/cache"
 )
 
 // Injectors from server.go:
@@ -33,7 +34,11 @@ func New() (*Server, error) {
 	gorm := db.NewMySQLConnection(configConfig)
 	repository := order.NewGormRepository(gorm)
 	service := productserv.NewProductServAdapter(configConfig)
-	usecase := orders.NewOrderService(repository, service)
+	cacheEngine, err := cache.NewCacheEngine(configConfig)
+	if err != nil {
+		return nil, err
+	}
+	usecase := orders.NewOrderService(repository, service, cacheEngine)
 	orderApiHandler := order2.NewOrderHandler(usecase)
 	userservService := userserv.NewUserServHttpAdapter(configConfig)
 	authenticationMiddleware := auth.NewAuthMiddleware(userservService)

@@ -41,6 +41,7 @@ func (OrderStatusLog) TableName() string {
 
 type Order struct {
 	Id             int               `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
+	OrderCacheKey  string            `gorm:"not null;type:varchar(250)" json:"order_cache_key"`
 	UserId         string            `gorm:"not null;type:varchar(250)" json:"user_id"`
 	Username       string            `gorm:"not null;type:varchar(250)" json:"email"`
 	Amount         int               `gorm:"not null;type:bigint" json:"amount"`

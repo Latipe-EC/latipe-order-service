@@ -7,5 +7,5 @@ import (
 
 type Usecase interface {
 	RollBackQuantity(ctx context.Context, dto *order.CreateOrderRequest) error
-	CreateOrder(ctx context.Context, dto *order.CreateOrderRequest) error
+	CreateOrder(ctx context.Context, orderCacheKey string) error
 }

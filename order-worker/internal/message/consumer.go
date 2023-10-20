@@ -6,7 +6,6 @@ import (
 	"log"
 	"order-worker/config"
 	"order-worker/internal/app/orders"
-	dto "order-worker/internal/domain/dto/order"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -66,12 +65,13 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var orderDTO dto.CreateOrderRequest
-	if err := json.Unmarshal(msg.Body, &orderDTO); err != nil {
+	var orderCacheKey string
+	if err := json.Unmarshal(msg.Body, &orderCacheKey); err != nil {
 		log.Printf("[%s] Parse message to order failed cause: %s", "ERROR", err)
 		return err
 	}
-	err := mq.orderUsecase.CreateOrder(ctx, &orderDTO)
+
+	err := mq.orderUsecase.CreateOrder(ctx, orderCacheKey)
 	if err != nil {
 		return err
 	}

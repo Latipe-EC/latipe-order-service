@@ -17,6 +17,7 @@ import (
 	"order-rest-api/internal/infrastructure/persistence"
 	"order-rest-api/internal/middleware"
 	router2 "order-rest-api/internal/router"
+	"order-rest-api/pkg/cache"
 )
 
 type Server struct {
@@ -35,6 +36,7 @@ func New() (*Server, error) {
 		productserv.Set,
 		app.Set,
 		middleware.Set,
+		cache.Set,
 	)))
 }
 

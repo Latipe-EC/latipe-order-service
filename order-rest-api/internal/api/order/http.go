@@ -58,18 +58,25 @@ func (o orderApiHandler) CreateOrder(ctx *fiber.Ctx) error {
 	bodyReq.UserRequest.UserId = userId
 	bodyReq.UserRequest.Username = username
 
-	if err := o.orderUsecase.PendingOrder(context, &bodyReq); err != nil {
+	orderKey, err := o.orderUsecase.ProcessCacheOrder(context, &bodyReq)
+	if err != nil {
 		return err
 	}
 
-	if err := message.SendMessage(bodyReq); err != nil {
+	if err := message.SendMessage(orderKey); err != nil {
 		resp := responses.DefaultError
 		resp.Status = 500
 		resp.Message = "Fail"
 		return resp.JSON(ctx)
 	}
 
-	return responses.DefaultSuccess.JSON(ctx)
+	dataResp := make(map[string]string)
+	dataResp["order_key"] = orderKey
+	dataResp["message"] = "The order was created successful"
+
+	resp := responses.DefaultSuccess
+	resp.Data = dataResp
+	return resp.JSON(ctx)
 }
 
 func (o orderApiHandler) UpdateOrderStatus(ctx *fiber.Ctx) error {

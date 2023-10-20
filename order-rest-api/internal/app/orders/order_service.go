@@ -2,37 +2,52 @@ package orders
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/google/uuid"
 	"order-rest-api/internal/common/errors"
 	orderDTO "order-rest-api/internal/domain/dto/order"
 	"order-rest-api/internal/domain/entities/order"
 	"order-rest-api/internal/infrastructure/adapter/productserv"
 	prodServDTO "order-rest-api/internal/infrastructure/adapter/productserv/dto"
 	"order-rest-api/internal/middleware/auth"
+	"order-rest-api/pkg/cache/redis"
 	"order-rest-api/pkg/util/mapper"
 )
 
 type orderService struct {
 	orderRepo   order.Repository
+	cacheEngine *redis.CacheEngine
 	productServ productserv.Service
 }
 
-func NewOrderService(orderRepo order.Repository, productServ productserv.Service) Usecase {
+func NewOrderService(orderRepo order.Repository, productServ productserv.Service, cacheEngine *redis.CacheEngine) Usecase {
 	return orderService{
 		orderRepo:   orderRepo,
+		cacheEngine: cacheEngine,
 		productServ: productServ,
 	}
 }
 
-func (o orderService) PendingOrder(ctx context.Context, dto *orderDTO.CreateOrderRequest) error {
+func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.CreateOrderRequest) (string, error) {
 	reduceReq := prodServDTO.ReduceProductRequest{
 		Items: MappingOrderItemForReduce(dto),
 	}
 
 	if _, err := o.productServ.ReduceProductQuantity(ctx, &reduceReq); err != nil {
-		return errors.NotAvailableQuantity
+		return "", errors.NotAvailableQuantity
 	}
 
-	return nil
+	tempId := uuid.NewString()
+
+	cacheData, err := json.Marshal(dto)
+	if err != nil {
+		return "", err
+	}
+
+	if err := o.cacheEngine.Set(tempId, cacheData); err != nil {
+		return "", err
+	}
+	return tempId, nil
 }
 
 func (o orderService) GetOrderById(ctx context.Context, dto *orderDTO.GetOrderRequest) (*orderDTO.GetOrderResponse, error) {

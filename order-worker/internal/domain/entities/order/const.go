@@ -7,3 +7,8 @@ const (
 	ORDER_COMPLETE = 4
 	ORDER_CANCEL   = 0
 )
+
+const (
+	PAYMENT_COD        = 1
+	PAYMENT_VIA_PAYPAL = 2
+)

@@ -26,7 +26,7 @@ func NewProductServAdapter(config *config.Config) Service {
 		restyClient.
 			Resty().
 			SetBaseURL(config.AdapterService.ProductService.BaseURL).
-			SetHeader("X-INTERNAL-SERVICE", config.AdapterService.ProductService.InternalKey).SetDebug(true))
+			SetHeader("X-INTERNAL-SERVICE", config.AdapterService.ProductService.InternalKey))
 	return httpAdapter{
 		client: restyClient,
 	}

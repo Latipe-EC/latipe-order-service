@@ -2,38 +2,28 @@ package orders
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"encoding/json"
 	"log"
 	dto "order-worker/internal/domain/dto/order"
 	"order-worker/internal/domain/entities/order"
 	"order-worker/internal/infrastructure/adapter/productserv"
 	prodServDTO "order-worker/internal/infrastructure/adapter/productserv/dto"
+	"order-worker/pkg/cache/redis"
 	"order-worker/pkg/util/mapper"
 )
 
 type orderService struct {
 	orderRepo   order.Repository
+	cacheRepo   *redis.CacheEngine
 	productServ productserv.Service
 }
 
-func NewOrderService(orderRepo order.Repository, productServ productserv.Service) Usecase {
+func NewOrderService(orderRepo order.Repository, productServ productserv.Service, cacheRepo *redis.CacheEngine) Usecase {
 	return orderService{
 		orderRepo:   orderRepo,
 		productServ: productServ,
+		cacheRepo:   cacheRepo,
 	}
-}
-
-func (o orderService) PendingOrder(ctx context.Context, dto *dto.CreateOrderRequest) error {
-	reduceReq := prodServDTO.ReduceProductRequest{
-		Items: MappingOrderItemForReduce(dto),
-	}
-
-	if _, err := o.productServ.ReduceProductQuantity(&reduceReq); err != nil {
-		return err
-	}
-
-	return nil
-
 }
 
 func (o orderService) RollBackQuantity(ctx context.Context, dto *dto.CreateOrderRequest) error {
@@ -48,8 +38,23 @@ func (o orderService) RollBackQuantity(ctx context.Context, dto *dto.CreateOrder
 	return nil
 }
 
-func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderRequest) error {
+func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) error {
+	cacheData, err := o.cacheRepo.Get(orderCacheKey)
+	if err != nil {
+		return err
+	}
+
+	dto := new(dto.CreateOrderRequest)
+	if cacheData != nil {
+		if err := json.Unmarshal(cacheData, &dto); err != nil {
+			return err
+		}
+	}
+
 	orderDAO := order.Order{}
+	orderDAO.OrderCacheKey = orderCacheKey
+	orderDAO.Username = dto.UserRequest.Username
+	orderDAO.UserId = dto.UserRequest.UserId
 
 	if err := mapper.BindingStruct(dto, &orderDAO); err != nil {
 		log.Printf("[%s] Mapping value from dto to dao failed cause: %s", "ERROR", err)
@@ -97,17 +102,6 @@ func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderReque
 	}
 	orderDAO.OrderStatusLog = append(logs, &orderLog)
 
-	//create payment
-	paymentLog := order.PaymentLog{
-		PaymentTransaction: uuid.New().String(),
-		PaymentType:        dto.PaymentMethod,
-		Total:              0,
-		ThirdPartyLog:      "",
-	}
-	orderDAO.PaymentLog = &paymentLog
-	orderDAO.Username = dto.UserRequest.Username
-	orderDAO.UserId = dto.UserRequest.UserId
-
 	//create delivery
 	recvTime, err := order.ParseStringToDate(dto.Delivery.ReceivingDate)
 	if err != nil {
@@ -140,5 +134,18 @@ func (o orderService) CreateOrder(ctx context.Context, dto *dto.CreateOrderReque
 		log.Printf("[%s] The order created failed : %s", "ERROR", err)
 		return err
 	}
+
+	//handle cache value
+	switch dto.PaymentMethod {
+	case order.PAYMENT_COD:
+		if err := o.cacheRepo.Delete(orderCacheKey); err != nil {
+			return err
+		}
+	case order.PAYMENT_VIA_PAYPAL:
+		if err := o.cacheRepo.Expire(orderCacheKey); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
