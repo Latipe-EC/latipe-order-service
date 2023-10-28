@@ -47,6 +47,11 @@ func (o orderApiHandler) CreateOrder(ctx *fiber.Ctx) error {
 		return errors.ErrUnauthenticated
 	}
 
+	bearerToken := fmt.Sprintf("%v", ctx.Locals(auth.BEARER_TOKEN))
+	if bearerToken == "" {
+		return errors.ErrUnauthenticated
+	}
+
 	if err := ctx.BodyParser(&bodyReq); err != nil {
 		return errors.ErrInternalServer.WithInternalError(err)
 	}
@@ -55,6 +60,7 @@ func (o orderApiHandler) CreateOrder(ctx *fiber.Ctx) error {
 		return errors.ErrBadRequest
 	}
 
+	bodyReq.Header.BearerToken = bearerToken
 	bodyReq.UserRequest.UserId = userId
 	bodyReq.UserRequest.Username = username
 

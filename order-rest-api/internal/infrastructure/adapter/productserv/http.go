@@ -39,28 +39,26 @@ func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *productDTO.Or
 		Post(req.URL())
 
 	if err != nil {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
+		log.Errorf("[Get product]: %s", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() >= 500 {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", resp.Body())
+		log.Errorf("[Get product]: %s", resp.Body())
 		return nil, err
 	}
 
 	var rawResp productDTO.BaseResponse
-	if err := json.Unmarshal(resp.Body(), &rawResp); err != nil {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
+	if err := json.Unmarshal(resp.Body(), &rawResp.Data); err != nil {
+		log.Errorf("[Get product]: %s", err)
 		return nil, errors.ErrInternalServer
 	}
 
-	/*	if rawResp.Code != 0 && resp.StatusCode() != 200 {
-		return nil, errors.ErrorMapping(baseResp.Code)
-	}*/
 	var regResp *productDTO.OrderProductResponse
+
 	err = mapper.BindingStruct(rawResp.Data, &regResp)
 	if err != nil {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
+		log.Errorf(" [Get product]: %s", err)
 		return nil, errors.ErrInternalServer
 	}
 

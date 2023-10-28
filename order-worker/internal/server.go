@@ -9,6 +9,7 @@ import (
 	"github.com/google/wire"
 	"order-worker/config"
 	"order-worker/internal/app"
+
 	"order-worker/internal/infrastructure/adapter/productserv"
 	"order-worker/internal/infrastructure/adapter/userserv"
 	"order-worker/internal/infrastructure/persistence"

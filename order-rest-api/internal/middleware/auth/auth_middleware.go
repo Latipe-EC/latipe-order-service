@@ -3,17 +3,17 @@ package auth
 import (
 	"github.com/gofiber/fiber/v2"
 	"order-rest-api/internal/common/errors"
-	"order-rest-api/internal/infrastructure/adapter/userserv"
-	"order-rest-api/internal/infrastructure/adapter/userserv/dto"
+	"order-rest-api/internal/infrastructure/adapter/authserv"
+	"order-rest-api/internal/infrastructure/adapter/authserv/dto"
 	"strings"
 )
 
 type AuthenticationMiddleware struct {
-	userServ userserv.Service
+	authServ authserv.Service
 }
 
-func NewAuthMiddleware(userServ userserv.Service) *AuthenticationMiddleware {
-	return &AuthenticationMiddleware{userServ: userServ}
+func NewAuthMiddleware(authServ authserv.Service) *AuthenticationMiddleware {
+	return &AuthenticationMiddleware{authServ: authServ}
 }
 
 func (a AuthenticationMiddleware) RequiredAuthentication() fiber.Handler {
@@ -27,13 +27,14 @@ func (a AuthenticationMiddleware) RequiredAuthentication() fiber.Handler {
 		req := dto.AuthorizationRequest{
 			Token: bearToken,
 		}
-		resp, err := a.userServ.Authorization(ctx.Context(), &req)
+		resp, err := a.authServ.Authorization(ctx.Context(), &req)
 		if err != nil {
 			return err
 		}
 
 		ctx.Locals(USERNAME, resp.Email)
 		ctx.Locals(USER_ID, resp.Id)
+		ctx.Locals(BEARER_TOKEN, bearToken)
 		return ctx.Next()
 	}
 }

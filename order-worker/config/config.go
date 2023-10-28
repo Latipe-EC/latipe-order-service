@@ -78,7 +78,9 @@ type Mongodb struct {
 type RabbitMQ struct {
 	Connection   string
 	Exchange     string
-	Queue        string
+	OrderQueue   string
+	EmailQueue   string
+	CartQueue    string
 	ConsumerName string
 	ProducerName string
 }

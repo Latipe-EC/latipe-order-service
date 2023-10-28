@@ -84,9 +84,15 @@ type RabbitMQ struct {
 }
 
 type AdapterService struct {
-	UserService    UserService
-	ProductService ProductService
-	EmailService   EmailService
+	AuthService     AuthService
+	UserService     UserService
+	ProductService  ProductService
+	EmailService    EmailService
+	DeliveryService DeliveryService
+}
+type AuthService struct {
+	BaseURL     string
+	InternalKey string
 }
 
 type UserService struct {
@@ -104,6 +110,11 @@ type EmailService struct {
 	Email string
 	Host  string
 	Key   string
+}
+
+type DeliveryService struct {
+	BaseURL     string
+	InternalKey string
 }
 
 // Get config path for local or docker

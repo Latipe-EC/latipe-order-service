@@ -12,6 +12,8 @@ import (
 	"order-rest-api/internal/api"
 	"order-rest-api/internal/app"
 	"order-rest-api/internal/common/errors"
+	"order-rest-api/internal/infrastructure/adapter/authserv"
+	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
 	"order-rest-api/internal/infrastructure/adapter/productserv"
 	"order-rest-api/internal/infrastructure/adapter/userserv"
 	"order-rest-api/internal/infrastructure/persistence"
@@ -33,6 +35,8 @@ func New() (*Server, error) {
 		router2.Set,
 		persistence.Set,
 		userserv.Set,
+		authserv.Set,
+		deliveryserv.Set,
 		productserv.Set,
 		app.Set,
 		middleware.Set,

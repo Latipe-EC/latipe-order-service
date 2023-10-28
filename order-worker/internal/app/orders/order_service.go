@@ -8,6 +8,7 @@ import (
 	"order-worker/internal/domain/entities/order"
 	"order-worker/internal/infrastructure/adapter/productserv"
 	prodServDTO "order-worker/internal/infrastructure/adapter/productserv/dto"
+	"order-worker/internal/message"
 	"order-worker/pkg/cache/redis"
 	"order-worker/pkg/util/mapper"
 )
@@ -143,6 +144,22 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 		}
 	case order.PAYMENT_VIA_PAYPAL:
 		if err := o.cacheRepo.Expire(orderCacheKey); err != nil {
+			return err
+		}
+	}
+
+	//reset cart-items
+	var cartItemList []string
+	for _, i := range dto.OrderItems {
+		if i.CartItemId != "" {
+			cartItemList = append(cartItemList, i.CartItemId)
+		}
+	}
+
+	if len(cartItemList) > 0 {
+		err := message.SendCartServiceMessage(cartItemList)
+		if err != nil {
+			log.Printf("[%s] sending message to cart queue was failed : %s", "ERROR", err)
 			return err
 		}
 	}

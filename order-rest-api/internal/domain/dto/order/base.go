@@ -10,7 +10,6 @@ type OrderResponse struct {
 	Total         int          `json:"total"`
 	Status        int          `json:"status"`
 	PaymentMethod int          `json:"payment_method"`
-	VoucherCode   string       `json:"voucher_code"`
 	CreateAt      string       `json:"create_at"`
 	UpdateAt      string       `json:"update_at"`
 	Address       OrderAddress `json:"address"`

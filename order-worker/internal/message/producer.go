@@ -9,15 +9,14 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type ProducerOrderMessage struct {
+type OrderWorkerProducer struct {
 	channel *amqp.Channel
-	queue   *amqp.Queue
 	cfg     *config.Config
 }
 
-var producer ProducerOrderMessage
+var producer OrderWorkerProducer
 
-func InitProducerMessage(config *config.Config) error {
+func InitWorkerProducer(config *config.Config) error {
 	conn, err := amqp.Dial(config.RabbitMQ.Connection)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	log.Printf("[%s] Producer has been connected", "INFO")
@@ -30,21 +29,12 @@ func InitProducerMessage(config *config.Config) error {
 	}
 	producer.channel = ch
 
-	q, err := producer.channel.QueueDeclare(
-		config.RabbitMQ.Queue, // name
-		false,                 // durable
-		false,                 // delete when unused
-		false,                 // exclusive
-		false,                 // no-wait
-		nil,                   // arguments
-	)
-	producer.queue = &q
 	failOnError(err, "Failed to declare a queue")
 
 	return nil
 }
 
-func SendMessage(request interface{}) error {
+func SendEmailMessage(request interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -55,15 +45,39 @@ func SendMessage(request interface{}) error {
 
 	log.Printf("[Info]: Send message %v", request)
 	err = producer.channel.PublishWithContext(ctx,
-		producer.cfg.RabbitMQ.Exchange, // exchange
-		producer.queue.Name,            // routing key
-		false,                          // mandatory
-		false,                          // immediate
+		producer.cfg.RabbitMQ.Exchange,   // exchange
+		producer.cfg.RabbitMQ.EmailQueue, // routing key
+		false,                            // mandatory
+		false,                            // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
 		})
-	failOnError(err, "Failed to publish a message")
+	failOnError(err, "Failed to publish a email message")
+
+	return nil
+}
+
+func SendCartServiceMessage(request interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	body, err := ParseOrderToMessage(&request)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[Info]: Send message %v", request)
+	err = producer.channel.PublishWithContext(ctx,
+		producer.cfg.RabbitMQ.Exchange,  // exchange
+		producer.cfg.RabbitMQ.CartQueue, // routing key
+		false,                           // mandatory
+		false,                           // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+		})
+	failOnError(err, "Failed to publish a email message")
 
 	return nil
 }

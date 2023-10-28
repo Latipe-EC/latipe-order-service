@@ -44,8 +44,10 @@ RabbitMQ:
   ProducerName: create_order_services
 
 AdapterService:
+  AuthService:
+    BaseURL: http://172.20.64.1:8081
+    InternalKey:
   UserService:
-    AuthURL: http://172.20.64.1:8081
     UserURL: http://172.20.64.1:8181
     InternalKey:
   ProductService:
@@ -53,4 +55,7 @@ AdapterService:
     InternalKey: fsf1AQOu6TVn+gNyjv22v9Cu/lW3HDF8QsSweKl5R6Me+rDO2Twyqkdbr8lZpRXkPL0MAcMA8AtgTrJAmSV5yA==
   EmailService:
     BaseURL: http://172.20.64.1:8181
+    InternalKey:
+  DeliveryService:
+    BaseURL: http://localhost:5005
     InternalKey:

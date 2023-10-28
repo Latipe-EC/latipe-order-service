@@ -22,7 +22,7 @@ func main() {
 	}()
 
 	//init message queue
-	if err := message.InitProducerMessage(serv.Config()); err != nil {
+	if err := message.InitWorkerProducer(serv.Config()); err != nil {
 		fmt.Printf("%s", err)
 	}
 

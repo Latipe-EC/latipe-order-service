@@ -7,8 +7,12 @@ import (
 	"order-rest-api/internal/common/errors"
 	orderDTO "order-rest-api/internal/domain/dto/order"
 	"order-rest-api/internal/domain/entities/order"
+	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
+	deliDto "order-rest-api/internal/infrastructure/adapter/deliveryserv/dto"
 	"order-rest-api/internal/infrastructure/adapter/productserv"
 	prodServDTO "order-rest-api/internal/infrastructure/adapter/productserv/dto"
+	"order-rest-api/internal/infrastructure/adapter/userserv"
+	userDTO "order-rest-api/internal/infrastructure/adapter/userserv/dto"
 	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/pkg/cache/redis"
 	"order-rest-api/pkg/util/mapper"
@@ -18,28 +22,54 @@ type orderService struct {
 	orderRepo   order.Repository
 	cacheEngine *redis.CacheEngine
 	productServ productserv.Service
+	userServ    userserv.Service
+	deliServ    deliveryserv.Service
 }
 
-func NewOrderService(orderRepo order.Repository, productServ productserv.Service, cacheEngine *redis.CacheEngine) Usecase {
+func NewOrderService(orderRepo order.Repository, productServ productserv.Service,
+	cacheEngine *redis.CacheEngine, userServ userserv.Service, deliServ deliveryserv.Service) Usecase {
 	return orderService{
 		orderRepo:   orderRepo,
 		cacheEngine: cacheEngine,
 		productServ: productServ,
+		userServ:    userServ,
+		deliServ:    deliServ,
 	}
 }
 
 func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.CreateOrderRequest) (string, error) {
-	reduceReq := prodServDTO.ReduceProductRequest{
-		Items: MappingOrderItemForReduce(dto),
+
+	productReq := prodServDTO.OrderProductRequest{
+		Items: MappingOrderItemToGetInfo(dto),
+	}
+	products, err := o.productServ.GetProductOrderInfo(ctx, &productReq)
+	if err != nil {
+		return "", err
 	}
 
-	if _, err := o.productServ.ReduceProductQuantity(ctx, &reduceReq); err != nil {
-		return "", errors.NotAvailableQuantity
+	addressRequest := userDTO.GetDetailAddressRequest{
+		AddressId:           dto.Address.AddressId,
+		AuthorizationHeader: userDTO.AuthorizationHeader{BearerToken: dto.Header.BearerToken},
+	}
+	userAddress, err := o.userServ.GetAddressDetails(ctx, &addressRequest)
+	if err != nil {
+		return "", err
 	}
 
+	shippingReq := deliDto.GetShippingCostRequest{
+		SrcCode:    products.StoreProvinceCodes,
+		DestCode:   userAddress.CityOrProvinceId,
+		DeliveryId: dto.Delivery.DeliveryId,
+	}
+	shippingDetail, err := o.deliServ.CalculateShippingCost(ctx, &shippingReq)
+	if err != nil {
+		return "", err
+	}
+
+	orderCacheData := o.initOrderCacheData(products, userAddress, shippingDetail, dto)
 	tempId := uuid.NewString()
 
-	cacheData, err := json.Marshal(dto)
+	cacheData, err := json.Marshal(orderCacheData)
 	if err != nil {
 		return "", err
 	}
@@ -162,4 +192,57 @@ func (o orderService) UpdateStatusOrder(ctx context.Context, dto *orderDTO.Updat
 func (o orderService) UpdateOrder(ctx context.Context, dto *orderDTO.UpdateOrderRequest) error {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductResponse,
+	address *userDTO.GetDetailAddressResponse, deli *deliDto.GetShippingCostResponse, dto *orderDTO.CreateOrderRequest) *order.OrderCacheData {
+
+	orderCache := order.OrderCacheData{
+		Header: order.BaseHeader{dto.Header.BearerToken},
+		UserRequest: order.UserRequest{
+			UserId:   dto.UserRequest.UserId,
+			Username: dto.UserRequest.Username,
+		},
+		SubTotal:      products.TotalPrice,
+		PaymentMethod: 0,
+		Vouchers:      nil,
+		Address: order.OrderAddress{
+			AddressId:       address.Id,
+			ShippingName:    address.ContactName,
+			ShippingPhone:   address.Phone,
+			ShippingAddress: address.DetailAddress,
+		},
+		Delivery: order.Delivery{
+			DeliveryId:    deli.DeliveryId,
+			Name:          deli.DeliveryName,
+			Cost:          deli.Cost,
+			ReceivingDate: deli.ReceiveDate,
+		},
+	}
+
+	discount := 0
+	//order detail
+	var orderItems []order.OrderItemsCache
+	for index, i := range products.Products {
+		item := order.OrderItemsCache{
+			CartItemId: dto.OrderItems[index].CartItemId,
+			ProductItem: order.ProductItem{
+				ProductID:   i.ProductId,
+				ProductName: i.Name,
+				StoreID:     i.StoreId,
+				OptionID:    i.OptionId,
+				Quantity:    i.Quantity,
+				Price:       int(i.Price),
+				NetPrice:    int(i.PromotionalPrice),
+			},
+		}
+		orderItems = append(orderItems, item)
+		discount += int(i.PromotionalPrice)
+	}
+
+	orderCache.OrderItems = orderItems
+	orderCache.Discount = discount
+	orderCache.Amount = orderCache.SubTotal - orderCache.Discount
+
+	return &orderCache
 }

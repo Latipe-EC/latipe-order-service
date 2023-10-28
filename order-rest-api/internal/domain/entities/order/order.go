@@ -48,12 +48,10 @@ type Order struct {
 	Discount       int               `gorm:"not null;type:int" json:"discount"`
 	Total          int               `gorm:"not null;type:int" json:"total"`
 	Status         int               `gorm:"not null;type:int" json:"status"`
-	VoucherCode    string            `gorm:"not null;type:varchar(250)" json:"voucher_code"`
 	UpdatedAt      time.Time         `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
 	CreatedAt      time.Time         `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
 	OrderItem      []*OrderItem      `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_items"`
 	OrderStatusLog []*OrderStatusLog `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_status_logs"`
-	PaymentLog     *PaymentLog       `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"payment_log"`
 	Delivery       *DeliveryOrder    `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"delivery"`
 }
 

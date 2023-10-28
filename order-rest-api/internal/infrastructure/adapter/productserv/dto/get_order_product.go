@@ -13,20 +13,21 @@ type ValidateItems struct {
 }
 
 type OrderProductResponse struct {
-	Products   []Product `json:"products"`
-	TotalPrice int       `json:"totalPrice"`
+	Products           []Product `json:"products"`
+	TotalPrice         int       `json:"totalPrice"`
+	StoreProvinceCodes []string  `json:"storeProvinceCodes"`
 }
 
 type Product struct {
-	ProductId        string `json:"id"`
-	Name             string `json:"name"`
-	Image            string `json:"image"`
-	Code             string `json:"code"`
-	Sku              string `json:"sku"`
-	Quantity         int    `json:"quantity"`
-	Price            int    `json:"price"`
-	NameOption       string `json:"nameOption"`
-	PromotionalPrice int    `json:"promotionalPrice"`
+	ProductId        string  `json:"productId"`
+	Name             string  `json:"name"`
+	Quantity         int     `json:"quantity"`
+	Price            float64 `json:"price"`
+	PromotionalPrice float64 `json:"promotionalPrice"`
+	OptionId         string  `json:"optionId"`
+	NameOption       string  `json:"nameOption"`
+	StoreId          string  `json:"storeId"`
+	TotalPrice       float64 `json:"totalPrice"`
 }
 
 func (OrderProductRequest) URL() string {

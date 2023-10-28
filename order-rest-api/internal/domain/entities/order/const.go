@@ -8,3 +8,8 @@ const (
 	ORDER_REFUND   = 5
 	ORDER_CANCEL   = 0
 )
+
+const (
+	PAID_COD     = 1
+	PAID_VIA_3RD = 2
+)

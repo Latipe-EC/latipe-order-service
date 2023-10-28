@@ -34,7 +34,7 @@ func (mq ConsumerOrderMessage) ListenMessageQueue() {
 
 	// declaring consumer with its properties over channel opened
 	msgs, err := channel.Consume(
-		mq.config.RabbitMQ.Queue,        // queue
+		mq.config.RabbitMQ.OrderQueue,   // queue
 		mq.config.RabbitMQ.ConsumerName, // consumer
 		true,                            // auto ack
 		false,                           // exclusive

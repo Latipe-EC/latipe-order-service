@@ -3,7 +3,8 @@ package dto
 const orderProductUrl = "/api/v1/products/check-in-stock"
 
 type OrderProductRequest struct {
-	Items []ProductItem `json:"products"`
+	Items              []ProductItem `json:"products"`
+	StoreProvinceCodes []int         `json:"store_province_codes"`
 }
 
 type OrderProductResponse struct {

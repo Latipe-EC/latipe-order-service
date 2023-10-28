@@ -1,8 +1,9 @@
 package auth
 
 const (
-	USER_ID  = "user_id"
-	USERNAME = "username"
+	USER_ID      = "user_id"
+	USERNAME     = "username"
+	BEARER_TOKEN = "bearer_token"
 )
 
 const (

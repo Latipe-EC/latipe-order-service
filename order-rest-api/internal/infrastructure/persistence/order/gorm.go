@@ -16,7 +16,6 @@ func NewGormRepository(client gorm.Gorm) entity.Repository {
 		&entity.Order{},
 		&entity.OrderItem{},
 		&entity.OrderStatusLog{},
-		&entity.PaymentLog{},
 		&entity.DeliveryOrder{},
 	)
 	if err != nil {
@@ -32,7 +31,6 @@ func (g GormRepository) FindById(Id int) (*entity.Order, error) {
 
 	result := g.client.DB().Model(&entity.Order{}).
 		Preload("OrderItem").
-		Preload("PaymentLog").
 		First(&order, Id).Error
 	if result != nil {
 		return nil, result
