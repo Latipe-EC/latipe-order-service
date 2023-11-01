@@ -41,12 +41,12 @@ func (OrderStatusLog) TableName() string {
 
 type Order struct {
 	Id             int               `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
-	OrderCacheKey  string            `gorm:"not null;type:varchar(250)" json:"order_cache_key"`
+	OrderUUID      string            `gorm:"column:order_uuid;not null;type:varchar(250)" json:"order_uuid"`
 	UserId         string            `gorm:"not null;type:varchar(250)" json:"user_id"`
 	Username       string            `gorm:"not null;type:varchar(250)" json:"email"`
 	Amount         int               `gorm:"not null;type:bigint" json:"amount"`
 	Discount       int               `gorm:"not null;type:int" json:"discount"`
-	Total          int               `gorm:"not null;type:int" json:"total"`
+	SubTotal       int               `gorm:"not null;type:int" json:"sub_total"`
 	Status         int               `gorm:"not null;type:int" json:"status"`
 	VoucherCode    string            `gorm:"not null;type:varchar(250)" json:"voucher_code"`
 	UpdatedAt      time.Time         `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`

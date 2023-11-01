@@ -5,41 +5,15 @@ import (
 	"order-worker/internal/infrastructure/adapter/productserv/dto"
 )
 
-func MappingOrderItemForReduce(request *order.CreateOrderRequest) []dto.ReduceItem {
+func MappingOrderItemForReduce(request []order.OrderItemsCache) []dto.ReduceItem {
 	var items []dto.ReduceItem
-	for _, i := range request.OrderItems {
+	for _, i := range request {
 		product := dto.ReduceItem{
-			ProductId: i.ProductId,
-			OptionId:  i.OptionId,
-			Quantity:  i.Quantity,
+			ProductId: i.ProductItem.ProductID,
+			OptionId:  i.ProductItem.OptionID,
+			Quantity:  i.ProductItem.Quantity,
 		}
 		items = append(items, product)
 	}
 	return items
-}
-
-func MappingOrderItemForRollback(request *order.CreateOrderRequest) []dto.RollbackItem {
-	var items []dto.RollbackItem
-	for _, i := range request.OrderItems {
-		product := dto.RollbackItem{
-			ProductId: i.ProductId,
-			OptionId:  i.OptionId,
-			Quantity:  i.Quantity,
-		}
-		items = append(items, product)
-	}
-	return items
-}
-
-func MappingOrderItemToValidateItems(items []order.OrderItems) []dto.ProductItem {
-	var results []dto.ProductItem
-	for _, i := range items {
-		reqItem := dto.ProductItem{
-			ProductId: i.ProductId,
-			OptionId:  i.OptionId,
-			Quantity:  i.Quantity,
-		}
-		results = append(results, reqItem)
-	}
-	return results
 }

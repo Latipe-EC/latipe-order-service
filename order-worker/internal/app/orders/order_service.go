@@ -7,8 +7,6 @@ import (
 	dto "order-worker/internal/domain/dto/order"
 	"order-worker/internal/domain/entities/order"
 	"order-worker/internal/infrastructure/adapter/productserv"
-	prodServDTO "order-worker/internal/infrastructure/adapter/productserv/dto"
-	"order-worker/internal/message"
 	"order-worker/pkg/cache/redis"
 	"order-worker/pkg/util/mapper"
 )
@@ -27,25 +25,18 @@ func NewOrderService(orderRepo order.Repository, productServ productserv.Service
 	}
 }
 
-func (o orderService) RollBackQuantity(ctx context.Context, dto *dto.CreateOrderRequest) error {
-	reduceReq := prodServDTO.ReduceProductRequest{
-		Items: MappingOrderItemForReduce(dto),
-	}
-
-	if _, err := o.productServ.ReduceProductQuantity(&reduceReq); err != nil {
-		return err
-	}
-
+func (o orderService) RollBackQuantity(ctx context.Context, dto *dto.OrderCacheData) error {
 	return nil
 }
 
 func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) error {
+	//get the order data from redis
 	cacheData, err := o.cacheRepo.Get(orderCacheKey)
 	if err != nil {
 		return err
 	}
 
-	dto := new(dto.CreateOrderRequest)
+	dto := new(dto.OrderCacheData)
 	if cacheData != nil {
 		if err := json.Unmarshal(cacheData, &dto); err != nil {
 			return err
@@ -53,7 +44,7 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 	}
 
 	orderDAO := order.Order{}
-	orderDAO.OrderCacheKey = orderCacheKey
+	orderDAO.OrderUUID = orderCacheKey
 	orderDAO.Username = dto.UserRequest.Username
 	orderDAO.UserId = dto.UserRequest.UserId
 
@@ -62,27 +53,17 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 		return err
 	}
 
-	itemReq := MappingOrderItemToValidateItems(dto.OrderItems)
-	productReq := prodServDTO.OrderProductRequest{Items: itemReq}
-
-	products, err := o.productServ.GetProductOrderInfo(&productReq)
-	if err != nil {
-		return err
-	}
-
 	//create items in order
-	total := 0
 	var orderItems []*order.OrderItem
-	for _, item := range products.Products {
-		total += item.Price
+	for _, item := range dto.OrderItems {
 		i := order.OrderItem{
-			ProductID:   item.ProductId,
-			ProductName: item.Name,
-			StoreID:     item.StoreId,
-			OptionID:    item.OptionId,
-			Quantity:    item.Quantity,
-			Price:       item.Price,
-			NetPrice:    item.PromotionalPrice,
+			ProductID:   item.ProductItem.ProductID,
+			ProductName: item.ProductItem.ProductName,
+			StoreID:     item.ProductItem.StoreID,
+			OptionID:    item.ProductItem.OptionID,
+			Quantity:    item.ProductItem.Quantity,
+			Price:       item.ProductItem.Price,
+			NetPrice:    item.ProductItem.NetPrice,
 			Order:       &orderDAO,
 		}
 		orderItems = append(orderItems, &i)
@@ -90,9 +71,9 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 	orderDAO.OrderItem = orderItems
 
 	//calculate order price
-	orderDAO.Total = total
-	orderDAO.Amount = products.TotalPrice
-	orderDAO.Discount = total - products.TotalPrice
+	orderDAO.SubTotal = dto.SubTotal
+	orderDAO.Amount = dto.Amount
+	orderDAO.Discount = dto.Discount
 
 	//create log
 	var logs []*order.OrderStatusLog
@@ -123,15 +104,7 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 
 	err = o.orderRepo.Save(&orderDAO)
 	if err != nil {
-		reduceReq := prodServDTO.RollbackQuantityRequest{
-			Items: MappingOrderItemForRollback(dto),
-		}
-
-		if _, err := o.productServ.RollBackQuantityOrder(&reduceReq); err != nil {
-			log.Printf("[%s] Rollback product quantity was failed : %v", "ERROR", err)
-			return err
-		}
-
+		//handle rollback
 		log.Printf("[%s] The order created failed : %s", "ERROR", err)
 		return err
 	}
@@ -156,13 +129,13 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 		}
 	}
 
-	if len(cartItemList) > 0 {
+	/*if len(cartItemList) > 0 {
 		err := message.SendCartServiceMessage(cartItemList)
 		if err != nil {
 			log.Printf("[%s] sending message to cart queue was failed : %s", "ERROR", err)
 			return err
 		}
-	}
+	}*/
 
 	return nil
 }

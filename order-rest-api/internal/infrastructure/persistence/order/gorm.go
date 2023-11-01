@@ -67,6 +67,17 @@ func (g GormRepository) FindByUserId(userId int, query *pagable.Query) ([]entity
 	return orders, nil
 }
 
+func (g GormRepository) FindOrderByUserAndProduct(userId string, productId string) ([]entity.Order, error) {
+	var orders []entity.Order
+	err := g.client.DB().Raw("select * from orders inner join order_items on orders.id = order_items.order_id "+
+		"where orders.user_id= ? and order_items.product_id = ?", userId, productId).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, err
+}
+
 func (g GormRepository) FindOrderLogByOrderId(orderId int) ([]entity.OrderStatusLog, error) {
 	var orderStatus []entity.OrderStatusLog
 	result := g.client.DB().Model(&entity.OrderStatusLog{}).

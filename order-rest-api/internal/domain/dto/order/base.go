@@ -5,6 +5,7 @@ type BaseHeader struct {
 }
 
 type OrderResponse struct {
+	OrderKey      string       `json:"order_key"`
 	Amount        int          `json:"amount"`
 	Discount      int          `json:"discount"`
 	Total         int          `json:"total"`

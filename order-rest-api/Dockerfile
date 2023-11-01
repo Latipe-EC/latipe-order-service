@@ -1,20 +1,14 @@
-FROM ubuntu:latest
-FROM golang:1.20
-LABEL service-owner="Latipe"
-
-
-ENV GO111MODULE=on
-  CGO_ENABLED=0
-
+FROM golang:1.20-alpine
 WORKDIR /app
+COPY . .
 
-COPY go.mod go.sum ./
 RUN go mod download
+RUN go install github.com/google/wire/cmd/wire@latest
 
-COPY *.go ./
+RUN cd internal/ && wire
+RUN cd ../
 
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/main ./cmd/main.go
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o apiserver ./cmd/main.go
-
-
-CMD ["./apiserver"]
+EXPOSE 5005
+ENTRYPOINT ["/out/main"]

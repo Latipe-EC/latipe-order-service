@@ -30,4 +30,9 @@ func (o orderRouter) Init(root *fiber.Router) {
 		orderRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
 		orderRouter.Patch("/:id/status", o.middleware.Authentication.RequiredAuthentication(), o.handler.CreateOrder)
 	}
+	products := orderRouter.Group("/products")
+	{
+		products.Post("/purchased", o.middleware.Authentication.RequiredAuthentication(), o.handler.CheckOrderOfUser)
+	}
+
 }

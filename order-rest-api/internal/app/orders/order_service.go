@@ -37,14 +37,14 @@ func NewOrderService(orderRepo order.Repository, productServ productserv.Service
 	}
 }
 
-func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.CreateOrderRequest) (string, error) {
+func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.CreateOrderRequest) (*orderDTO.CreateOrderResponse, error) {
 
 	productReq := prodServDTO.OrderProductRequest{
 		Items: MappingOrderItemToGetInfo(dto),
 	}
 	products, err := o.productServ.GetProductOrderInfo(ctx, &productReq)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	addressRequest := userDTO.GetDetailAddressRequest{
@@ -53,7 +53,7 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 	}
 	userAddress, err := o.userServ.GetAddressDetails(ctx, &addressRequest)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	shippingReq := deliDto.GetShippingCostRequest{
@@ -63,7 +63,7 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 	}
 	shippingDetail, err := o.deliServ.CalculateShippingCost(ctx, &shippingReq)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	orderCacheData := o.initOrderCacheData(products, userAddress, shippingDetail, dto)
@@ -71,13 +71,26 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 
 	cacheData, err := json.Marshal(orderCacheData)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if err := o.cacheEngine.Set(tempId, cacheData); err != nil {
-		return "", err
+		return nil, err
 	}
-	return tempId, nil
+
+	data := orderDTO.CreateOrderResponse{
+		UserOrder: orderDTO.UserRequest{
+			UserId:   dto.UserRequest.UserId,
+			Username: dto.UserRequest.Username,
+		},
+		OrderKey:      tempId,
+		Amount:        orderCacheData.Amount,
+		Discount:      orderCacheData.Discount,
+		SubTotal:      orderCacheData.SubTotal,
+		PaymentMethod: orderCacheData.PaymentMethod,
+	}
+
+	return &data, nil
 }
 
 func (o orderService) GetOrderById(ctx context.Context, dto *orderDTO.GetOrderRequest) (*orderDTO.GetOrderResponse, error) {
@@ -245,4 +258,22 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 	orderCache.Amount = orderCache.SubTotal - orderCache.Discount
 
 	return &orderCache
+}
+
+func (o orderService) CheckProductPurchased(ctx context.Context, dto *orderDTO.CheckUserOrderRequest) (*orderDTO.CheckUserOrderResponse, error) {
+	orders, err := o.orderRepo.FindOrderByUserAndProduct(dto.UserId, dto.ProductId)
+	if err != nil {
+		return nil, err
+	}
+	data := orderDTO.CheckUserOrderResponse{}
+
+	if len(orders) > 0 {
+		var ordersKeys []string
+		for _, i := range orders {
+			ordersKeys = append(ordersKeys, i.OrderUUID)
+		}
+		data.Orders = ordersKeys
+	}
+
+	return &data, err
 }

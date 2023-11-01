@@ -20,6 +20,7 @@ type OrderApiHandler interface {
 	UpdateOrderStatus(ctx *fiber.Ctx) error
 	ListOfOrder(ctx *fiber.Ctx) error
 	GetOrderById(ctx *fiber.Ctx) error
+	CheckOrderOfUser(ctx *fiber.Ctx) error
 }
 
 type orderApiHandler struct {
@@ -64,21 +65,17 @@ func (o orderApiHandler) CreateOrder(ctx *fiber.Ctx) error {
 	bodyReq.UserRequest.UserId = userId
 	bodyReq.UserRequest.Username = username
 
-	orderKey, err := o.orderUsecase.ProcessCacheOrder(context, &bodyReq)
+	dataResp, err := o.orderUsecase.ProcessCacheOrder(context, &bodyReq)
 	if err != nil {
 		return err
 	}
 
-	if err := message.SendMessage(orderKey); err != nil {
+	if err := message.SendMessage(dataResp.OrderKey); err != nil {
 		resp := responses.DefaultError
 		resp.Status = 500
 		resp.Message = "Fail"
 		return resp.JSON(ctx)
 	}
-
-	dataResp := make(map[string]string)
-	dataResp["order_key"] = orderKey
-	dataResp["message"] = "The order was created successful"
 
 	resp := responses.DefaultSuccess
 	resp.Data = dataResp
@@ -121,6 +118,38 @@ func (o orderApiHandler) GetOrderById(ctx *fiber.Ctx) error {
 
 	if err := ctx.ParamsParser(req); err != nil {
 		return errors.ErrInternalServer
+	}
+
+	result, err := o.orderUsecase.GetOrderById(context, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return errors.ErrNotFound
+		}
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+	return resp.JSON(ctx)
+}
+
+func (o orderApiHandler) CheckOrderOfUser(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+	req := new(dto.GetOrderRequest)
+
+	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
+	if userId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	bearerToken := fmt.Sprintf("%v", ctx.Locals(auth.BEARER_TOKEN))
+	if bearerToken == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
 	}
 
 	result, err := o.orderUsecase.GetOrderById(context, req)

@@ -1,14 +1,22 @@
 package order
 
 type CreateOrderRequest struct {
-	Header      BaseHeader
-	UserRequest UserRequest
-
+	Header        BaseHeader
+	UserRequest   UserRequest
 	PaymentMethod int          `json:"payment_method" validate:"required"`
 	VoucherCode   []Voucher    `json:"vouchers"`
 	Address       OrderAddress `json:"address" validate:"required"`
 	Delivery      Delivery     `json:"delivery" validate:"required"`
 	OrderItems    []OrderItems `json:"order_items" validate:"required"`
+}
+
+type CreateOrderResponse struct {
+	UserOrder     UserRequest `json:"user_order"`
+	OrderKey      string      `json:"order_key"`
+	Amount        int         `json:"amount"`
+	Discount      int         `json:"discount"`
+	SubTotal      int         `json:"sub_total" `
+	PaymentMethod int         `json:"payment_method"`
 }
 
 type UserRequest struct {

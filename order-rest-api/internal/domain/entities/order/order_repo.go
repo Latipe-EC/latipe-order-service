@@ -9,6 +9,7 @@ type Repository interface {
 	FindAll(query *pagable.Query) ([]Order, error)
 	FindByUserId(userId int, query *pagable.Query) ([]Order, error)
 	FindOrderLogByOrderId(orderId int) ([]OrderStatusLog, error)
+	FindOrderByUserAndProduct(userId string, productId string) ([]Order, error)
 	Save(order *Order) error
 	Update(order Order) error
 	Total(query *pagable.Query) (int, error)
