@@ -3,6 +3,7 @@ package orders
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	dto "order-worker/internal/domain/dto/order"
 	"order-worker/internal/domain/entities/order"
@@ -101,6 +102,12 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 		Order:           &orderDAO,
 	}
 	orderDAO.Delivery = &deli
+
+	vouchers := ""
+	for _, i := range dto.Vouchers {
+		vouchers += fmt.Sprintf("%v;", i.Code)
+	}
+	orderDAO.VoucherCode = vouchers
 
 	err = o.orderRepo.Save(&orderDAO)
 	if err != nil {

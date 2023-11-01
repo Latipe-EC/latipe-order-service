@@ -19,7 +19,7 @@ type OrderApiHandler interface {
 	CreateOrder(ctx *fiber.Ctx) error
 	UpdateOrderStatus(ctx *fiber.Ctx) error
 	ListOfOrder(ctx *fiber.Ctx) error
-	GetOrderById(ctx *fiber.Ctx) error
+	GetOrderByUUID(ctx *fiber.Ctx) error
 	CheckOrderOfUser(ctx *fiber.Ctx) error
 }
 
@@ -112,15 +112,15 @@ func (o orderApiHandler) ListOfOrder(ctx *fiber.Ctx) error {
 	return resp.JSON(ctx)
 }
 
-func (o orderApiHandler) GetOrderById(ctx *fiber.Ctx) error {
+func (o orderApiHandler) GetOrderByUUID(ctx *fiber.Ctx) error {
 	context := ctx.Context()
-	req := new(dto.GetOrderRequest)
+	req := new(dto.GetOrderByUUIDRequest)
 
 	if err := ctx.ParamsParser(req); err != nil {
 		return errors.ErrInternalServer
 	}
 
-	result, err := o.orderUsecase.GetOrderById(context, req)
+	result, err := o.orderUsecase.GetOrderByUUID(context, req)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -136,23 +136,22 @@ func (o orderApiHandler) GetOrderById(ctx *fiber.Ctx) error {
 
 func (o orderApiHandler) CheckOrderOfUser(ctx *fiber.Ctx) error {
 	context := ctx.Context()
-	req := new(dto.GetOrderRequest)
+	req := dto.CheckUserOrderRequest{}
 
 	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
 	if userId == "" {
 		return errors.ErrUnauthenticated
 	}
-
-	bearerToken := fmt.Sprintf("%v", ctx.Locals(auth.BEARER_TOKEN))
-	if bearerToken == "" {
-		return errors.ErrUnauthenticated
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
+	req.UserId = userId
+	if err := ctx.QueryParser(&req); err != nil {
 		return errors.ErrInternalServer.WithInternalError(err)
 	}
 
-	result, err := o.orderUsecase.GetOrderById(context, req)
+	if err := valid.GetValidator().Validate(&req); err != nil {
+		return errors.ErrBadRequest
+	}
+
+	result, err := o.orderUsecase.CheckProductPurchased(context, &req)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):

@@ -6,6 +6,7 @@ import (
 
 type Repository interface {
 	FindById(Id int) (*Order, error)
+	FindByUUID(uuid string) (*Order, error)
 	FindAll(query *pagable.Query) ([]Order, error)
 	FindByUserId(userId int, query *pagable.Query) ([]Order, error)
 	FindOrderLogByOrderId(orderId int) ([]OrderStatusLog, error)

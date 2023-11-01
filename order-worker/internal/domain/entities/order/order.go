@@ -53,10 +53,9 @@ type Order struct {
 	CreatedAt      time.Time         `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
 	OrderItem      []*OrderItem      `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_items"`
 	OrderStatusLog []*OrderStatusLog `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_status_logs"`
-	PaymentLog     *PaymentLog       `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"payment_log"`
 	Delivery       *DeliveryOrder    `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"delivery"`
 }
 
 func (Order) TableName() string {
-	return "order"
+	return "orders"
 }

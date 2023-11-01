@@ -31,7 +31,22 @@ func (g GormRepository) FindById(Id int) (*entity.Order, error) {
 
 	result := g.client.DB().Model(&entity.Order{}).
 		Preload("OrderItem").
+		Preload("Delivery").
 		First(&order, Id).Error
+	if result != nil {
+		return nil, result
+	}
+
+	return &order, nil
+}
+
+func (g GormRepository) FindByUUID(uuid string) (*entity.Order, error) {
+	order := entity.Order{}
+
+	result := g.client.DB().Model(&entity.Order{}).
+		Preload("OrderItem").
+		Preload("Delivery").
+		First(&order, "order_uuid = ?", uuid).Error
 	if result != nil {
 		return nil, result
 	}
@@ -43,6 +58,8 @@ func (g GormRepository) FindAll(query *pagable.Query) ([]entity.Order, error) {
 	var orders []entity.Order
 	whereState := query.ORMConditions().(string)
 	result := g.client.DB().Model(&entity.Order{}).
+		Preload("OrderItem").
+		Preload("Delivery").
 		Where(whereState).
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error
@@ -56,7 +73,7 @@ func (g GormRepository) FindAll(query *pagable.Query) ([]entity.Order, error) {
 func (g GormRepository) FindByUserId(userId int, query *pagable.Query) ([]entity.Order, error) {
 	var orders []entity.Order
 	result := g.client.DB().Model(&entity.Order{}).
-		Where("order.user_id", userId).
+		Where("orders.user_id", userId).
 		Order("create_at desc").
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error

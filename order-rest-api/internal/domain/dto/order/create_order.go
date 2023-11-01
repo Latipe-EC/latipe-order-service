@@ -30,7 +30,7 @@ type Voucher struct {
 }
 
 type OrderItems struct {
-	CartItemId string `json:"cart_item_id"`
+	CartItemId string `json:"cart_item_id,omitempty"`
 	ProductId  string `json:"product_id" validate:"required"`
 	OptionId   string `json:"option_id"`
 	Quantity   int    `json:"quantity" validate:"required"`
@@ -40,6 +40,7 @@ type OrderItems struct {
 type OrderAddress struct {
 	AddressId string `json:"address_id" validate:"required"`
 }
+
 type Delivery struct {
 	DeliveryId string `json:"delivery_id" validate:"required"`
 }

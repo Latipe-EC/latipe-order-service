@@ -93,10 +93,27 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 	return &data, nil
 }
 
-func (o orderService) GetOrderById(ctx context.Context, dto *orderDTO.GetOrderRequest) (*orderDTO.GetOrderResponse, error) {
+func (o orderService) GetOrderById(ctx context.Context, dto *orderDTO.GetOrderByIDRequest) (*orderDTO.GetOrderResponse, error) {
 	orderResp := orderDTO.OrderResponse{}
 
 	orderDAO, err := o.orderRepo.FindById(dto.OrderId)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = mapper.BindingStruct(orderDAO, &orderResp); err != nil {
+		return nil, err
+	}
+
+	resp := orderDTO.GetOrderResponse{Order: orderResp}
+
+	return &resp, err
+}
+
+func (o orderService) GetOrderByUUID(ctx context.Context, dto *orderDTO.GetOrderByUUIDRequest) (*orderDTO.GetOrderResponse, error) {
+	orderResp := orderDTO.OrderResponse{}
+
+	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderId)
 	if err != nil {
 		return nil, err
 	}
@@ -272,6 +289,7 @@ func (o orderService) CheckProductPurchased(ctx context.Context, dto *orderDTO.C
 		for _, i := range orders {
 			ordersKeys = append(ordersKeys, i.OrderUUID)
 		}
+		data.IsPurchased = true
 		data.Orders = ordersKeys
 	}
 

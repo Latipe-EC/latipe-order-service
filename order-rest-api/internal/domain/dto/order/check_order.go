@@ -2,8 +2,8 @@ package order
 
 type CheckUserOrderRequest struct {
 	Header    BaseHeader
-	ProductId string `json:"product_id"`
-	UserId    string
+	ProductId string `query:"product_id" validate:"required"`
+	UserId    string `validate:"required"`
 }
 
 type CheckUserOrderResponse struct {
