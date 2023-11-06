@@ -39,9 +39,9 @@ Cache:
 RabbitMQ:
   Connection: amqp://guest:guest@localhost:5672/
   Exchange:
-  Queue: order_message
-  ConsumerName: create_order_services
-  ProducerName: create_order_services
+  Queue: order_created_event
+  ConsumerName: create_orders_service
+  ProducerName: create_orders_service
 
 AdapterService:
   AuthService:
@@ -58,4 +58,7 @@ AdapterService:
     InternalKey:
   DeliveryService:
     BaseURL: http://localhost:5005
+    InternalKey:
+  PromotionService:
+    BaseURL: http://localhost:5010
     InternalKey:

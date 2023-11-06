@@ -7,7 +7,6 @@ import (
 	"order-rest-api/internal/app/orders"
 	"order-rest-api/internal/common/errors"
 	dto "order-rest-api/internal/domain/dto/order"
-	"order-rest-api/internal/message"
 	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/internal/responses"
 	"order-rest-api/pkg/util/pagable"
@@ -68,13 +67,6 @@ func (o orderApiHandler) CreateOrder(ctx *fiber.Ctx) error {
 	dataResp, err := o.orderUsecase.ProcessCacheOrder(context, &bodyReq)
 	if err != nil {
 		return err
-	}
-
-	if err := message.SendMessage(dataResp.OrderKey); err != nil {
-		resp := responses.DefaultError
-		resp.Status = 500
-		resp.Message = "Fail"
-		return resp.JSON(ctx)
 	}
 
 	resp := responses.DefaultSuccess

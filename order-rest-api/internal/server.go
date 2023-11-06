@@ -16,6 +16,7 @@ import (
 	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
 	"order-rest-api/internal/infrastructure/adapter/productserv"
 	"order-rest-api/internal/infrastructure/adapter/userserv"
+	voucherserv "order-rest-api/internal/infrastructure/adapter/vouchersev"
 	"order-rest-api/internal/infrastructure/persistence"
 	"order-rest-api/internal/middleware"
 	router2 "order-rest-api/internal/router"
@@ -41,6 +42,7 @@ func New() (*Server, error) {
 		app.Set,
 		middleware.Set,
 		cache.Set,
+		voucherserv.Set,
 	)))
 }
 

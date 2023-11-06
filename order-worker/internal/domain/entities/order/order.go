@@ -45,6 +45,7 @@ type Order struct {
 	UserId         string            `gorm:"not null;type:varchar(250)" json:"user_id"`
 	Username       string            `gorm:"not null;type:varchar(250)" json:"email"`
 	Amount         int               `gorm:"not null;type:bigint" json:"amount"`
+	ShippingCost   int               `gorm:"not null;type:int" json:"shipping_cost"`
 	Discount       int               `gorm:"not null;type:int" json:"discount"`
 	SubTotal       int               `gorm:"not null;type:int" json:"sub_total"`
 	Status         int               `gorm:"not null;type:int" json:"status"`

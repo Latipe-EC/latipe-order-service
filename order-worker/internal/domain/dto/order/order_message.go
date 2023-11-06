@@ -1,17 +1,15 @@
 package order
 
-type BaseHeader struct {
-	BearerToken string `reqHeader:"Authorization"`
-}
-
-type OrderCacheData struct {
+type OrderMessage struct {
 	Header        BaseHeader
 	UserRequest   UserRequest       `json:"user_request"`
+	OrderUUID     string            `json:"order_uuid"`
 	Amount        int               `json:"amount" validate:"required"`
+	ShippingCost  int               ` json:"shipping_cost"`
 	Discount      int               `json:"discount" validate:"required"`
 	SubTotal      int               `json:"sub_total" validate:"required"`
 	PaymentMethod int               `json:"payment_method" validate:"required"`
-	Vouchers      []Voucher         `json:"vouchers"`
+	Vouchers      []string          `json:"vouchers"`
 	Address       OrderAddress      `json:"address" validate:"required"`
 	Delivery      Delivery          `json:"delivery" validate:"required"`
 	OrderItems    []OrderItemsCache `json:"order_items" validate:"required"`

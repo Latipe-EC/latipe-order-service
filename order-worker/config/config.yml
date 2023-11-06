@@ -40,11 +40,10 @@ Cache:
 RabbitMQ:
   Connection: amqp://guest:guest@localhost:5672/
   Exchange:
-  OrderQueue: order_message
-  EmailQueue: order_message
-  CartQueue: order_message
-  ConsumerName: create_order_services
-  ProducerName: create_order_services
+  OrderQueue: order_created_event
+  EmailQueue: email_notify_queue
+  ConsumerName: create_orders_service
+  ProducerName: create_orders_service
 
 AdapterService:
   UserService:

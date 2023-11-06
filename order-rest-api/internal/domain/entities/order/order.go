@@ -46,6 +46,7 @@ type Order struct {
 	Username       string            `gorm:"not null;type:varchar(250)" json:"email"`
 	Amount         int               `gorm:"not null;type:bigint" json:"amount"`
 	Discount       int               `gorm:"not null;type:int" json:"discount"`
+	ShippingCost   int               `gorm:"not null;type:int" json:"shipping_cost"`
 	SubTotal       int               `gorm:"not null;type:int" json:"sub_total"`
 	Status         int               `gorm:"not null;type:int" json:"status"`
 	UpdatedAt      time.Time         `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`

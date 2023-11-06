@@ -2,7 +2,6 @@ package orders
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	dto "order-worker/internal/domain/dto/order"
@@ -26,37 +25,24 @@ func NewOrderService(orderRepo order.Repository, productServ productserv.Service
 	}
 }
 
-func (o orderService) RollBackQuantity(ctx context.Context, dto *dto.OrderCacheData) error {
+func (o orderService) RollBackQuantity(ctx context.Context, dto *dto.OrderMessage) error {
 	return nil
 }
 
-func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) error {
-	//get the order data from redis
-	cacheData, err := o.cacheRepo.Get(orderCacheKey)
-	if err != nil {
-		return err
-	}
-
-	dto := new(dto.OrderCacheData)
-	if cacheData != nil {
-		if err := json.Unmarshal(cacheData, &dto); err != nil {
-			return err
-		}
-	}
-
+func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage) error {
 	orderDAO := order.Order{}
-	orderDAO.OrderUUID = orderCacheKey
-	orderDAO.Username = dto.UserRequest.Username
-	orderDAO.UserId = dto.UserRequest.UserId
+	orderDAO.OrderUUID = message.OrderUUID
+	orderDAO.Username = message.UserRequest.Username
+	orderDAO.UserId = message.UserRequest.UserId
 
-	if err := mapper.BindingStruct(dto, &orderDAO); err != nil {
+	if err := mapper.BindingStruct(message, &orderDAO); err != nil {
 		log.Printf("[%s] Mapping value from dto to dao failed cause: %s", "ERROR", err)
 		return err
 	}
 
 	//create items in order
 	var orderItems []*order.OrderItem
-	for _, item := range dto.OrderItems {
+	for _, item := range message.OrderItems {
 		i := order.OrderItem{
 			ProductID:   item.ProductItem.ProductID,
 			ProductName: item.ProductItem.ProductName,
@@ -72,9 +58,9 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 	orderDAO.OrderItem = orderItems
 
 	//calculate order price
-	orderDAO.SubTotal = dto.SubTotal
-	orderDAO.Amount = dto.Amount
-	orderDAO.Discount = dto.Discount
+	orderDAO.SubTotal = message.SubTotal
+	orderDAO.Amount = message.Amount
+	orderDAO.Discount = message.Discount
 
 	//create log
 	var logs []*order.OrderStatusLog
@@ -86,26 +72,26 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 	orderDAO.OrderStatusLog = append(logs, &orderLog)
 
 	//create delivery
-	recvTime, err := order.ParseStringToDate(dto.Delivery.ReceivingDate)
+	recvTime, err := order.ParseStringToDate(message.Delivery.ReceivingDate)
 	if err != nil {
 		return err
 	}
 	deli := order.DeliveryOrder{
-		DeliveryId:      dto.Delivery.DeliveryId,
-		DeliveryName:    dto.Delivery.Name,
-		Cost:            dto.Delivery.Cost,
-		AddressId:       dto.Address.AddressId,
-		ShippingName:    dto.Address.ShippingName,
-		ShippingPhone:   dto.Address.ShippingPhone,
-		ShippingAddress: dto.Address.ShippingAddress,
+		DeliveryId:      message.Delivery.DeliveryId,
+		DeliveryName:    message.Delivery.Name,
+		Cost:            message.Delivery.Cost,
+		AddressId:       message.Address.AddressId,
+		ShippingName:    message.Address.ShippingName,
+		ShippingPhone:   message.Address.ShippingPhone,
+		ShippingAddress: message.Address.ShippingAddress,
 		ReceivingDate:   *recvTime,
 		Order:           &orderDAO,
 	}
 	orderDAO.Delivery = &deli
 
 	vouchers := ""
-	for _, i := range dto.Vouchers {
-		vouchers += fmt.Sprintf("%v;", i.Code)
+	for _, i := range message.Vouchers {
+		vouchers += fmt.Sprintf("%v;", i)
 	}
 	orderDAO.VoucherCode = vouchers
 
@@ -115,34 +101,6 @@ func (o orderService) CreateOrder(ctx context.Context, orderCacheKey string) err
 		log.Printf("[%s] The order created failed : %s", "ERROR", err)
 		return err
 	}
-
-	//handle cache value
-	switch dto.PaymentMethod {
-	case order.PAYMENT_COD:
-		if err := o.cacheRepo.Delete(orderCacheKey); err != nil {
-			return err
-		}
-	case order.PAYMENT_VIA_PAYPAL:
-		if err := o.cacheRepo.Expire(orderCacheKey); err != nil {
-			return err
-		}
-	}
-
-	//reset cart-items
-	var cartItemList []string
-	for _, i := range dto.OrderItems {
-		if i.CartItemId != "" {
-			cartItemList = append(cartItemList, i.CartItemId)
-		}
-	}
-
-	/*if len(cartItemList) > 0 {
-		err := message.SendCartServiceMessage(cartItemList)
-		if err != nil {
-			log.Printf("[%s] sending message to cart queue was failed : %s", "ERROR", err)
-			return err
-		}
-	}*/
 
 	return nil
 }

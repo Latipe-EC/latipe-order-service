@@ -6,6 +6,8 @@ import (
 	"log"
 	"order-worker/config"
 	"order-worker/internal/app/orders"
+	emailDTO "order-worker/internal/domain/dto"
+	dto "order-worker/internal/domain/dto/order"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -65,15 +67,45 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var orderCacheKey string
-	if err := json.Unmarshal(msg.Body, &orderCacheKey); err != nil {
+	message := dto.OrderMessage{}
+
+	if err := json.Unmarshal(msg.Body, &message); err != nil {
 		log.Printf("[%s] Parse message to order failed cause: %s", "ERROR", err)
 		return err
 	}
 
-	err := mq.orderUsecase.CreateOrder(ctx, orderCacheKey)
+	err := mq.orderUsecase.CreateOrder(ctx, &message)
 	if err != nil {
 		return err
+	}
+
+	//send notify email
+	email := emailDTO.EmailRequest{
+		EmailRecipient: message.UserRequest.Username,
+		Name:           message.Address.ShippingName,
+		OrderId:        message.OrderUUID,
+		Url:            "http://www.google.com",
+		Type:           emailDTO.ORDER,
+	}
+	err = SendEmailMessage(email)
+	if err != nil {
+		log.Printf("[%s] sending message to email queue was failed : %s", "ERROR", err)
+		return err
+	}
+
+	//delete cart
+	var cartItemList []string
+	for _, i := range message.OrderItems {
+		if i.CartItemId != "" {
+			cartItemList = append(cartItemList, i.CartItemId)
+		}
+	}
+	if len(cartItemList) > 0 {
+		err := SendCartServiceMessage(cartItemList)
+		if err != nil {
+			log.Printf("[%s] sending message to cart queue was failed : %s", "ERROR", err)
+			return err
+		}
 	}
 
 	log.Printf("[%s] The order created successfully: %s", "INFO", msg.RoutingKey)

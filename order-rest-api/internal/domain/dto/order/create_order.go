@@ -4,7 +4,7 @@ type CreateOrderRequest struct {
 	Header        BaseHeader
 	UserRequest   UserRequest
 	PaymentMethod int          `json:"payment_method" validate:"required"`
-	VoucherCode   []Voucher    `json:"vouchers"`
+	VoucherCode   []string     `json:"vouchers"`
 	Address       OrderAddress `json:"address" validate:"required"`
 	Delivery      Delivery     `json:"delivery" validate:"required"`
 	OrderItems    []OrderItems `json:"order_items" validate:"required"`
@@ -22,11 +22,6 @@ type CreateOrderResponse struct {
 type UserRequest struct {
 	UserId   string `json:"user_id"`
 	Username string `json:"username"`
-}
-
-type Voucher struct {
-	Code string `json:"code"`
-	Type int    `json:"type"`
 }
 
 type OrderItems struct {

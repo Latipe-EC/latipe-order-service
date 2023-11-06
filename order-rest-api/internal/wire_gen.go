@@ -18,6 +18,7 @@ import (
 	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
 	"order-rest-api/internal/infrastructure/adapter/productserv"
 	"order-rest-api/internal/infrastructure/adapter/userserv"
+	"order-rest-api/internal/infrastructure/adapter/vouchersev"
 	"order-rest-api/internal/infrastructure/persistence/db"
 	"order-rest-api/internal/infrastructure/persistence/order"
 	"order-rest-api/internal/middleware"
@@ -42,7 +43,8 @@ func New() (*Server, error) {
 	}
 	userservService := userserv.NewUserServHttpAdapter(configConfig)
 	deliveryservService := deliveryserv.NewDeliServHttpAdapter(configConfig)
-	usecase := orders.NewOrderService(repository, service, cacheEngine, userservService, deliveryservService)
+	voucherservService := voucherserv.NewUserServHttpAdapter(configConfig)
+	usecase := orders.NewOrderService(repository, service, cacheEngine, userservService, deliveryservService, voucherservService)
 	orderApiHandler := order2.NewOrderHandler(usecase)
 	authservService := authserv.NewAuthServHttpAdapter(configConfig)
 	authenticationMiddleware := auth.NewAuthMiddleware(authservService)

@@ -1,13 +1,19 @@
 package order
 
-type OrderCacheData struct {
+type BaseHeader struct {
+	BearerToken string `reqHeader:"Authorization"`
+}
+
+type OrderMessage struct {
 	Header        BaseHeader
 	UserRequest   UserRequest       `json:"user_request"`
+	OrderUUID     string            `json:"order_uuid"`
 	Amount        int               `json:"amount" validate:"required"`
+	ShippingCost  int               ` json:"shipping_cost"`
 	Discount      int               `json:"discount" validate:"required"`
 	SubTotal      int               `json:"sub_total" validate:"required"`
 	PaymentMethod int               `json:"payment_method" validate:"required"`
-	Vouchers      []Voucher         `json:"vouchers"`
+	Vouchers      []string          `json:"vouchers"`
 	Address       OrderAddress      `json:"address" validate:"required"`
 	Delivery      Delivery          `json:"delivery" validate:"required"`
 	OrderItems    []OrderItemsCache `json:"order_items" validate:"required"`
@@ -17,25 +23,19 @@ type UserRequest struct {
 	UserId   string `json:"user_id"`
 	Username string `json:"username"`
 }
-
-type Voucher struct {
-	Code string `json:"code"`
-	Type int    `json:"type"`
-}
-
 type OrderItemsCache struct {
 	CartItemId  string      `json:"cart_item_id"`
 	ProductItem ProductItem `json:"product_item"`
 }
 
 type ProductItem struct {
-	ProductID   string `json:"product_id"`
-	ProductName string `json:"product_name"`
-	StoreID     string `json:"store_id"`
-	OptionID    string `json:"option_id" `
-	Quantity    int    `json:"quantity"`
-	Price       int    `json:"price"`
-	NetPrice    int    `json:"net_price"`
+	ProductID   string `gorm:"not null;type:varchar(255)" json:"product_id"`
+	ProductName string `gorm:"not null;type:varchar(255)" json:"product_name"`
+	StoreID     string `gorm:"not null;type:varchar(255)" json:"store_id"`
+	OptionID    string `gorm:"not null;type:varchar(250)" json:"option_id" `
+	Quantity    int    `gorm:"not null;type:int" json:"quantity"`
+	Price       int    `gorm:"not null;type:bigint" json:"price"`
+	NetPrice    int    `gorm:"not null;type:bigint" json:"net_price"`
 }
 
 type OrderAddress struct {

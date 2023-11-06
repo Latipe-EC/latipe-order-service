@@ -2,7 +2,6 @@ package orders
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/google/uuid"
 	"order-rest-api/internal/common/errors"
 	orderDTO "order-rest-api/internal/domain/dto/order"
@@ -13,6 +12,9 @@ import (
 	prodServDTO "order-rest-api/internal/infrastructure/adapter/productserv/dto"
 	"order-rest-api/internal/infrastructure/adapter/userserv"
 	userDTO "order-rest-api/internal/infrastructure/adapter/userserv/dto"
+	voucherserv "order-rest-api/internal/infrastructure/adapter/vouchersev"
+	voucherDTO "order-rest-api/internal/infrastructure/adapter/vouchersev/dto"
+	"order-rest-api/internal/message"
 	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/pkg/cache/redis"
 	"order-rest-api/pkg/util/mapper"
@@ -24,16 +26,19 @@ type orderService struct {
 	productServ productserv.Service
 	userServ    userserv.Service
 	deliServ    deliveryserv.Service
+	voucherSer  voucherserv.Service
 }
 
 func NewOrderService(orderRepo order.Repository, productServ productserv.Service,
-	cacheEngine *redis.CacheEngine, userServ userserv.Service, deliServ deliveryserv.Service) Usecase {
+	cacheEngine *redis.CacheEngine, userServ userserv.Service, deliServ deliveryserv.Service,
+	voucherServ voucherserv.Service) Usecase {
 	return orderService{
 		orderRepo:   orderRepo,
 		cacheEngine: cacheEngine,
 		productServ: productServ,
 		userServ:    userServ,
 		deliServ:    deliServ,
+		voucherSer:  voucherServ,
 	}
 }
 
@@ -66,15 +71,46 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 		return nil, err
 	}
 
-	orderCacheData := o.initOrderCacheData(products, userAddress, shippingDetail, dto)
-	tempId := uuid.NewString()
+	orderData := o.initOrderCacheData(products, userAddress, shippingDetail, dto)
 
-	cacheData, err := json.Marshal(orderCacheData)
-	if err != nil {
-		return nil, err
+	if len(dto.VoucherCode) > 0 {
+		voucherReq := voucherDTO.ApplyVoucherRequest{}
+		voucherReq.Vouchers = dto.VoucherCode
+		voucherReq.AuthorizationHeader.BearerToken = dto.Header.BearerToken
+
+		voucherDetail, err := o.voucherSer.ApplyVoucher(ctx, &voucherReq)
+		if err != nil {
+			return nil, err
+		}
+
+		if voucherDetail.IsSuccess == true {
+
+			for _, v := range voucherDetail.Items {
+				switch v.VoucherType {
+				case voucherDTO.FREE_SHIP:
+					if shippingDetail.Cost < v.DiscountValue {
+						orderData.ShippingCost = 0
+					} else {
+						orderData.ShippingCost -= v.DiscountValue
+					}
+
+				case voucherDTO.DISCOUNT_ORDER:
+					orderData.Discount += v.DiscountValue
+				}
+
+			}
+			orderData.Vouchers = dto.VoucherCode
+		}
+
 	}
+	//calculate amount order
+	orderData.Amount = orderData.SubTotal + orderData.ShippingCost - orderData.Discount
 
-	if err := o.cacheEngine.Set(tempId, cacheData); err != nil {
+	//gen key order
+	keyGen := uuid.NewString()
+	orderData.OrderUUID = keyGen
+
+	if err := message.SendMessage(orderData, orderData.OrderUUID); err != nil {
 		return nil, err
 	}
 
@@ -83,11 +119,11 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 			UserId:   dto.UserRequest.UserId,
 			Username: dto.UserRequest.Username,
 		},
-		OrderKey:      tempId,
-		Amount:        orderCacheData.Amount,
-		Discount:      orderCacheData.Discount,
-		SubTotal:      orderCacheData.SubTotal,
-		PaymentMethod: orderCacheData.PaymentMethod,
+		OrderKey:      keyGen,
+		Amount:        orderData.Amount,
+		Discount:      orderData.Discount,
+		SubTotal:      orderData.SubTotal,
+		PaymentMethod: orderData.PaymentMethod,
 	}
 
 	return &data, nil
@@ -225,9 +261,9 @@ func (o orderService) UpdateOrder(ctx context.Context, dto *orderDTO.UpdateOrder
 }
 
 func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductResponse,
-	address *userDTO.GetDetailAddressResponse, deli *deliDto.GetShippingCostResponse, dto *orderDTO.CreateOrderRequest) *order.OrderCacheData {
+	address *userDTO.GetDetailAddressResponse, deli *deliDto.GetShippingCostResponse, dto *orderDTO.CreateOrderRequest) *order.OrderMessage {
 
-	orderCache := order.OrderCacheData{
+	orderCache := order.OrderMessage{
 		Header: order.BaseHeader{dto.Header.BearerToken},
 		UserRequest: order.UserRequest{
 			UserId:   dto.UserRequest.UserId,
@@ -269,10 +305,8 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 		orderItems = append(orderItems, item)
 		discount += int(i.PromotionalPrice)
 	}
-
 	orderCache.OrderItems = orderItems
-	orderCache.Discount = discount
-	orderCache.Amount = orderCache.SubTotal - orderCache.Discount
+	orderCache.ShippingCost = deli.Cost
 
 	return &orderCache
 }

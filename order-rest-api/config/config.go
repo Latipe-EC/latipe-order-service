@@ -84,11 +84,12 @@ type RabbitMQ struct {
 }
 
 type AdapterService struct {
-	AuthService     AuthService
-	UserService     UserService
-	ProductService  ProductService
-	EmailService    EmailService
-	DeliveryService DeliveryService
+	AuthService      AuthService
+	UserService      UserService
+	ProductService   ProductService
+	EmailService     EmailService
+	DeliveryService  DeliveryService
+	PromotionService PromotionService
 }
 type AuthService struct {
 	BaseURL     string
@@ -113,6 +114,11 @@ type EmailService struct {
 }
 
 type DeliveryService struct {
+	BaseURL     string
+	InternalKey string
+}
+
+type PromotionService struct {
 	BaseURL     string
 	InternalKey string
 }
