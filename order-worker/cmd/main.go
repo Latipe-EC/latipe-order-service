@@ -18,7 +18,7 @@ func main() {
 
 	//order handle worker
 	go func() {
-		serv.Consumer().ListenMessageQueue()
+		serv.Consumer().ListenOrderEventQueue()
 	}()
 
 	//init message queue

@@ -45,10 +45,10 @@ func SendEmailMessage(request interface{}) error {
 
 	log.Printf("[Info]: Send message %v", request)
 	err = producer.channel.PublishWithContext(ctx,
-		producer.cfg.RabbitMQ.Exchange,   // exchange
-		producer.cfg.RabbitMQ.EmailQueue, // routing key
-		false,                            // mandatory
-		false,                            // immediate
+		producer.cfg.RabbitMQ.EmailEvent.Exchange,   // exchange
+		producer.cfg.RabbitMQ.EmailEvent.RoutingKey, // routing key
+		false, // mandatory
+		false, // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
@@ -69,10 +69,10 @@ func SendCartServiceMessage(request interface{}) error {
 
 	log.Printf("[Info]: Send message %v", request)
 	err = producer.channel.PublishWithContext(ctx,
-		producer.cfg.RabbitMQ.Exchange,  // exchange
-		producer.cfg.RabbitMQ.CartQueue, // routing key
-		false,                           // mandatory
-		false,                           // immediate
+		producer.cfg.RabbitMQ.CartEvent.Exchange,   // exchange
+		producer.cfg.RabbitMQ.CartEvent.RoutingKey, // routing key
+		false, // mandatory
+		false, // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,

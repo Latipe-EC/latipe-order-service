@@ -39,9 +39,18 @@ Cache:
 
 RabbitMQ:
   Connection: amqp://guest:guest@localhost:5672/
-  Exchange:
-  OrderQueue: order_created_event
-  EmailQueue: email_notify_queue
+  OrderEvent:
+    Exchange: order_exchange
+    RoutingKey: order_created_key
+    Queue: order_created_event
+  EmailEvent:
+    Exchange: email_exchange
+    RoutingKey: email_routing_key
+    Queue: email_notify_queue
+  CartEvent:
+    Exchange:
+    RoutingKey:
+    Queue:
   ConsumerName: create_orders_service
   ProducerName: create_orders_service
 

@@ -77,12 +77,32 @@ type Mongodb struct {
 
 type RabbitMQ struct {
 	Connection   string
-	Exchange     string
-	OrderQueue   string
-	EmailQueue   string
-	CartQueue    string
+	OrderEvent   OrderEvent
+	EmailEvent   EmailEvent
+	CartEvent    CartEvent
 	ConsumerName string
 	ProducerName string
+}
+
+type OrderEvent struct {
+	Connection string
+	Exchange   string
+	RoutingKey string
+	Queue      string
+}
+
+type EmailEvent struct {
+	Connection string
+	Exchange   string
+	RoutingKey string
+	Queue      string
+}
+
+type CartEvent struct {
+	Connection string
+	Exchange   string
+	RoutingKey string
+	Queue      string
 }
 
 type AdapterService struct {

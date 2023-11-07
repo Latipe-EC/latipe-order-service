@@ -25,7 +25,7 @@ func NewConsumerOrderMessage(config *config.Config, orderService orders.Usecase)
 	}
 }
 
-func (mq ConsumerOrderMessage) ListenMessageQueue() {
+func (mq ConsumerOrderMessage) ListenOrderEventQueue() {
 	conn, err := amqp.Dial(mq.config.RabbitMQ.Connection)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	log.Printf("[%s] Comsumer has been connected", "INFO")
@@ -34,15 +34,52 @@ func (mq ConsumerOrderMessage) ListenMessageQueue() {
 	defer channel.Close()
 	defer conn.Close()
 
+	// Khai báo một Exchange loại "direct"
+	err = channel.ExchangeDeclare(
+		mq.config.RabbitMQ.OrderEvent.Exchange, // Tên Exchange
+		"direct",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Fatalf("cannot declare exchange: %v", err)
+	}
+
+	// Tạo hàng đợi
+	_, err = channel.QueueDeclare(
+		mq.config.RabbitMQ.OrderEvent.Queue,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Fatalf("cannot declare queue: %v", err)
+	}
+
+	err = channel.QueueBind(
+		mq.config.RabbitMQ.OrderEvent.Queue,
+		mq.config.RabbitMQ.OrderEvent.RoutingKey,
+		mq.config.RabbitMQ.OrderEvent.Exchange,
+		false,
+		nil)
+	if err != nil {
+		log.Fatalf("cannot bind exchange: %v", err)
+	}
+
 	// declaring consumer with its properties over channel opened
 	msgs, err := channel.Consume(
-		mq.config.RabbitMQ.OrderQueue,   // queue
-		mq.config.RabbitMQ.ConsumerName, // consumer
-		true,                            // auto ack
-		false,                           // exclusive
-		false,                           // no local
-		false,                           // no wait
-		nil,                             //args
+		mq.config.RabbitMQ.OrderEvent.Queue, // queue
+		mq.config.RabbitMQ.ConsumerName,     // consumer
+		true,                                // auto ack
+		false,                               // exclusive
+		false,                               // no local
+		false,                               // no wait
+		nil,                                 //args
 	)
 	if err != nil {
 		panic(err)
