@@ -7,21 +7,18 @@ import (
 	dto "order-worker/internal/domain/dto/order"
 	"order-worker/internal/domain/entities/order"
 	"order-worker/internal/infrastructure/adapter/productserv"
-	"order-worker/pkg/cache/redis"
 	"order-worker/pkg/util/mapper"
 )
 
 type orderService struct {
 	orderRepo   order.Repository
-	cacheRepo   *redis.CacheEngine
 	productServ productserv.Service
 }
 
-func NewOrderService(orderRepo order.Repository, productServ productserv.Service, cacheRepo *redis.CacheEngine) Usecase {
+func NewOrderService(orderRepo order.Repository, productServ productserv.Service) Usecase {
 	return orderService{
 		orderRepo:   orderRepo,
 		productServ: productServ,
-		cacheRepo:   cacheRepo,
 	}
 }
 

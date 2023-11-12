@@ -15,7 +15,6 @@ import (
 	"order-worker/internal/infrastructure/persistence/db"
 	"order-worker/internal/infrastructure/persistence/order"
 	"order-worker/internal/message"
-	"order-worker/pkg/cache"
 )
 
 // Injectors from server.go:
@@ -28,11 +27,7 @@ func New() (*Server, error) {
 	gorm := db.NewMySQLConnection(configConfig)
 	repository := order.NewGormRepository(gorm)
 	service := productserv.NewProductServAdapter(configConfig)
-	cacheEngine, err := cache.NewCacheEngine(configConfig)
-	if err != nil {
-		return nil, err
-	}
-	usecase := orders.NewOrderService(repository, service, cacheEngine)
+	usecase := orders.NewOrderService(repository, service)
 	consumerOrderMessage := message.NewConsumerOrderMessage(configConfig, usecase)
 	server := NewServer(configConfig, consumerOrderMessage)
 	return server, nil

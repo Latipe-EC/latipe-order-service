@@ -45,7 +45,12 @@ func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *productDTO.Or
 
 	if resp.StatusCode() >= 500 {
 		log.Errorf("[Get product]: %s", resp.Body())
-		return nil, err
+		return nil, errors.ErrInternalServer
+	}
+
+	if resp.StatusCode() >= 400 {
+		log.Errorf("[Get product]: %s", resp.Body())
+		return nil, errors.ErrBadRequest
 	}
 
 	var rawResp productDTO.BaseResponse
@@ -74,6 +79,11 @@ func (h httpAdapter) ReduceProductQuantity(ctx context.Context, req *productDTO.
 	if err != nil {
 		log.Errorf("[Reduce Quantity]: %s", err)
 		return nil, err
+	}
+
+	if resp.StatusCode() >= 400 {
+		log.Errorf("[Get product]: %s", resp.Body())
+		return nil, errors.ErrBadRequest
 	}
 
 	if resp.StatusCode() >= 500 {

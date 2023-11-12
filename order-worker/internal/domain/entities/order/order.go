@@ -11,6 +11,8 @@ type OrderItem struct {
 	Order       *Order    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	ProductID   string    `gorm:"not null;type:varchar(255)" json:"product_id"`
 	ProductName string    `gorm:"not null;type:varchar(255)" json:"product_name"`
+	ProdImg     string    `gorm:"not null;type:varchar(255)" json:"prod_img"`
+	RatingID    string    `gorm:"not null;type:varchar(255)" json:"rating_id"`
 	StoreID     string    `gorm:"not null;type:varchar(255)" json:"store_id"`
 	OptionID    string    `gorm:"not null;type:varchar(250)" json:"option_id" `
 	Quantity    int       `gorm:"not null;type:int" json:"quantity"`

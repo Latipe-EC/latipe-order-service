@@ -41,6 +41,11 @@ func (h httpAdapter) Authorization(ctx context.Context, req *dto.AuthorizationRe
 		return nil, err
 	}
 
+	if resp.StatusCode() >= 400 {
+		log.Errorf("[Get product]: %s", resp.Body())
+		return nil, errors.ErrBadRequest
+	}
+
 	if resp.StatusCode() >= 500 {
 		log.Errorf("[Authorize token]: %s", "ERROR", resp.Body())
 		return nil, err

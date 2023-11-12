@@ -14,7 +14,6 @@ import (
 	"order-worker/internal/infrastructure/adapter/userserv"
 	"order-worker/internal/infrastructure/persistence"
 	"order-worker/internal/message"
-	"order-worker/pkg/cache"
 )
 
 type Server struct {
@@ -32,7 +31,6 @@ func New() (*Server, error) {
 		userserv.Set,
 		productserv.Set,
 		app.Set,
-		cache.Set,
 	)))
 }
 

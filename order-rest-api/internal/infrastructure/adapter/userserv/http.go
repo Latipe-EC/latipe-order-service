@@ -44,7 +44,12 @@ func (h httpAdapter) GetAddressDetails(ctx context.Context, req *dto.GetDetailAd
 
 	if resp.StatusCode() >= 400 {
 		log.Errorf("[Authorize token]: %s", resp.Body())
-		return nil, err
+		return nil, errors.ErrNotFound
+	}
+
+	if resp.StatusCode() >= 500 {
+		log.Errorf("[Authorize token]: %s", resp.Body())
+		return nil, errors.ErrInternalServer
 	}
 
 	var regResp *dto.GetDetailAddressResponse

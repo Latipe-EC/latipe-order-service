@@ -42,7 +42,7 @@ RabbitMQ:
   OrderEvent:
     Exchange: order_exchange
     RoutingKey: order_created_key
-    Queue: order_created_event
+    Queue: order_created_event_worker
   EmailEvent:
     Exchange: email_exchange
     RoutingKey: email_routing_key
@@ -52,7 +52,7 @@ RabbitMQ:
     RoutingKey:
     Queue:
   ConsumerName: create_orders_service
-  ProducerName: create_orders_service
+  ProducerName: billing&payment_service
 
 AdapterService:
   UserService:

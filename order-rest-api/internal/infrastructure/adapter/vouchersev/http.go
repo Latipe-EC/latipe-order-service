@@ -49,6 +49,11 @@ func (h httpAdapter) ApplyVoucher(ctx context.Context, req *dto.ApplyVoucherRequ
 		return nil, errors.ErrUnauthenticated
 	}
 
+	if resp.StatusCode() >= 500 {
+		log.Errorf("[Apply voucher]: %s", resp.Body())
+		return nil, errors.ErrInternalServer
+	}
+
 	var regResp *dto.UseVoucherResponse
 
 	if err := json.Unmarshal(resp.Body(), &regResp); err != nil {

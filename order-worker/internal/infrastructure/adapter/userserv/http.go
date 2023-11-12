@@ -3,6 +3,7 @@ package userserv
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"order-worker/config"
 	"order-worker/internal/infrastructure/adapter/userserv/dto"
 	http "order-worker/pkg/internal_http"
@@ -38,12 +39,17 @@ func (h httpAdapter) Authorization(ctx context.Context, req *dto.AuthorizationRe
 
 	if err != nil {
 		log.Errorf("[%s] [Authorize token]: %s", "ERROR", err)
-		return nil, err
+		return nil, errors.New("ErrInternalServer")
+	}
+
+	if resp.StatusCode() >= 400 {
+		log.Errorf("[%s] [Authorize token]: %s", "ERROR", resp.Body())
+		return nil, errors.New("ErrBadRequest")
 	}
 
 	if resp.StatusCode() >= 500 {
 		log.Errorf("[%s] [Authorize token]: %s", "ERROR", resp.Body())
-		return nil, err
+		return nil, errors.New("ErrInternalServer")
 	}
 
 	var regResp *dto.AuthorizationResponse
