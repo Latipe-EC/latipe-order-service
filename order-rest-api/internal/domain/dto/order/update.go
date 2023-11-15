@@ -1,15 +1,17 @@
 package order
 
 type UpdateOrderStatusRequest struct {
-	Role    string
-	OrderId int `json:"order_id"`
-	Status  int `json:"status"`
+	Role      string
+	OrderUUID string `json:"order_uuid"`
+	UserId    string
+	Status    int `json:"status"`
 }
 type UpdateOrderStatusResponse struct {
 }
 
 type UpdateOrderRequest struct {
-	Header  BaseHeader
-	OrderId int `json:"order_id"`
-	Status  int `json:"status"`
+	Header    BaseHeader
+	OrderUUID string `json:"order_uuid"`
+	UserId    string
+	Status    int `json:"status"`
 }

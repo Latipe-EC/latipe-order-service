@@ -7,6 +7,7 @@ import (
 	"order-rest-api/internal/app/orders"
 	"order-rest-api/internal/common/errors"
 	dto "order-rest-api/internal/domain/dto/order"
+	"order-rest-api/internal/domain/dto/order/store"
 	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/internal/responses"
 	"order-rest-api/pkg/util/pagable"
@@ -19,7 +20,10 @@ type OrderApiHandler interface {
 	UpdateOrderStatus(ctx *fiber.Ctx) error
 	ListOfOrder(ctx *fiber.Ctx) error
 	GetOrderByUUID(ctx *fiber.Ctx) error
-	CheckOrderOfUser(ctx *fiber.Ctx) error
+	GetMyOrder(ctx *fiber.Ctx) error
+	CancelOrder(ctx *fiber.Ctx) error
+	GetMyStoreOrder(ctx *fiber.Ctx) error
+	GetStoreOrderDetail(ctx *fiber.Ctx) error
 }
 
 type orderApiHandler struct {
@@ -74,9 +78,88 @@ func (o orderApiHandler) CreateOrder(ctx *fiber.Ctx) error {
 	return resp.JSON(ctx)
 }
 
+func (o orderApiHandler) GetMyOrder(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	query, err := pagable.GetQueryFromFiberCtx(ctx)
+	if err != nil {
+		return errors.ErrBadRequest.WithInternalError(err)
+	}
+
+	req := new(dto.GetByUserIdRequest)
+	req.Query = query
+
+	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
+	if userId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.UserId = userId
+
+	result, err := o.orderUsecase.GetOrderByUserId(context, req)
+	if err != nil {
+		return errors.ErrInternalServer
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+
+	return resp.JSON(ctx)
+}
+
+func (o orderApiHandler) CancelOrder(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	req := new(dto.CancelOrderRequest)
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
+	if userId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.UserId = userId
+
+	err := o.orderUsecase.CancelOrder(context, req)
+	if err != nil {
+		return errors.ErrInternalServer
+	}
+
+	resp := responses.DefaultSuccess
+	return resp.JSON(ctx)
+}
+
 func (o orderApiHandler) UpdateOrderStatus(ctx *fiber.Ctx) error {
-	//TODO implement me
-	panic("implement me")
+	context := ctx.Context()
+
+	req := new(dto.UpdateOrderStatusRequest)
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
+	if userId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	role := fmt.Sprintf("%v", ctx.Locals(auth.ROLE))
+	if role == "" {
+		return errors.ErrPermissionDenied
+	}
+
+	req.UserId = userId
+	req.Role = role
+
+	err := o.orderUsecase.UpdateStatusOrder(context, req)
+	if err != nil {
+		return errors.ErrInternalServer
+	}
+
+	return responses.DefaultSuccess.JSON(ctx)
 }
 
 func (o orderApiHandler) ListOfOrder(ctx *fiber.Ctx) error {
@@ -126,28 +209,51 @@ func (o orderApiHandler) GetOrderByUUID(ctx *fiber.Ctx) error {
 	return resp.JSON(ctx)
 }
 
-func (o orderApiHandler) CheckOrderOfUser(ctx *fiber.Ctx) error {
+func (o orderApiHandler) GetMyStoreOrder(ctx *fiber.Ctx) error {
 	context := ctx.Context()
-	req := dto.CheckUserOrderRequest{}
 
-	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
-	if userId == "" {
-		return errors.ErrUnauthenticated
-	}
-	req.UserId = userId
-	if err := ctx.QueryParser(&req); err != nil {
-		return errors.ErrInternalServer.WithInternalError(err)
+	query, err := pagable.GetQueryFromFiberCtx(ctx)
+	if err != nil {
+		return errors.ErrBadRequest.WithInternalError(err)
 	}
 
-	if err := valid.GetValidator().Validate(&req); err != nil {
-		return errors.ErrBadRequest
-	}
+	req := new(store.GetStoreOrderRequest)
+	req.Query = query
 
-	result, err := o.orderUsecase.CheckProductPurchased(context, &req)
+	storeID := fmt.Sprintf("%v", ctx.Locals(auth.STORE_ID))
+	req.StoreID = storeID
+
+	result, err := o.orderUsecase.GetOrdersOfStore(context, req)
 	if err != nil {
 		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			return errors.ErrNotFound
+		case strings.Contains(err.Error(), "Unknown column"):
+			return errors.ErrBadRequest.WithInternalError(err)
+		}
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+	return resp.JSON(ctx)
+}
+
+func (o orderApiHandler) GetStoreOrderDetail(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	req := new(store.GetOrderOfStoreByIDRequest)
+
+	if err := ctx.ParamsParser(&req); err != nil {
+		return errors.ErrBadRequest.WithInternalError(err)
+	}
+
+	storeID := fmt.Sprintf("%v", ctx.Locals(auth.STORE_ID))
+	req.StoreID = storeID
+
+	result, err := o.orderUsecase.ViewDetailStoreOrder(context, req)
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "Unknown column"):
+			return errors.ErrBadRequest.WithInternalError(err)
 		}
 		return err
 	}

@@ -34,6 +34,55 @@ func (a AuthenticationMiddleware) RequiredAuthentication() fiber.Handler {
 
 		ctx.Locals(USERNAME, resp.Email)
 		ctx.Locals(USER_ID, resp.Id)
+		ctx.Locals(ROLE, resp.Role)
+		ctx.Locals(BEARER_TOKEN, bearToken)
+		return ctx.Next()
+	}
+}
+
+func (a AuthenticationMiddleware) RequiredStoreAuthentication() fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		bearToken := ctx.Get("Authorization")
+		if bearToken == "" {
+			return errors.ErrUnauthenticated
+		}
+
+		bearToken = strings.Split(bearToken, " ")[1]
+		req := dto.AuthorizationRequest{
+			Token: bearToken,
+		}
+		resp, err := a.authServ.Authorization(ctx.Context(), &req)
+		if err != nil {
+			return err
+		}
+
+		ctx.Locals(USERNAME, resp.Email)
+		ctx.Locals(USER_ID, resp.Id)
+		ctx.Locals(ROLE, resp.Role)
+		ctx.Locals(BEARER_TOKEN, bearToken)
+		return ctx.Next()
+	}
+}
+
+func (a AuthenticationMiddleware) RequiredRole(roles []string) fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		bearToken := ctx.Get("Authorization")
+		if bearToken == "" {
+			return errors.ErrUnauthenticated
+		}
+
+		bearToken = strings.Split(bearToken, " ")[1]
+		req := dto.AuthorizationRequest{
+			Token: bearToken,
+		}
+		resp, err := a.authServ.Authorization(ctx.Context(), &req)
+		if err != nil {
+			return err
+		}
+
+		ctx.Locals(USERNAME, resp.Email)
+		ctx.Locals(USER_ID, resp.Id)
+		ctx.Locals(ROLE, resp.Role)
 		ctx.Locals(BEARER_TOKEN, bearToken)
 		return ctx.Next()
 	}

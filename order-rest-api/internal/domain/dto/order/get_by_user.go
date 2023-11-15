@@ -4,7 +4,7 @@ import "order-rest-api/pkg/util/pagable"
 
 type GetByUserIdRequest struct {
 	BaseHeader BaseHeader
-	UserId     int
+	UserId     string
 	Query      *pagable.Query
 }
 

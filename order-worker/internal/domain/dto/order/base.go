@@ -12,8 +12,8 @@ type OrderResponse struct {
 	Status        int               `json:"status"`
 	PaymentMethod int               `json:"payment_method"`
 	VoucherCode   string            `json:"voucher_code"`
-	CreateAt      string            `json:"create_at"`
-	UpdateAt      string            `json:"update_at"`
+	CreatedAt     string            `json:"created_at"`
+	UpdatedAt     string            `json:"updated_at"`
 	Address       OrderAddress      `json:"address"`
 	OrderItems    []OrderItemsCache `json:"order_items"`
 }

@@ -70,18 +70,34 @@ func (g GormRepository) FindAll(query *pagable.Query) ([]entity.Order, error) {
 	return orders, nil
 }
 
-func (g GormRepository) FindByUserId(userId int, query *pagable.Query) ([]entity.Order, error) {
+func (g GormRepository) FindByUserId(userId string, query *pagable.Query) ([]entity.Order, error) {
 	var orders []entity.Order
 	result := g.client.DB().Model(&entity.Order{}).
+		Preload("Delivery").
 		Where("orders.user_id", userId).
-		Order("create_at desc").
+		Order("created_at desc").
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error
+
 	if result != nil {
 		return nil, result
 	}
 
 	return orders, nil
+}
+
+func (g GormRepository) FindOrderByStoreID(storeId string, query *pagable.Query) ([]entity.Order, error) {
+	var orders []entity.Order
+	err := g.client.DB().Raw("select * from orders inner join order_items on orders.id = order_items.order_id "+
+		"where order_items.store_id= ?", storeId).
+		Order("orders.created_at desc").
+		Limit(query.GetLimit()).Offset(query.GetOffset()).
+		Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, err
 }
 
 func (g GormRepository) FindOrderByUserAndProduct(userId string, productId string) ([]entity.Order, error) {
@@ -99,7 +115,7 @@ func (g GormRepository) FindOrderLogByOrderId(orderId int) ([]entity.OrderStatus
 	var orderStatus []entity.OrderStatusLog
 	result := g.client.DB().Model(&entity.OrderStatusLog{}).
 		Where("order_id", orderId).
-		Order("create_at desc").
+		Order("created_at desc").
 		Find(&orderStatus).Error
 	if result != nil {
 		return nil, result
@@ -111,6 +127,16 @@ func (g GormRepository) FindOrderLogByOrderId(orderId int) ([]entity.OrderStatus
 func (g GormRepository) Save(dao *entity.Order) error {
 	result := g.client.DB().Model(&entity.Order{}).Create(&dao)
 	return result.Error
+}
+
+func (g GormRepository) UpdateStatus(orderID int, status int) error {
+	result := g.client.DB().Model(&entity.Order{}).
+		Where("id = ?", orderID).Update("status", status)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return result.Error
+	}
+	return nil
 }
 
 func (g GormRepository) Update(order entity.Order) error {

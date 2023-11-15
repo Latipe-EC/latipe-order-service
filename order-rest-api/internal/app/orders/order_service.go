@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"order-rest-api/internal/common/errors"
 	orderDTO "order-rest-api/internal/domain/dto/order"
+	"order-rest-api/internal/domain/dto/order/store"
 	"order-rest-api/internal/domain/entities/order"
 	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
 	deliDto "order-rest-api/internal/infrastructure/adapter/deliveryserv/dto"
@@ -40,6 +41,21 @@ func NewOrderService(orderRepo order.Repository, productServ productserv.Service
 		deliServ:    deliServ,
 		voucherSer:  voucherServ,
 	}
+}
+
+func (o orderService) CancelOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error {
+	dao, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	if err != nil {
+		return err
+	}
+
+	if dao.Status == order.ORDER_CREATED && dao.UserId == dto.UserId {
+		if err := o.orderRepo.UpdateStatus(dao.Id, order.ORDER_CANCEL); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.CreateOrderRequest) (*orderDTO.CreateOrderResponse, error) {
@@ -191,7 +207,7 @@ func (o orderService) GetOrderList(ctx context.Context, dto *orderDTO.GetOrderLi
 }
 
 func (o orderService) GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByUserIdRequest) (*orderDTO.GetByUserIdResponse, error) {
-	dataResp := orderDTO.OrderResponse{}
+	var dataResp []orderDTO.OrderResponse
 
 	orders, err := o.orderRepo.FindByUserId(dto.UserId, dto.Query)
 	if err != nil {
@@ -217,9 +233,74 @@ func (o orderService) GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByU
 	return &resp, err
 }
 
+func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreOrderRequest) (*orderDTO.GetOrderListResponse, error) {
+	var dataResp []store.StoreOrderResponse
+
+	orders, err := o.orderRepo.FindOrderByStoreID(dto.StoreID, dto.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := o.orderRepo.Total(dto.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = mapper.BindingStruct(orders, &dataResp); err != nil {
+		return nil, err
+	}
+
+	resp := orderDTO.GetOrderListResponse{}
+	resp.Data = dataResp
+	resp.Size = dto.Query.Size
+	resp.Page = dto.Query.Page
+	resp.Total = dto.Query.GetTotalPages(total)
+	resp.HasMore = dto.Query.GetHasMore(total)
+
+	return &resp, err
+}
+
+func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOrderOfStoreByIDRequest) (*store.GetOrderOfStoreByIDResponse, error) {
+	orderResp := store.GetOrderOfStoreByIDResponse{}
+
+	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = mapper.BindingStruct(orderDAO, &orderResp); err != nil {
+		return nil, err
+	}
+
+	storeAmount := 0
+	var items []store.OrderStoreItem
+	for _, o := range orderDAO.OrderItem {
+		if o.StoreID == dto.StoreID {
+			i := store.OrderStoreItem{
+				ProductId: o.ProductID,
+				OptionId:  o.OptionID,
+				Quantity:  o.Quantity,
+				Price:     o.Price,
+				Status:    o.Status,
+			}
+			items = append(items, i)
+			storeAmount += o.Price
+		}
+	}
+
+	if len(items) < 1 {
+		return nil, errors.ErrNotFoundRecord
+	}
+
+	orderResp.Order.StoreOrderAmount = storeAmount
+	orderResp.Order.OrderItems = items
+
+	return &orderResp, err
+}
+
 func (o orderService) UpdateStatusOrder(ctx context.Context, dto *orderDTO.UpdateOrderStatusRequest) error {
 
-	orderDAO, err := o.orderRepo.FindById(dto.OrderId)
+	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
 	if err != nil {
 		return err
 	}

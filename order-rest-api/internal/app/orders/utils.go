@@ -30,3 +30,7 @@ func MappingOrderItemToGetInfo(request *order.CreateOrderRequest) []dto.Validate
 	}
 	return items
 }
+
+func deleteItems(slice []order.OrderItems, index int) []order.OrderItems {
+	return append(slice[:index], slice[index+1:]...)
+}

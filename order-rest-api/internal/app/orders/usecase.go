@@ -3,6 +3,7 @@ package orders
 import (
 	"context"
 	orderDTO "order-rest-api/internal/domain/dto/order"
+	"order-rest-api/internal/domain/dto/order/store"
 )
 
 type Usecase interface {
@@ -10,8 +11,11 @@ type Usecase interface {
 	GetOrderById(ctx context.Context, dto *orderDTO.GetOrderByIDRequest) (*orderDTO.GetOrderResponse, error)
 	GetOrderByUUID(ctx context.Context, dto *orderDTO.GetOrderByUUIDRequest) (*orderDTO.GetOrderResponse, error)
 	GetOrderList(ctx context.Context, dto *orderDTO.GetOrderListRequest) (*orderDTO.GetOrderListResponse, error)
+	GetOrdersOfStore(ctx context.Context, dto *store.GetStoreOrderRequest) (*orderDTO.GetOrderListResponse, error)
 	GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByUserIdRequest) (*orderDTO.GetByUserIdResponse, error)
 	CheckProductPurchased(ctx context.Context, dto *orderDTO.CheckUserOrderRequest) (*orderDTO.CheckUserOrderResponse, error)
 	UpdateStatusOrder(ctx context.Context, dto *orderDTO.UpdateOrderStatusRequest) error
 	UpdateOrder(ctx context.Context, dto *orderDTO.UpdateOrderRequest) error
+	CancelOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error
+	ViewDetailStoreOrder(ctx context.Context, dto *store.GetOrderOfStoreByIDRequest) (*store.GetOrderOfStoreByIDResponse, error)
 }

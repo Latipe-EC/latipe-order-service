@@ -92,6 +92,7 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 	}
 	orderDAO.VoucherCode = vouchers
 
+	orderDAO.Status = order.ORDER_CREATED
 	err = o.orderRepo.Save(&orderDAO)
 	if err != nil {
 		//handle rollback

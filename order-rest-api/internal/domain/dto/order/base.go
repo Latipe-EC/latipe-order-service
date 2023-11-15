@@ -16,7 +16,7 @@ type OrderResponse struct {
 	CreatedAt     time.Time        `json:"created_at"`
 	UpdatedAt     time.Time        `json:"updated-at"`
 	Delivery      DeliveryResp     `json:"delivery"`
-	OrderItems    []OrderItemsResp `json:"order_items"`
+	OrderItems    []OrderItemsResp `json:"order_items,omitempty"`
 }
 
 type DeliveryResp struct {

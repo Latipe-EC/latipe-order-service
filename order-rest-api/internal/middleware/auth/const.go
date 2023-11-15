@@ -4,6 +4,8 @@ const (
 	USER_ID      = "user_id"
 	USERNAME     = "username"
 	BEARER_TOKEN = "bearer_token"
+	ROLE         = "role"
+	STORE_ID     = "store_id"
 )
 
 const (
