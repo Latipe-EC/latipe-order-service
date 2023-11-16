@@ -11,7 +11,7 @@ type OrderItem struct {
 	Order       *Order    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	ProductID   string    `gorm:"not null;type:varchar(255)" json:"product_id"`
 	ProductName string    `gorm:"not null;type:varchar(255)" json:"product_name"`
-	ProdImg     string    `gorm:"not null;type:varchar(255)" json:"prod_img"`
+	ProdImg     string    `gorm:"not null;type:varchar(255)" json:"image"`
 	RatingID    string    `gorm:"not null;type:varchar(255)" json:"rating_id"`
 	StoreID     string    `gorm:"not null;type:varchar(255)" json:"store_id"`
 	Status      int       `gorm:"not null;type:int" json:"status"`
@@ -49,6 +49,7 @@ type Order struct {
 	Username       string            `gorm:"not null;type:varchar(250)" json:"email"`
 	Amount         int               `gorm:"not null;type:bigint" json:"amount"`
 	ShippingCost   int               `gorm:"not null;type:int" json:"shipping_cost"`
+	PaymentMethod  int               `json:"payment_method" gorm:"not null;type:int"`
 	Discount       int               `gorm:"not null;type:int" json:"discount"`
 	SubTotal       int               `gorm:"not null;type:int" json:"sub_total"`
 	Status         int               `gorm:"not null;type:int" json:"status"`

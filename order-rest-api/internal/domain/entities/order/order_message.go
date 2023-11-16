@@ -29,13 +29,14 @@ type OrderItemsCache struct {
 }
 
 type ProductItem struct {
-	ProductID   string `gorm:"not null;type:varchar(255)" json:"product_id"`
-	ProductName string `gorm:"not null;type:varchar(255)" json:"product_name"`
-	StoreID     string `gorm:"not null;type:varchar(255)" json:"store_id"`
-	OptionID    string `gorm:"not null;type:varchar(250)" json:"option_id" `
-	Quantity    int    `gorm:"not null;type:int" json:"quantity"`
-	Price       int    `gorm:"not null;type:bigint" json:"price"`
-	NetPrice    int    `gorm:"not null;type:bigint" json:"net_price"`
+	ProductID   string `json:"product_id"`
+	ProductName string `json:"product_name"`
+	StoreID     string `json:"store_id"`
+	OptionID    string `json:"option_id" `
+	Image       string `json:"image"`
+	Quantity    int    `json:"quantity"`
+	Price       int    `json:"price"`
+	NetPrice    int    `json:"net_price"`
 }
 
 type OrderAddress struct {

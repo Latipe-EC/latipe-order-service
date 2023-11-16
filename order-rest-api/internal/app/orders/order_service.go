@@ -121,7 +121,6 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 	}
 	//calculate amount order
 	orderData.Amount = orderData.SubTotal + orderData.ShippingCost - orderData.Discount
-
 	//gen key order
 	keyGen := uuid.NewString()
 	orderData.OrderUUID = keyGen
@@ -292,8 +291,8 @@ func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOr
 		return nil, errors.ErrNotFoundRecord
 	}
 
-	orderResp.Order.StoreOrderAmount = storeAmount
-	orderResp.Order.OrderItems = items
+	orderResp.StoreOrderAmount = storeAmount
+	orderResp.OrderItems = items
 
 	return &orderResp, err
 }
@@ -351,7 +350,7 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 			Username: dto.UserRequest.Username,
 		},
 		SubTotal:      products.TotalPrice,
-		PaymentMethod: 0,
+		PaymentMethod: dto.PaymentMethod,
 		Vouchers:      nil,
 		Address: order.OrderAddress{
 			AddressId:       address.Id,
@@ -381,6 +380,7 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 				Quantity:    i.Quantity,
 				Price:       int(i.Price),
 				NetPrice:    int(i.PromotionalPrice),
+				Image:       i.Image,
 			},
 		}
 		orderItems = append(orderItems, item)

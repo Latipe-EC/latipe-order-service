@@ -48,6 +48,7 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 			Quantity:    item.ProductItem.Quantity,
 			Price:       item.ProductItem.Price,
 			NetPrice:    item.ProductItem.NetPrice,
+			ProdImg:     item.ProductItem.Image,
 			Order:       &orderDAO,
 		}
 		orderItems = append(orderItems, &i)
@@ -91,6 +92,7 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 		vouchers += fmt.Sprintf("%v;", i)
 	}
 	orderDAO.VoucherCode = vouchers
+	orderDAO.PaymentMethod = message.PaymentMethod
 
 	orderDAO.Status = order.ORDER_CREATED
 	err = o.orderRepo.Save(&orderDAO)

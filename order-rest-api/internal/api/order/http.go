@@ -240,7 +240,7 @@ func (o orderApiHandler) GetMyStoreOrder(ctx *fiber.Ctx) error {
 func (o orderApiHandler) GetStoreOrderDetail(ctx *fiber.Ctx) error {
 	context := ctx.Context()
 
-	req := new(store.GetOrderOfStoreByIDRequest)
+	var req store.GetOrderOfStoreByIDRequest
 
 	if err := ctx.ParamsParser(&req); err != nil {
 		return errors.ErrBadRequest.WithInternalError(err)
@@ -249,7 +249,7 @@ func (o orderApiHandler) GetStoreOrderDetail(ctx *fiber.Ctx) error {
 	storeID := fmt.Sprintf("%v", ctx.Locals(auth.STORE_ID))
 	req.StoreID = storeID
 
-	result, err := o.orderUsecase.ViewDetailStoreOrder(context, req)
+	result, err := o.orderUsecase.ViewDetailStoreOrder(context, &req)
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "Unknown column"):

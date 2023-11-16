@@ -5,15 +5,18 @@ import (
 	"order-rest-api/internal/common/errors"
 	"order-rest-api/internal/infrastructure/adapter/authserv"
 	"order-rest-api/internal/infrastructure/adapter/authserv/dto"
+	"order-rest-api/internal/infrastructure/adapter/storeserv"
+	storeDTO "order-rest-api/internal/infrastructure/adapter/storeserv/dto"
 	"strings"
 )
 
 type AuthenticationMiddleware struct {
-	authServ authserv.Service
+	authServ  authserv.Service
+	storeServ storeserv.Service
 }
 
-func NewAuthMiddleware(authServ authserv.Service) *AuthenticationMiddleware {
-	return &AuthenticationMiddleware{authServ: authServ}
+func NewAuthMiddleware(authServ authserv.Service, storeServ storeserv.Service) *AuthenticationMiddleware {
+	return &AuthenticationMiddleware{authServ: authServ, storeServ: storeServ}
 }
 
 func (a AuthenticationMiddleware) RequiredAuthentication() fiber.Handler {
@@ -56,10 +59,25 @@ func (a AuthenticationMiddleware) RequiredStoreAuthentication() fiber.Handler {
 			return err
 		}
 
+		//validate store
+		storeReq := storeDTO.GetStoreIdByUserRequest{UserID: resp.Id}
+		storeReq.BaseHeader.BearToken = bearToken
+
+		storeResp, err := a.storeServ.GetStoreByUserId(ctx.Context(), &storeReq)
+		if err != nil {
+			return err
+		}
+
+		if storeResp.StoreID == "" {
+			return errors.ErrPermissionDenied
+		}
+
 		ctx.Locals(USERNAME, resp.Email)
 		ctx.Locals(USER_ID, resp.Id)
 		ctx.Locals(ROLE, resp.Role)
 		ctx.Locals(BEARER_TOKEN, bearToken)
+		ctx.Locals(STORE_ID, storeResp.StoreID)
+
 		return ctx.Next()
 	}
 }

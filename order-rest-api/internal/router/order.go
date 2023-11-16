@@ -26,19 +26,19 @@ func (o orderRouter) Init(root *fiber.Router) {
 	orderRouter := (*root).Group("/orders")
 	{
 		//admin
-		orderRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
-		orderRouter.Patch("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
-		orderRouter.Patch("/:id/complete", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
+		orderRouter.Get("/admin", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
+		orderRouter.Patch("/admin/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
+		orderRouter.Patch("/admin/:id/complete", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
 		//user
 		orderRouter.Post("", o.middleware.Authentication.RequiredAuthentication(), o.handler.CreateOrder)
-		orderRouter.Post("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.handler.CancelOrder)
+		orderRouter.Post("/user/cancel", o.middleware.Authentication.RequiredAuthentication(), o.handler.CancelOrder)
 		orderRouter.Get("/my-order", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetMyOrder)
-		orderRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetOrderByUUID)
+		orderRouter.Get("/user/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetOrderByUUID)
 		orderRouter.Patch("/:id/items", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
 		//store
-		orderRouter.Get("/my-store", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetMyStoreOrder)
+		orderRouter.Get("/store", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetMyStoreOrder)
 		orderRouter.Get("/store/:id", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetStoreOrderDetail)
-		orderRouter.Patch("/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.UpdateOrderStatus)
+		orderRouter.Patch("/store/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.UpdateOrderStatus)
 
 	}
 

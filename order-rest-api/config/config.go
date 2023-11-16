@@ -91,6 +91,7 @@ type AdapterService struct {
 	EmailService     EmailService
 	DeliveryService  DeliveryService
 	PromotionService PromotionService
+	StoreService     StoreService
 }
 type AuthService struct {
 	BaseURL     string
@@ -104,6 +105,11 @@ type UserService struct {
 }
 
 type ProductService struct {
+	BaseURL     string
+	InternalKey string
+}
+
+type StoreService struct {
 	BaseURL     string
 	InternalKey string
 }

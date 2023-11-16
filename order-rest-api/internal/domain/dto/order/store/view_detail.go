@@ -12,7 +12,7 @@ type GetOrderOfStoreByIDRequest struct {
 }
 
 type GetOrderOfStoreByIDResponse struct {
-	Order StoreOrderResponse `json:"order"`
+	StoreOrderResponse
 }
 
 type StoreOrderResponse struct {
@@ -23,7 +23,7 @@ type StoreOrderResponse struct {
 	CreatedAt        time.Time          `json:"created_at"`
 	UpdatedAt        time.Time          `json:"updated-at"`
 	Delivery         order.DeliveryResp `json:"delivery"`
-	OrderItems       []OrderStoreItem   `json:"order_items"`
+	OrderItems       []OrderStoreItem   `json:"order_items,omitempty"`
 }
 
 type OrderStoreItem struct {
