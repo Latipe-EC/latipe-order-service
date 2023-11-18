@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+const (
+	OI_PENDING  = 0
+	OI_PREPARED = 1
+)
+
 type OrderItem struct {
 	OrderType   string
 	Id          int       `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`

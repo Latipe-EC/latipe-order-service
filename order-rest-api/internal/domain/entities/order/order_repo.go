@@ -8,6 +8,7 @@ type Repository interface {
 	FindById(Id int) (*Order, error)
 	FindByUUID(uuid string) (*Order, error)
 	FindOrderByStoreID(storeId string, query *pagable.Query) ([]Order, error)
+	FindOrderByDelivery(deliID string, query *pagable.Query) ([]Order, error)
 	FindAll(query *pagable.Query) ([]Order, error)
 	FindByUserId(userId string, query *pagable.Query) ([]Order, error)
 	FindOrderLogByOrderId(orderId int) ([]OrderStatusLog, error)
@@ -15,5 +16,6 @@ type Repository interface {
 	Save(order *Order) error
 	Update(order Order) error
 	UpdateStatus(orderID int, status int) error
+	UpdateOrderItem(orderItem int, status int) error
 	Total(query *pagable.Query) (int, error)
 }

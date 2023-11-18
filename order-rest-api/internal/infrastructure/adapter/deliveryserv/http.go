@@ -47,7 +47,7 @@ func (h httpAdapter) CalculateShippingCost(ctx context.Context, req *dto.GetShip
 	}
 
 	if resp.StatusCode() >= 400 {
-		log.Errorf("[Get product]: %s", resp.Body())
+		log.Errorf("[Shipping Cost]: %s", resp.Body())
 		return nil, errors.ErrBadRequest
 	}
 

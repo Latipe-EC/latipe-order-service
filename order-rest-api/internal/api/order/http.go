@@ -7,6 +7,7 @@ import (
 	"order-rest-api/internal/app/orders"
 	"order-rest-api/internal/common/errors"
 	dto "order-rest-api/internal/domain/dto/order"
+	"order-rest-api/internal/domain/dto/order/delivery"
 	"order-rest-api/internal/domain/dto/order/store"
 	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/internal/responses"
@@ -24,6 +25,9 @@ type OrderApiHandler interface {
 	CancelOrder(ctx *fiber.Ctx) error
 	GetMyStoreOrder(ctx *fiber.Ctx) error
 	GetStoreOrderDetail(ctx *fiber.Ctx) error
+	UpdateOrderItemStatus(ctx *fiber.Ctx) error
+	UpdateStatusByDelivery(ctx *fiber.Ctx) error
+	GetOrdersByDelivery(ctx *fiber.Ctx) error
 }
 
 type orderApiHandler struct {
@@ -250,6 +254,96 @@ func (o orderApiHandler) GetStoreOrderDetail(ctx *fiber.Ctx) error {
 	req.StoreID = storeID
 
 	result, err := o.orderUsecase.ViewDetailStoreOrder(context, &req)
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "Unknown column"):
+			return errors.ErrBadRequest.WithInternalError(err)
+		}
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+	return resp.JSON(ctx)
+}
+
+func (o orderApiHandler) UpdateOrderItemStatus(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	req := new(store.UpdateOrderItemRequest)
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	storeId := fmt.Sprintf("%v", ctx.Locals(auth.STORE_ID))
+	if storeId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.StoreId = storeId
+
+	resp, err := o.orderUsecase.UpdateOrderItem(context, req)
+	if err != nil {
+		return errors.ErrInternalServer
+	}
+
+	data := responses.DefaultSuccess
+	data.Data = resp
+
+	return data.JSON(ctx)
+}
+
+func (o orderApiHandler) UpdateStatusByDelivery(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	req := delivery.UpdateOrderStatusRequest{}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	if err := ctx.ParamsParser(&req); err != nil {
+		return errors.ErrBadRequest.WithInternalError(err)
+	}
+
+	deli := fmt.Sprintf("%v", ctx.Locals(auth.DELIVERY_ID))
+	if deli == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.DeliveryID = deli
+
+	if err := valid.GetValidator().Validate(req); err != nil {
+		return errors.ErrBadRequest
+	}
+
+	resp, err := o.orderUsecase.DeliveryUpdateStatusOrder(context, req)
+	if err != nil {
+		return errors.ErrInternalServer
+	}
+
+	data := responses.DefaultSuccess
+	data.Data = resp
+
+	return data.JSON(ctx)
+}
+
+func (o orderApiHandler) GetOrdersByDelivery(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	query, err := pagable.GetQueryFromFiberCtx(ctx)
+	if err != nil {
+		return errors.ErrBadRequest.WithInternalError(err)
+	}
+
+	req := delivery.GetOrderListRequest{}
+	req.Query = query
+
+	deliId := fmt.Sprintf("%v", ctx.Locals(auth.DELIVERY_ID))
+	req.DeliveryID = deliId
+
+	result, err := o.orderUsecase.GetOrdersOfDelivery(context, &req)
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "Unknown column"):

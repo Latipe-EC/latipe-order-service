@@ -1,6 +1,6 @@
 package dto
 
-const shippingCostUrl = "/api/v1/shipping/cost/order"
+const shippingCostUrl = "/api/v1/delivery/shipping/order"
 
 type GetShippingCostRequest struct {
 	SrcCode    []string `json:"src_code"`

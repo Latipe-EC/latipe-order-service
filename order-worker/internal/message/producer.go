@@ -43,6 +43,16 @@ func SendEmailMessage(request interface{}) error {
 		return err
 	}
 
+	err = producer.channel.ExchangeDeclare(
+		producer.cfg.RabbitMQ.EmailEvent.Exchange, // name
+		"topic", // type
+		true,    // durable
+		false,   // auto-deleted
+		false,   // internal
+		false,   // no-wait
+		nil,     // arguments
+	)
+
 	log.Printf("[Info]: Send message %v", request)
 	err = producer.channel.PublishWithContext(ctx,
 		producer.cfg.RabbitMQ.EmailEvent.Exchange,   // exchange

@@ -101,6 +101,21 @@ func (g GormRepository) FindOrderByStoreID(storeId string, query *pagable.Query)
 	return orders, err
 }
 
+func (g GormRepository) FindOrderByDelivery(deliID string, query *pagable.Query) ([]entity.Order, error) {
+	var orders []entity.Order
+	err := g.client.DB().Model(&entity.Order{}).Preload("Delivery").
+		Joins("inner join delivery_orders ON orders.id = delivery_orders.order_id").
+		Where("delivery_orders.id=?", deliID).
+		Order("orders.created_at DESC").
+		Limit(query.GetLimit()).Offset(query.GetOffset()).
+		Find(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, err
+}
+
 func (g GormRepository) FindOrderByUserAndProduct(userId string, productId string) ([]entity.Order, error) {
 	var orders []entity.Order
 	err := g.client.DB().Raw("select * from orders inner join order_items on orders.id = order_items.order_id "+
@@ -157,4 +172,14 @@ func (g GormRepository) Total(query *pagable.Query) (int, error) {
 		Count(&count).Error
 
 	return int(count), result
+}
+
+func (g GormRepository) UpdateOrderItem(orderItemID int, status int) error {
+	result := g.client.DB().Model(&entity.OrderItem{}).
+		Where("id = ?", orderItemID).Update("status", status)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return result.Error
+	}
+	return nil
 }

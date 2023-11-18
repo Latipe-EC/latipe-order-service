@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"order-rest-api/internal/common/errors"
 	orderDTO "order-rest-api/internal/domain/dto/order"
+	"order-rest-api/internal/domain/dto/order/delivery"
 	"order-rest-api/internal/domain/dto/order/store"
 	"order-rest-api/internal/domain/entities/order"
 	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
@@ -16,7 +17,6 @@ import (
 	voucherserv "order-rest-api/internal/infrastructure/adapter/vouchersev"
 	voucherDTO "order-rest-api/internal/infrastructure/adapter/vouchersev/dto"
 	"order-rest-api/internal/message"
-	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/pkg/cache/redis"
 	"order-rest-api/pkg/util/mapper"
 )
@@ -259,6 +259,33 @@ func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreO
 	return &resp, err
 }
 
+func (o orderService) GetOrdersOfDelivery(ctx context.Context, dto *delivery.GetOrderListRequest) (*delivery.GetOrderListResponse, error) {
+	var dataResp []store.StoreOrderResponse
+
+	orders, err := o.orderRepo.FindOrderByDelivery(dto.DeliveryID, dto.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := o.orderRepo.Total(dto.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = mapper.BindingStruct(orders, &dataResp); err != nil {
+		return nil, err
+	}
+
+	resp := delivery.GetOrderListResponse{}
+	resp.Data = dataResp
+	resp.Size = dto.Query.Size
+	resp.Page = dto.Query.Page
+	resp.Total = dto.Query.GetTotalPages(total)
+	resp.HasMore = dto.Query.GetHasMore(total)
+
+	return &resp, err
+}
+
 func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOrderOfStoreByIDRequest) (*store.GetOrderOfStoreByIDResponse, error) {
 	orderResp := store.GetOrderOfStoreByIDResponse{}
 
@@ -308,24 +335,6 @@ func (o orderService) UpdateStatusOrder(ctx context.Context, dto *orderDTO.Updat
 		return errors.ErrBadRequest
 	}
 
-	switch dto.Role {
-	case auth.ROLE_USER:
-		if dto.Status != order.ORDER_CANCEL || orderDAO.Status != order.ORDER_CREATED {
-			return errors.ErrPermissionDenied
-		}
-	case auth.ROLE_STORE:
-		if dto.Status != order.ORDER_PENDING && dto.Status != order.ORDER_DELIVERY {
-			return errors.ErrPermissionDenied
-		}
-	case auth.ROLE_SHIPPER:
-		if orderDAO.Status != order.ORDER_DELIVERY {
-			return errors.ErrPermissionDenied
-		}
-		if dto.Status != order.ORDER_PENDING && dto.Status != order.ORDER_REFUND {
-			return errors.ErrPermissionDenied
-		}
-	}
-
 	orderDAO.Status = dto.Status
 
 	if err := o.orderRepo.Update(*orderDAO); err != nil {
@@ -333,6 +342,78 @@ func (o orderService) UpdateStatusOrder(ctx context.Context, dto *orderDTO.Updat
 	}
 
 	return nil
+}
+
+func (o orderService) DeliveryUpdateStatusOrder(ctx context.Context, dto delivery.UpdateOrderStatusRequest) (*delivery.UpdateOrderStatusResponse, error) {
+	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	if orderDAO.Status != order.ORDER_DELIVERY {
+		return nil, errors.ErrBadRequest
+	}
+
+	if orderDAO.Delivery.DeliveryId != dto.DeliveryID {
+		return nil, errors.ErrNotFoundRecord
+	}
+
+	orderDAO.Status = dto.Status
+
+	if dto.Status == order.ORDER_CANCEL || dto.Status == order.ORDER_SHIPPING_FINISH {
+		if err := o.orderRepo.UpdateStatus(orderDAO.Id, dto.Status); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
+}
+
+func (o orderService) UpdateOrderItem(ctx context.Context, dto *store.UpdateOrderItemRequest) (*store.UpdateOrderItemResponse, error) {
+	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	notFound := true
+	itemPreparedCount := 0
+
+	for _, i := range orderDAO.OrderItem {
+		if i.Status != order.OI_PREPARED && i.Id == dto.ItemID {
+			notFound = false
+			if err := o.orderRepo.UpdateOrderItem(i.Id, order.OI_PREPARED); err != nil {
+				return nil, err
+			}
+		}
+
+		if i.Status == order.OI_PREPARED {
+			itemPreparedCount++
+		}
+	}
+
+	if notFound {
+		return nil, errors.ErrNotFoundRecord
+	}
+
+	if orderDAO.Status == order.ORDER_CREATED {
+		if err := o.orderRepo.UpdateStatus(orderDAO.Id, order.ORDER_PENDING); err != nil {
+			return nil, err
+		}
+	}
+
+	if len(orderDAO.OrderItem) == itemPreparedCount {
+		if err := o.orderRepo.UpdateStatus(orderDAO.Id, order.ORDER_DELIVERY); err != nil {
+			return nil, err
+		}
+	}
+
+	resp := store.UpdateOrderItemResponse{
+		OrderUUID: dto.OrderUUID,
+		ItemID:    dto.ItemID,
+		Status:    order.OI_PREPARED,
+	}
+
+	return &resp, nil
 }
 
 func (o orderService) UpdateOrder(ctx context.Context, dto *orderDTO.UpdateOrderRequest) error {

@@ -44,8 +44,8 @@ RabbitMQ:
     RoutingKey: order_created_key
     Queue: order_created_event_worker
   EmailEvent:
-    Exchange: email_exchange
-    RoutingKey: email_routing_key
+    Exchange: email_topic_exchange
+    RoutingKey: email.order
     Queue: email_notify_queue
   CartEvent:
     Exchange:
