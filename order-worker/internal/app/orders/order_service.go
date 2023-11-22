@@ -51,6 +51,12 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 			ProdImg:     item.ProductItem.Image,
 			Order:       &orderDAO,
 		}
+		if i.NetPrice != 0 {
+			i.SubTotal = i.NetPrice * i.Quantity
+		} else {
+			i.SubTotal = i.Price * i.Quantity
+		}
+
 		orderItems = append(orderItems, &i)
 	}
 	orderDAO.OrderItem = orderItems
