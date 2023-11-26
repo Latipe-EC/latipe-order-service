@@ -51,6 +51,10 @@ RabbitMQ:
     Exchange:
     RoutingKey:
     Queue:
+  BillingEvent:
+    Exchange: store_exchange
+    RoutingKey: order.success
+    Queue:
   ConsumerName: create_orders_service
   ProducerName: billing&payment_service
 
@@ -65,3 +69,9 @@ AdapterService:
   EmailService:
     BaseURL: http://172.20.64.1:8181
     InternalKey:
+  StoreService:
+    BaseURL: http://172.20.64.1:8118
+    InternalKey:
+
+CronJob:
+  OrderCompleteScheduled: "@every 5s"

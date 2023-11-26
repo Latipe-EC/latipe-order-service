@@ -1,4 +1,4 @@
-package message
+package worker
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"log"
 	"order-worker/config"
 	"order-worker/internal/app/orders"
-	emailDTO "order-worker/internal/domain/dto"
 	dto "order-worker/internal/domain/dto/order"
+	"sync"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -25,7 +25,7 @@ func NewConsumerOrderMessage(config *config.Config, orderService orders.Usecase)
 	}
 }
 
-func (mq ConsumerOrderMessage) ListenOrderEventQueue() {
+func (mq ConsumerOrderMessage) ListenOrderEventQueue(wg *sync.WaitGroup) {
 	conn, err := amqp.Dial(mq.config.RabbitMQ.Connection)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	log.Printf("[%s] Comsumer has been connected", "INFO")
@@ -85,6 +85,7 @@ func (mq ConsumerOrderMessage) ListenOrderEventQueue() {
 		panic(err)
 	}
 
+	defer wg.Done()
 	// handle consumed messages from queue
 	for msg := range msgs {
 		log.Printf("[%s] received order message from: %s", "INFO", msg.RoutingKey)
@@ -114,35 +115,6 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 	err := mq.orderUsecase.CreateOrder(ctx, &message)
 	if err != nil {
 		return err
-	}
-
-	//send notify email
-	email := emailDTO.EmailRequest{
-		EmailRecipient: message.UserRequest.Username,
-		Name:           message.Address.ShippingName,
-		OrderId:        message.OrderUUID,
-		Url:            "http://www.google.com",
-		Type:           emailDTO.ORDER,
-	}
-	err = SendEmailMessage(email)
-	if err != nil {
-		log.Printf("[%s] sending message to email queue was failed : %s", "ERROR", err)
-		return err
-	}
-
-	//delete cart
-	var cartItemList []string
-	for _, i := range message.OrderItems {
-		if i.CartItemId != "" {
-			cartItemList = append(cartItemList, i.CartItemId)
-		}
-	}
-	if len(cartItemList) > 0 {
-		err := SendCartServiceMessage(cartItemList)
-		if err != nil {
-			log.Printf("[%s] sending message to cart queue was failed : %s", "ERROR", err)
-			return err
-		}
 	}
 
 	log.Printf("[%s] The order created successfully: %s", "INFO", msg.RoutingKey)

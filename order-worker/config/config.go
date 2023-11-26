@@ -18,6 +18,7 @@ type Config struct {
 	//Adapters Adapters
 	AdapterService AdapterService
 	RabbitMQ       RabbitMQ
+	CronJob        CronJob
 }
 
 type Server struct {
@@ -80,6 +81,7 @@ type RabbitMQ struct {
 	OrderEvent   OrderEvent
 	EmailEvent   EmailEvent
 	CartEvent    CartEvent
+	BillingEvent BillingEvent
 	ConsumerName string
 	ProducerName string
 }
@@ -105,10 +107,18 @@ type CartEvent struct {
 	Queue      string
 }
 
+type BillingEvent struct {
+	Connection string
+	Exchange   string
+	RoutingKey string
+	Queue      string
+}
+
 type AdapterService struct {
 	UserService    UserService
 	ProductService ProductService
 	EmailService   EmailService
+	StoreService   StoreService
 }
 
 type UserService struct {
@@ -126,6 +136,15 @@ type EmailService struct {
 	Email string
 	Host  string
 	Key   string
+}
+
+type StoreService struct {
+	BaseURL     string
+	InternalKey string
+}
+
+type CronJob struct {
+	OrderCompleteScheduled string
 }
 
 // Get config path for local or docker

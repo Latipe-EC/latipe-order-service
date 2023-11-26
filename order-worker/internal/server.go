@@ -9,34 +9,42 @@ import (
 	"github.com/google/wire"
 	"order-worker/config"
 	"order-worker/internal/app"
+	"order-worker/internal/infrastructure/adapter/storeserv"
+	"order-worker/internal/order_cron"
+	"order-worker/internal/publisher"
+	"order-worker/internal/worker"
 
 	"order-worker/internal/infrastructure/adapter/productserv"
 	"order-worker/internal/infrastructure/adapter/userserv"
 	"order-worker/internal/infrastructure/persistence"
-	"order-worker/internal/message"
 )
 
 type Server struct {
-	app      *fiber.App
-	cfg      *config.Config
-	consumer *message.ConsumerOrderMessage
+	app                 *fiber.App
+	cfg                 *config.Config
+	orderCreateConsumer *worker.ConsumerOrderMessage
+	orderCompleteCJ     *order_cron.OrderCompleteCronjob
 }
 
 func New() (*Server, error) {
 	panic(wire.Build(wire.NewSet(
 		NewServer,
 		config.Set,
-		message.Set,
+		publisher.Set,
+		worker.Set,
 		persistence.Set,
 		userserv.Set,
 		productserv.Set,
+		storeserv.Set,
 		app.Set,
+		order_cron.Set,
 	)))
 }
 
 func NewServer(
 	cfg *config.Config,
-	consumer *message.ConsumerOrderMessage) *Server {
+	orderSubscriber *worker.ConsumerOrderMessage,
+	orderCompleteCron *order_cron.OrderCompleteCronjob) *Server {
 
 	app := fiber.New(fiber.Config{})
 	// Initialize default config
@@ -47,9 +55,10 @@ func NewServer(
 	})
 
 	return &Server{
-		cfg:      cfg,
-		app:      app,
-		consumer: consumer,
+		cfg:                 cfg,
+		app:                 app,
+		orderCreateConsumer: orderSubscriber,
+		orderCompleteCJ:     orderCompleteCron,
 	}
 }
 
@@ -61,6 +70,10 @@ func (serv Server) Config() *config.Config {
 	return serv.cfg
 }
 
-func (serv Server) Consumer() *message.ConsumerOrderMessage {
-	return serv.consumer
+func (serv Server) ConsumerOrderMessage() *worker.ConsumerOrderMessage {
+	return serv.orderCreateConsumer
+}
+
+func (serv Server) OrderCompleteCJ() *order_cron.OrderCompleteCronjob {
+	return serv.orderCompleteCJ
 }

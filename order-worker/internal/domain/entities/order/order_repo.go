@@ -1,13 +1,17 @@
 package order
 
-import "order-worker/pkg/util/pagable"
+import (
+	"order-worker/internal/domain/entities/custom"
+	"order-worker/pkg/util/pagable"
+)
 
 type Repository interface {
-	FindById(Id string) (*Order, error)
-	FindAll(query *pagable.Query) ([]*Order, error)
-	FindByUserId(query *pagable.Query) ([]*Order, error)
-	FindOrderLogByOrderId(orderId int) ([]*OrderStatusLog, error)
+	GetOrderAmountOfStore(orderId int) ([]custom.AmountItemOfStoreInOrder, error)
+	FindAllFinishShippingOrder() ([]Order, error)
+	CreateOrderCommmsionTransaction(order *Order, ocms *OrderCommission, log *OrderStatusLog) error
 	Save(order *Order) error
+	FindById(Id string) (*Order, error)
+	FindByUserId(query *pagable.Query) ([]*Order, error)
 	Update(order Order) error
 	Total(query *pagable.Query) (int, error)
 }

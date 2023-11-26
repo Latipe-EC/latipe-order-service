@@ -1,4 +1,4 @@
-package message
+package worker
 
 import "github.com/google/wire"
 

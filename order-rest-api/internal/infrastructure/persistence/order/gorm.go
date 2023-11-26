@@ -92,12 +92,17 @@ func (g GormRepository) FindByUserId(userId string, query *pagable.Query) ([]ent
 
 func (g GormRepository) FindOrderByStoreID(storeId string, query *pagable.Query) ([]entity.Order, error) {
 	var orders []entity.Order
-	err := g.client.DB().Model(&entity.Order{}).Preload("Delivery").
-		Joins("inner join order_items ON orders.id = order_items.order_id").
-		Where("order_items.store_id=?", storeId).
-		Order("orders.created_at DESC").
-		Limit(query.GetLimit()).Offset(query.GetOffset()).
-		Find(&orders).Error
+	sql := `
+	SELECT orders.id,orders.created_at,
+       order_uuid,username,amount,payment_method,orders.status,orders.created_at
+	FROM orders
+	join order_items oi on orders.id = oi.order_id
+	where store_id=?
+	group by orders.id
+	order by orders.created_at desc
+	limit ?,?
+	`
+	err := g.client.DB().Raw(sql, storeId, query.Page, query.Size).Scan(&orders).Error
 	if err != nil {
 		return nil, err
 	}

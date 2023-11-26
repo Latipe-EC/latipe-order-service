@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	server "order-worker/internal"
-	"order-worker/internal/message"
+	"sync"
 )
 
 func main() {
@@ -17,16 +17,13 @@ func main() {
 	}
 
 	//order handle worker
-	go func() {
-		serv.Consumer().ListenOrderEventQueue()
-	}()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go serv.ConsumerOrderMessage().ListenOrderEventQueue(&wg)
 
-	//init message queue
-	if err := message.InitWorkerProducer(serv.Config()); err != nil {
-		fmt.Printf("%s", err)
-	}
+	wg.Add(1)
+	go serv.OrderCompleteCJ().CheckOrderFinishShippingStatus(&wg)
+	wg.Add(1)
 
-	if err := serv.App().Listen(serv.Config().Server.Port); err != nil {
-		fmt.Printf("%s", err)
-	}
+	wg.Wait()
 }

@@ -1,19 +1,10 @@
 package orders
 
-import (
-	"order-worker/internal/domain/dto/order"
-	"order-worker/internal/infrastructure/adapter/productserv/dto"
-)
+import "time"
 
-func MappingOrderItemForReduce(request []order.OrderItemsCache) []dto.ReduceItem {
-	var items []dto.ReduceItem
-	for _, i := range request {
-		product := dto.ReduceItem{
-			ProductId: i.ProductItem.ProductID,
-			OptionId:  i.ProductItem.OptionID,
-			Quantity:  i.ProductItem.Quantity,
-		}
-		items = append(items, product)
-	}
-	return items
+func IsAfterSevenDays(t time.Time) bool {
+	now := time.Now()
+
+	sevenDaysAgo := now.Add(-7 * 24 * time.Hour)
+	return t.After(sevenDaysAgo) || t.Equal(sevenDaysAgo)
 }
