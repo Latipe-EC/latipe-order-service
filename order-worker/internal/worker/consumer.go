@@ -7,6 +7,7 @@ import (
 	"order-worker/config"
 	"order-worker/internal/app/orders"
 	dto "order-worker/internal/domain/dto/order"
+	"order-worker/internal/domain/entities/order"
 	"sync"
 	"time"
 
@@ -110,6 +111,10 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 	if err := json.Unmarshal(msg.Body, &message); err != nil {
 		log.Printf("[%s] Parse message to order failed cause: %s", "ERROR", err)
 		return err
+	}
+
+	if message.Status == order.ORDER_SHIPPING_FINISH {
+		return nil
 	}
 
 	err := mq.orderUsecase.CreateOrder(ctx, &message)

@@ -25,11 +25,11 @@ type UserRequest struct {
 }
 
 type OrderItems struct {
-	CartItemId string `json:"cart_item_id,omitempty"`
-	ProductId  string `json:"product_id" validate:"required"`
-	OptionId   string `json:"option_id"`
-	Quantity   int    `json:"quantity" validate:"required"`
-	Price      int    `json:"price" validate:"required"`
+	CartId    string `json:"cart_id,omitempty"`
+	ProductId string `json:"product_id" validate:"required"`
+	OptionId  string `json:"option_id"`
+	Quantity  int    `json:"quantity" validate:"required"`
+	Price     int    `json:"price" validate:"required"`
 }
 
 type OrderAddress struct {

@@ -125,7 +125,7 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 	keyGen := uuid.NewString()
 	orderData.OrderUUID = keyGen
 
-	if err := message.SendMessage(orderData, orderData.OrderUUID); err != nil {
+	if err := message.SendOrderMessage(orderData); err != nil {
 		return nil, err
 	}
 
@@ -366,6 +366,17 @@ func (o orderService) DeliveryUpdateStatusOrder(ctx context.Context, dto deliver
 		}
 	}
 
+	msg := order.OrderMessage{
+		Status:    order.ORDER_SHIPPING_FINISH,
+		OrderUUID: orderDAO.OrderUUID,
+	}
+
+	if dto.Status == order.ORDER_SHIPPING_FINISH {
+		if err := message.SendOrderMessage(&msg); err != nil {
+			return nil, err
+		}
+	}
+
 	return nil, nil
 }
 
@@ -425,6 +436,7 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 	address *userDTO.GetDetailAddressResponse, deli *deliDto.GetShippingCostResponse, dto *orderDTO.CreateOrderRequest) *order.OrderMessage {
 
 	orderCache := order.OrderMessage{
+		Status: order.ORDER_SYSTEM_PROCESS,
 		Header: order.BaseHeader{dto.Header.BearerToken},
 		UserRequest: order.UserRequest{
 			UserId:   dto.UserRequest.UserId,
@@ -452,7 +464,7 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 	var orderItems []order.OrderItemsCache
 	for index, i := range products.Products {
 		item := order.OrderItemsCache{
-			CartItemId: dto.OrderItems[index].CartItemId,
+			CartId: dto.OrderItems[index].CartId,
 			ProductItem: order.ProductItem{
 				ProductID:   i.ProductId,
 				ProductName: i.Name,

@@ -131,12 +131,14 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 	//delete cart
 	var cartItemList []string
 	for _, i := range message.OrderItems {
-		if i.CartItemId != "" {
-			cartItemList = append(cartItemList, i.CartItemId)
+		if i.CartId != "" {
+			cartItemList = append(cartItemList, i.CartId)
 		}
 	}
 	if len(cartItemList) > 0 {
-		err := o.message.SendCartServiceMessage(cartItemList)
+		msg := messageDTO.CartMessage{CartIdVmList: cartItemList}
+
+		err := o.message.SendCartServiceMessage(&msg)
 		if err != nil {
 			log.Printf("[%s] sending message to cart queue was failed : %s", "ERROR", err)
 			return err
@@ -189,11 +191,11 @@ func (o orderService) createCommissionOfOrder(ctx context.Context, dao *order.Or
 			return err
 		}
 
-		systemFee := int(float64(i.OrderAmount) * storeCms.Fee)
+		systemFee := int(float64(i.OrderAmount) * storeCms.FeePerOrder)
 		storeReceived := i.OrderAmount - systemFee
 		oc := order.OrderCommission{
 			OrderID:        dao.Id,
-			StoreID:        i.StoreId,
+			StoreID:        storeCms.Id,
 			AmountReceived: storeReceived,
 			SystemFee:      systemFee,
 		}
@@ -217,7 +219,7 @@ func (o orderService) createCommissionOfOrder(ctx context.Context, dao *order.Or
 			SystemFee:      oc.SystemFee,
 		}
 
-		if err := o.message.SendEmailMessage(&msg); err != nil {
+		if err := o.message.SendBillingServiceMessage(&msg); err != nil {
 			return err
 		}
 

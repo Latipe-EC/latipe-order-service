@@ -48,12 +48,12 @@ RabbitMQ:
     RoutingKey: email.order
     Queue: email_notify_queue
   CartEvent:
-    Exchange:
-    RoutingKey:
+    Exchange: cart_exchange
+    RoutingKey: cart_routing_key
     Queue:
   BillingEvent:
     Exchange: store_exchange
-    RoutingKey: order.success
+    RoutingKey: store_routing_key
     Queue:
   ConsumerName: create_orders_service
   ProducerName: billing&payment_service
@@ -74,4 +74,4 @@ AdapterService:
     InternalKey:
 
 CronJob:
-  OrderCompleteScheduled: "@every 5s"
+  OrderCompleteScheduled: "@every 15m"

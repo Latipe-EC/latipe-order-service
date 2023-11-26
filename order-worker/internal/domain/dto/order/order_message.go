@@ -3,6 +3,7 @@ package order
 type OrderMessage struct {
 	Header        BaseHeader
 	UserRequest   UserRequest       `json:"user_request"`
+	Status        int               `json:"status"`
 	OrderUUID     string            `json:"order_uuid"`
 	Amount        int               `json:"amount" validate:"required"`
 	ShippingCost  int               ` json:"shipping_cost"`
@@ -26,7 +27,7 @@ type Voucher struct {
 }
 
 type OrderItemsCache struct {
-	CartItemId  string      `json:"cart_item_id"`
+	CartId      string      `json:"cart_id"`
 	ProductItem ProductItem `json:"product_item"`
 }
 

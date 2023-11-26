@@ -78,7 +78,11 @@ func (p MessageProducer) SendCartServiceMessage(request interface{}) error {
 		return err
 	}
 
-	log.Printf("[Info]: Send message %v", request)
+	log.Printf("[Info] [%v-%v]: Send message %v",
+		p.cfg.RabbitMQ.CartEvent.Exchange,
+		p.cfg.RabbitMQ.CartEvent.RoutingKey,
+		request)
+
 	err = p.channel.PublishWithContext(ctx,
 		p.cfg.RabbitMQ.CartEvent.Exchange,   // exchange
 		p.cfg.RabbitMQ.CartEvent.RoutingKey, // routing key
@@ -102,7 +106,11 @@ func (p MessageProducer) SendBillingServiceMessage(request interface{}) error {
 		return err
 	}
 
-	log.Printf("[Info]: Send message %v", request)
+	log.Printf("[Info] [%v-%v]: Send message %v",
+		p.cfg.RabbitMQ.BillingEvent.Exchange,
+		p.cfg.RabbitMQ.BillingEvent.RoutingKey,
+		request)
+
 	err = p.channel.PublishWithContext(ctx,
 		p.cfg.RabbitMQ.BillingEvent.Exchange,   // exchange
 		p.cfg.RabbitMQ.BillingEvent.RoutingKey, // routing key

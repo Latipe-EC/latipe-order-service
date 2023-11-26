@@ -31,20 +31,18 @@ func InitProducerMessage(config *config.Config) error {
 	return nil
 }
 
-func SendMessage(request interface{}, content ...string) error {
+func SendOrderMessage(request interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	if len(content) > 1 {
-		content[0] = "default"
-	}
 
 	body, err := ParseOrderToMessage(&request)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[Info]: Send message to queue %v", content[0])
+	log.Printf("[Info]: Send message to queue %v - %v",
+		producer.cfg.RabbitMQ.Exchange,
+		producer.cfg.RabbitMQ.RoutingKey)
 	err = producer.channel.PublishWithContext(ctx,
 		producer.cfg.RabbitMQ.Exchange,   // exchange
 		producer.cfg.RabbitMQ.RoutingKey, // routing key

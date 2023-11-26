@@ -6,17 +6,18 @@ type BaseHeader struct {
 
 type OrderMessage struct {
 	Header        BaseHeader
-	UserRequest   UserRequest       `json:"user_request"`
-	OrderUUID     string            `json:"order_uuid"`
-	Amount        int               `json:"amount" validate:"required"`
-	ShippingCost  int               ` json:"shipping_cost"`
-	Discount      int               `json:"discount" validate:"required"`
-	SubTotal      int               `json:"sub_total" validate:"required"`
-	PaymentMethod int               `json:"payment_method" validate:"required"`
-	Vouchers      []string          `json:"vouchers"`
-	Address       OrderAddress      `json:"address" validate:"required"`
-	Delivery      Delivery          `json:"delivery" validate:"required"`
-	OrderItems    []OrderItemsCache `json:"order_items" validate:"required"`
+	UserRequest   UserRequest       `json:"user_request,omitempty"`
+	Status        int               `json:"status,omitempty"`
+	OrderUUID     string            `json:"order_uuid,omitempty"`
+	Amount        int               `json:"amount,omitempty" validate:"required"`
+	ShippingCost  int               `json:"shipping_cost,omitempty"`
+	Discount      int               `json:"discount,omitempty" validate:"required"`
+	SubTotal      int               `json:"sub_total,omitempty" validate:"required"`
+	PaymentMethod int               `json:"payment_method,omitempty" validate:"required"`
+	Vouchers      []string          `json:"vouchers,omitempty"`
+	Address       OrderAddress      `json:"address,omitempty" validate:"required"`
+	Delivery      Delivery          `json:"delivery,omitempty" validate:"required"`
+	OrderItems    []OrderItemsCache `json:"order_item,omitempty" validate:"required"`
 }
 
 type UserRequest struct {
@@ -24,7 +25,7 @@ type UserRequest struct {
 	Username string `json:"username"`
 }
 type OrderItemsCache struct {
-	CartItemId  string      `json:"cart_item_id"`
+	CartId      string      `json:"cart_id"`
 	ProductItem ProductItem `json:"product_item"`
 }
 

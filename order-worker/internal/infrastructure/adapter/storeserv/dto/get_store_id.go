@@ -8,8 +8,14 @@ type GetStoreByIdRequest struct {
 }
 
 type GetStoreByIdResponse struct {
-	StoreID string  `json:"store_id"`
-	Fee     float64 `json:"fee"`
+	Id          string  `json:"id"`
+	IsDeleted   bool    `json:"isDeleted"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Logo        string  `json:"logo"`
+	OwnerId     string  `json:"ownerId"`
+	Cover       string  `json:"cover"`
+	FeePerOrder float64 `json:"feePerOrder"`
 }
 
 func (GetStoreByIdRequest) URL() string {

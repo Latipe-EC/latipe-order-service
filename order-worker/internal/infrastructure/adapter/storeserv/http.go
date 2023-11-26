@@ -2,6 +2,7 @@ package storeserv
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2/log"
@@ -9,6 +10,7 @@ import (
 	"order-worker/config"
 	"order-worker/internal/infrastructure/adapter/storeserv/dto"
 	http "order-worker/pkg/internal_http"
+	"order-worker/pkg/util/mapper"
 )
 
 var Set = wire.NewSet(
@@ -60,37 +62,37 @@ func (h httpAdapter) GetStoreByUserId(ctx context.Context, req *dto.GetStoreIdBy
 }
 
 func (h httpAdapter) GetStoreByStoreId(ctx context.Context, req *dto.GetStoreByIdRequest) (*dto.GetStoreByIdResponse, error) {
-	/*	resp, err := h.client.MakeRequest().
-			SetContext(ctx).
-			SetHeader("Authorization", fmt.Sprintf("Bearer %v", req.BaseHeader.BearToken)).
-			Get(req.URL() + req.UserID)
+	resp, err := h.client.MakeRequest().
+		Get(fmt.Sprintf("%v%v", req.URL(), req.StoreID))
 
-		if err != nil {
-			log.Errorf("[Get store id]: %s", err)
-			return nil, err
-		}
-
-		if resp.StatusCode() >= 500 {
-			log.Errorf("[Get store id]: %s", resp.Body())
-			return nil, errors.New("internal service request")
-		}
-
-		if resp.StatusCode() >= 400 {
-			log.Errorf("[Get store id]: %s", resp.Body())
-			return nil, errors.New("service bad request")
-		}
-
-		var regResp *dto.GetStoreByIdResponse
-
-		err = mapper.BindingStruct(resp.Body(), &regResp)
-		if err != nil {
-			log.Errorf("[Get store id]: %s", err)
-			return nil, err
-		}*/
-	regResp := dto.GetStoreByIdResponse{
-		StoreID: req.StoreID,
-		Fee:     0.05,
+	if err != nil {
+		log.Errorf("[Get store id]: %s", err)
+		return nil, err
 	}
 
-	return &regResp, nil
+	if resp.StatusCode() >= 500 {
+		log.Errorf("[Get store id]: %s", resp.Body())
+		return nil, errors.New("internal service request")
+	}
+
+	if resp.StatusCode() >= 400 {
+		log.Errorf("[Get store id]: %s", resp.Body())
+		return nil, errors.New("service bad request")
+	}
+
+	var rawResp dto.BaseResponse
+	if err := json.Unmarshal(resp.Body(), &rawResp.Data); err != nil {
+		log.Errorf("[%s] [Get store id]: %s", "ERROR", err)
+		return nil, err
+	}
+
+	var regResp *dto.GetStoreByIdResponse
+
+	err = mapper.BindingStruct(rawResp.Data, &regResp)
+	if err != nil {
+		log.Errorf("[Get store id]: %s", err)
+		return nil, err
+	}
+
+	return regResp, nil
 }
