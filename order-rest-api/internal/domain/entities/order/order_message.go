@@ -7,7 +7,7 @@ type BaseHeader struct {
 type OrderMessage struct {
 	Header        BaseHeader
 	UserRequest   UserRequest       `json:"user_request,omitempty"`
-	Status        int               `json:"status,omitempty"`
+	Status        int               `json:"status"`
 	OrderUUID     string            `json:"order_uuid,omitempty"`
 	Amount        int               `json:"amount,omitempty" validate:"required"`
 	ShippingCost  int               `json:"shipping_cost,omitempty"`
@@ -24,6 +24,7 @@ type UserRequest struct {
 	UserId   string `json:"user_id"`
 	Username string `json:"username"`
 }
+
 type OrderItemsCache struct {
 	CartId      string      `json:"cart_id"`
 	ProductItem ProductItem `json:"product_item"`

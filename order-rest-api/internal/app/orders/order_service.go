@@ -121,6 +121,7 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 	}
 	//calculate amount order
 	orderData.Amount = orderData.SubTotal + orderData.ShippingCost - orderData.Discount
+	orderData.Status = order.ORDER_SYSTEM_PROCESS
 	//gen key order
 	keyGen := uuid.NewString()
 	orderData.OrderUUID = keyGen
@@ -308,6 +309,7 @@ func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOr
 				Quantity:  o.Quantity,
 				Price:     o.Price,
 				Status:    o.Status,
+				Id:        o.Id,
 			}
 			items = append(items, i)
 			storeAmount += o.Price
@@ -395,6 +397,7 @@ func (o orderService) UpdateOrderItem(ctx context.Context, dto *store.UpdateOrde
 			if err := o.orderRepo.UpdateOrderItem(i.Id, order.OI_PREPARED); err != nil {
 				return nil, err
 			}
+			i.Status = order.OI_PREPARED
 		}
 
 		if i.Status == order.OI_PREPARED {

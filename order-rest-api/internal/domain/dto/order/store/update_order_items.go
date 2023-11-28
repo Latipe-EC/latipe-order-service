@@ -1,7 +1,7 @@
 package store
 
 type UpdateOrderItemRequest struct {
-	OrderUUID string `json:"order_uuid" validate:"required"`
+	OrderUUID string `params:"id" validate:"required"`
 	ItemID    int    `json:"item_id"`
 	StoreId   string
 }

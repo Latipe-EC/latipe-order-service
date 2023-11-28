@@ -162,6 +162,17 @@ func (g GormRepository) UpdateStatus(orderID int, status int) error {
 		StatusChange: status,
 	}
 
+	switch status {
+	case entity.ORDER_PENDING:
+		updateLog.Message = "order-pending"
+	case entity.ORDER_DELIVERY:
+		updateLog.Message = "order-delivery"
+	case entity.ORDER_SHIPPING_FINISH:
+		updateLog.Message = "shipping-finish"
+	case entity.ORDER_CANCEL:
+		updateLog.Message = "shipping-cancel"
+	}
+
 	result := g.client.Transaction(func(tx *gormF.DB) error {
 		if err := tx.Model(&entity.Order{}).
 			Where("id = ?", orderID).Update("status", status).Error; err != nil {

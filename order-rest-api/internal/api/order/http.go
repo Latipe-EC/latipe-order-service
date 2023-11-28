@@ -270,9 +270,13 @@ func (o orderApiHandler) GetStoreOrderDetail(ctx *fiber.Ctx) error {
 func (o orderApiHandler) UpdateOrderItemStatus(ctx *fiber.Ctx) error {
 	context := ctx.Context()
 
-	req := new(store.UpdateOrderItemRequest)
+	req := store.UpdateOrderItemRequest{}
 
 	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	if err := ctx.ParamsParser(&req); err != nil {
 		return errors.ErrInternalServer.WithInternalError(err)
 	}
 
@@ -283,7 +287,7 @@ func (o orderApiHandler) UpdateOrderItemStatus(ctx *fiber.Ctx) error {
 
 	req.StoreId = storeId
 
-	resp, err := o.orderUsecase.UpdateOrderItem(context, req)
+	resp, err := o.orderUsecase.UpdateOrderItem(context, &req)
 	if err != nil {
 		return errors.ErrInternalServer
 	}

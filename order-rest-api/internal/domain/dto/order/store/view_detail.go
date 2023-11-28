@@ -27,6 +27,7 @@ type StoreOrderResponse struct {
 }
 
 type OrderStoreItem struct {
+	Id        int    `json:"id,omitempty"`
 	ProductId string `json:"product_id" `
 	OptionId  string `json:"option_id"`
 	Quantity  int    `json:"quantity" `
