@@ -89,18 +89,21 @@ func (q *Query) GetPage() int {
 
 // Get OrderBy
 func (q *Query) GetSize() int {
+	if q.Size == 0 {
+		return defaultSize
+	}
 	return q.Size
 }
 
 // Get total pages int
 func (q *Query) GetTotalPages(totalCount int) int {
-	d := float64(totalCount) / float64(q.Size)
+	d := float64(totalCount) / float64(q.GetSize())
 	return int(math.Ceil(d))
 }
 
 // Get has more
 func (q *Query) GetHasMore(total int) bool {
-	return q.Page < total/q.Size
+	return q.Page < total/q.GetSize()
 }
 
 func (q *Query) ORMConditions() interface{} {
@@ -110,27 +113,35 @@ func (q *Query) ORMConditions() interface{} {
 	var conditions []string
 	for _, filter := range q.ExpressionFilters {
 		var condition string
+		var value interface{}
+
+		if filter.Field == "status" {
+			value, _ = strconv.Atoi(fmt.Sprintf("%v", filter.Value))
+		} else {
+			value = fmt.Sprintf("'%s'", filter.Value)
+		}
+
 		switch filter.Operation {
 		case Equal:
-			condition = filter.Field + " = " + fmt.Sprintf("'%s'", filter.Value)
+			condition = filter.Field + " = " + fmt.Sprintf("%v", value)
 		case NotEqual:
-			condition = filter.Field + " <> " + fmt.Sprintf("'%s'", filter.Value)
+			condition = filter.Field + " <> " + fmt.Sprintf("'%s'", value)
 		case LT:
-			condition = filter.Field + " < " + fmt.Sprintf("'%s'", filter.Value)
+			condition = filter.Field + " < " + fmt.Sprintf("'%s'", value)
 		case LTE:
-			condition = filter.Field + " <= " + fmt.Sprintf("'%s'", filter.Value)
+			condition = filter.Field + " <= " + fmt.Sprintf("'%s'", value)
 		case GT:
-			condition = filter.Field + " > " + fmt.Sprintf("'%s'", filter.Value)
+			condition = filter.Field + " > " + fmt.Sprintf("'%s'", value)
 		case GTE:
-			condition = filter.Field + " >= " + fmt.Sprintf("'%s'", filter.Value)
+			condition = filter.Field + " >= " + fmt.Sprintf("'%s'", value)
 		case In:
-			condition = filter.Field + " IN " + fmt.Sprintf("'%s'", filter.Value)
+			condition = filter.Field + " IN " + fmt.Sprintf("'%s'", value)
 		case NotIn:
-			condition = filter.Field + " NOT IN " + fmt.Sprintf("'%s'", filter.Value)
+			condition = filter.Field + " NOT IN " + fmt.Sprintf("'%s'", value)
 		case Contains:
-			condition = filter.Field + " LIKE " + "%" + fmt.Sprintf("'%s'", filter.Value) + "%"
+			condition = filter.Field + " LIKE " + "%" + fmt.Sprintf("'%s'", value) + "%"
 		case NotContains:
-			condition = filter.Field + " NOT LIKE " + "%" + fmt.Sprintf("'%s'", filter.Value) + "%"
+			condition = filter.Field + " NOT LIKE " + "%" + fmt.Sprintf("'%s'", value) + "%"
 		case IsNull:
 			condition = filter.Field + " IS NULL"
 		case IsNotNull:

@@ -40,8 +40,8 @@ func (o orderRouter) Init(root *fiber.Router) {
 		orderRouter.Get("/store/:id", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetStoreOrderDetail)
 		orderRouter.Patch("/store/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.UpdateOrderItemStatus)
 		//delivery
-		orderRouter.Get("/delivery/", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetOrdersByDelivery)
-		orderRouter.Patch("/delivery/:id", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.UpdateStatusByDelivery)
+		orderRouter.Get("/delivery", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.GetOrdersByDelivery)
+		orderRouter.Patch("/delivery/:id", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.UpdateStatusByDelivery)
 	}
 
 }

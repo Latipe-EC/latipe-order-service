@@ -49,7 +49,7 @@ func New() (*Server, error) {
 	orderApiHandler := order2.NewOrderHandler(usecase)
 	authservService := authserv.NewAuthServHttpAdapter(configConfig)
 	storeservService := storeserv.NewStoreServiceAdapter(configConfig)
-	authenticationMiddleware := auth.NewAuthMiddleware(authservService, storeservService)
+	authenticationMiddleware := auth.NewAuthMiddleware(authservService, storeservService, deliveryservService)
 	middlewareMiddleware := middleware.NewMiddleware(authenticationMiddleware)
 	orderRouter := router.NewOrderRouter(orderApiHandler, middlewareMiddleware)
 	server := NewServer(configConfig, orderRouter)

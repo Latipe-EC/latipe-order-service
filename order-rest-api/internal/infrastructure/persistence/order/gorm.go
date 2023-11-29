@@ -61,6 +61,7 @@ func (g GormRepository) FindByUUID(uuid string) (*entity.Order, error) {
 func (g GormRepository) FindAll(query *pagable.Query) ([]entity.Order, error) {
 	var orders []entity.Order
 	whereState := query.ORMConditions().(string)
+
 	result := g.client.DB().Model(&entity.Order{}).
 		Preload("OrderItem").
 		Preload("Delivery").
@@ -114,7 +115,7 @@ func (g GormRepository) FindOrderByDelivery(deliID string, query *pagable.Query)
 	var orders []entity.Order
 	err := g.client.DB().Model(&entity.Order{}).Preload("Delivery").
 		Joins("inner join delivery_orders ON orders.id = delivery_orders.order_id").
-		Where("delivery_orders.id=?", deliID).
+		Where("delivery_orders.delivery_id=?", deliID).
 		Order("orders.created_at DESC").
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error

@@ -5,6 +5,8 @@ import (
 	"order-rest-api/internal/common/errors"
 	"order-rest-api/internal/infrastructure/adapter/authserv"
 	"order-rest-api/internal/infrastructure/adapter/authserv/dto"
+	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
+	deliDto "order-rest-api/internal/infrastructure/adapter/deliveryserv/dto"
 	"order-rest-api/internal/infrastructure/adapter/storeserv"
 	storeDTO "order-rest-api/internal/infrastructure/adapter/storeserv/dto"
 	"strings"
@@ -13,10 +15,11 @@ import (
 type AuthenticationMiddleware struct {
 	authServ  authserv.Service
 	storeServ storeserv.Service
+	delivery  deliveryserv.Service
 }
 
-func NewAuthMiddleware(authServ authserv.Service, storeServ storeserv.Service) *AuthenticationMiddleware {
-	return &AuthenticationMiddleware{authServ: authServ, storeServ: storeServ}
+func NewAuthMiddleware(authServ authserv.Service, storeServ storeserv.Service, deliServ deliveryserv.Service) *AuthenticationMiddleware {
+	return &AuthenticationMiddleware{authServ: authServ, storeServ: storeServ, delivery: deliServ}
 }
 
 func (a AuthenticationMiddleware) RequiredAuthentication() fiber.Handler {
@@ -99,15 +102,14 @@ func (a AuthenticationMiddleware) RequiredDeliveryAuthentication() fiber.Handler
 		}
 
 		//validate store
-		storeReq := storeDTO.GetStoreIdByUserRequest{UserID: resp.Id}
-		storeReq.BaseHeader.BearToken = bearToken
+		deliReq := deliDto.GetDeliveryByTokenRequest{BearerToken: bearToken}
 
-		storeResp, err := a.storeServ.GetStoreByUserId(ctx.Context(), &storeReq)
+		deliResp, err := a.delivery.GetDeliveryByToken(ctx.Context(), &deliReq)
 		if err != nil {
 			return err
 		}
 
-		if storeResp.StoreID == "" {
+		if deliResp.ID == "" {
 			return errors.ErrPermissionDenied
 		}
 
@@ -115,7 +117,7 @@ func (a AuthenticationMiddleware) RequiredDeliveryAuthentication() fiber.Handler
 		ctx.Locals(USER_ID, resp.Id)
 		ctx.Locals(ROLE, resp.Role)
 		ctx.Locals(BEARER_TOKEN, bearToken)
-		ctx.Locals(STORE_ID, storeResp.StoreID)
+		ctx.Locals(DELIVERY_ID, deliResp.ID)
 
 		return ctx.Next()
 	}

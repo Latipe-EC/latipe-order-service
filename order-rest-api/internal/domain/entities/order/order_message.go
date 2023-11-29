@@ -17,7 +17,7 @@ type OrderMessage struct {
 	Vouchers      []string          `json:"vouchers,omitempty"`
 	Address       OrderAddress      `json:"address,omitempty" validate:"required"`
 	Delivery      Delivery          `json:"delivery,omitempty" validate:"required"`
-	OrderItems    []OrderItemsCache `json:"order_item,omitempty" validate:"required"`
+	OrderItems    []OrderItemsCache `json:"order_items,omitempty" validate:"required"`
 }
 
 type UserRequest struct {
