@@ -35,6 +35,7 @@ type ProductItem struct {
 	ProductID   string `json:"product_id"`
 	ProductName string `json:"product_name"`
 	StoreID     string `json:"store_id"`
+	NameOption  string `json:"name_option"`
 	OptionID    string `json:"option_id"`
 	Image       string `json:"image"`
 	Quantity    int    `json:"quantity"`

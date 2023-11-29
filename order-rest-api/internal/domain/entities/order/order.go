@@ -17,10 +17,11 @@ type OrderItem struct {
 	ProductID   string    `gorm:"not null;type:varchar(255)" json:"product_id"`
 	ProductName string    `gorm:"not null;type:varchar(255)" json:"product_name"`
 	ProdImg     string    `gorm:"not null;type:TEXT" json:"image"`
+	StoreID     string    `gorm:"not null;type:varchar(255)" json:"store_id"`
 	RatingID    string    `gorm:"not null;type:varchar(255)" json:"rating_id"`
 	Status      int       `gorm:"not null;type:int" json:"status"`
-	StoreID     string    `gorm:"not null;type:varchar(255)" json:"store_id"`
-	OptionID    string    `gorm:"not null;type:varchar(250)" json:"option_id" `
+	OptionID    string    `gorm:"not null;type:varchar(250)" json:"option_id"`
+	NameOption  string    `gorm:"not null;type:varchar(250)" json:"name_option"`
 	Quantity    int       `gorm:"not null;type:int" json:"quantity"`
 	Price       int       `gorm:"not null;type:bigint" json:"price"`
 	NetPrice    int       `gorm:"not null;type:bigint" json:"net_price"`

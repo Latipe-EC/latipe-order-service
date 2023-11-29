@@ -51,6 +51,7 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 			ProductName: item.ProductItem.ProductName,
 			StoreID:     item.ProductItem.StoreID,
 			OptionID:    item.ProductItem.OptionID,
+			NameOption:  item.ProductItem.NameOption,
 			Quantity:    item.ProductItem.Quantity,
 			Price:       item.ProductItem.Price,
 			NetPrice:    item.ProductItem.NetPrice,

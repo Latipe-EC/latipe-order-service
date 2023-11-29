@@ -32,11 +32,14 @@ type DeliveryResp struct {
 }
 
 type OrderItemsResp struct {
-	ProductId string `json:"product_id" `
-	SubTotal  int    `json:"sub_total"`
-	OptionId  string `json:"option_id"`
-	Quantity  int    `json:"quantity" `
-	Price     int    `json:"price" `
+	ProductId   string `json:"product_id" `
+	SubTotal    int    `json:"sub_total"`
+	OptionId    string `json:"option_id"`
+	Quantity    int    `json:"quantity" `
+	ProductName string `json:"product_name"`
+	ProdImg     string `json:"image"`
+	StoreID     string `json:"store_id"`
+	Price       int    `json:"price" `
 }
 
 type OrderStatusResp struct {

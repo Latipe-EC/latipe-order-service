@@ -33,6 +33,7 @@ type OrderItemsCache struct {
 type ProductItem struct {
 	ProductID   string `json:"product_id"`
 	ProductName string `json:"product_name"`
+	NameOption  string `json:"name_option"`
 	StoreID     string `json:"store_id"`
 	OptionID    string `json:"option_id" `
 	Image       string `json:"image"`

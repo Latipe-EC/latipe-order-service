@@ -15,7 +15,8 @@ type OrderItem struct {
 	RatingID    string    `gorm:"not null;type:varchar(255)" json:"rating_id"`
 	StoreID     string    `gorm:"not null;type:varchar(255)" json:"store_id"`
 	Status      int       `gorm:"not null;type:int" json:"status"`
-	OptionID    string    `gorm:"not null;type:varchar(250)" json:"option_id" `
+	OptionID    string    `gorm:"not null;type:varchar(250)" json:"option_id"`
+	NameOption  string    `gorm:"not null;type:varchar(250)" json:"name_option"`
 	Quantity    int       `gorm:"not null;type:int" json:"quantity"`
 	Price       int       `gorm:"not null;type:bigint" json:"price"`
 	SubTotal    int       `gorm:"not null;type:bigint" json:"sub_total"`

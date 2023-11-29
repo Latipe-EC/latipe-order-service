@@ -478,6 +478,7 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 				ProductID:   i.ProductId,
 				ProductName: i.Name,
 				StoreID:     i.StoreId,
+				NameOption:  i.NameOption,
 				OptionID:    i.OptionId,
 				Quantity:    i.Quantity,
 				Price:       int(i.Price),
