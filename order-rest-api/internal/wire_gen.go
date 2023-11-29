@@ -45,7 +45,7 @@ func New() (*Server, error) {
 	userservService := userserv.NewUserServHttpAdapter(configConfig)
 	deliveryservService := deliveryserv.NewDeliServHttpAdapter(configConfig)
 	voucherservService := voucherserv.NewUserServHttpAdapter(configConfig)
-	usecase := orders.NewOrderService(repository, service, cacheEngine, userservService, deliveryservService, voucherservService)
+	usecase := orders.NewOrderService(configConfig, repository, service, cacheEngine, userservService, deliveryservService, voucherservService)
 	orderApiHandler := order2.NewOrderHandler(usecase)
 	authservService := authserv.NewAuthServHttpAdapter(configConfig)
 	storeservService := storeserv.NewStoreServiceAdapter(configConfig)

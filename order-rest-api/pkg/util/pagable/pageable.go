@@ -112,7 +112,7 @@ func (q *Query) ORMConditions() interface{} {
 	}
 	var conditions []string
 	for _, filter := range q.ExpressionFilters {
-		var condition string
+
 		var value interface{}
 
 		if filter.Field == "status" {
@@ -121,42 +121,82 @@ func (q *Query) ORMConditions() interface{} {
 			value = fmt.Sprintf("'%s'", filter.Value)
 		}
 
-		switch filter.Operation {
-		case Equal:
-			condition = filter.Field + " = " + fmt.Sprintf("%v", value)
-		case NotEqual:
-			condition = filter.Field + " <> " + fmt.Sprintf("'%s'", value)
-		case LT:
-			condition = filter.Field + " < " + fmt.Sprintf("'%s'", value)
-		case LTE:
-			condition = filter.Field + " <= " + fmt.Sprintf("'%s'", value)
-		case GT:
-			condition = filter.Field + " > " + fmt.Sprintf("'%s'", value)
-		case GTE:
-			condition = filter.Field + " >= " + fmt.Sprintf("'%s'", value)
-		case In:
-			condition = filter.Field + " IN " + fmt.Sprintf("'%s'", value)
-		case NotIn:
-			condition = filter.Field + " NOT IN " + fmt.Sprintf("'%s'", value)
-		case Contains:
-			condition = filter.Field + " LIKE " + "%" + fmt.Sprintf("'%s'", value) + "%"
-		case NotContains:
-			condition = filter.Field + " NOT LIKE " + "%" + fmt.Sprintf("'%s'", value) + "%"
-		case IsNull:
-			condition = filter.Field + " IS NULL"
-		case IsNotNull:
-			condition = filter.Field + " IS NOT NULL"
-		case StartsWith:
-			condition = filter.Field + " LIKE " + fmt.Sprintf(`'%s%s'`, filter.Value, "%")
-		case EndsWith:
-			condition = filter.Field + " LIKE " + fmt.Sprintf("'%s%s'", "%", filter.Value)
-		}
+		condition := q.ParseCondition(filter, value)
 		conditions = append(conditions, condition)
+	}
+
+	q.ormConditions = strings.Join(conditions, " AND ")
+	return q.ormConditions
+}
+
+func (q *Query) ParseCondition(ft Filter, value interface{}) string {
+	condition := ""
+
+	switch ft.Operation {
+	case Equal:
+		condition = ft.Field + " = " + fmt.Sprintf("%v", value)
+	case NotEqual:
+		condition = ft.Field + " <> " + fmt.Sprintf("'%s'", value)
+	case LT:
+		condition = ft.Field + " < " + fmt.Sprintf("'%s'", value)
+	case LTE:
+		condition = ft.Field + " <= " + fmt.Sprintf("'%s'", value)
+	case GT:
+		condition = ft.Field + " > " + fmt.Sprintf("'%s'", value)
+	case GTE:
+		condition = ft.Field + " >= " + fmt.Sprintf("'%s'", value)
+	case In:
+		condition = ft.Field + " IN " + fmt.Sprintf("'%s'", value)
+	case NotIn:
+		condition = ft.Field + " NOT IN " + fmt.Sprintf("'%s'", value)
+	case Contains:
+		condition = ft.Field + " LIKE " + "%" + fmt.Sprintf("'%s'", value) + "%"
+	case NotContains:
+		condition = ft.Field + " NOT LIKE " + "%" + fmt.Sprintf("'%s'", value) + "%"
+	case IsNull:
+		condition = ft.Field + " IS NULL"
+	case IsNotNull:
+		condition = ft.Field + " IS NOT NULL"
+	case StartsWith:
+		condition = ft.Field + " LIKE " + fmt.Sprintf(`'%s%s'`, ft.Value, "%")
+	case EndsWith:
+		condition = ft.Field + " LIKE " + fmt.Sprintf("'%s%s'", "%", ft.Value)
+	}
+	return condition
+}
+
+func (q *Query) UserORMConditions() interface{} {
+	if q.ormConditions != nil {
+		return q.ormConditions
+	}
+	var conditions []string
+	for _, filter := range q.ExpressionFilters {
+
+		var value interface{}
+
+		if q.isUserRequest(filter.Field) {
+			if filter.Field == "status" {
+				value, _ = strconv.Atoi(fmt.Sprintf("%v", filter.Value))
+			} else {
+				value = fmt.Sprintf("'%s'", filter.Value)
+			}
+
+			condition := q.ParseCondition(filter, value)
+			conditions = append(conditions, condition)
+		}
 
 	}
 
 	q.ormConditions = strings.Join(conditions, " AND ")
 	return q.ormConditions
+}
+
+func (q *Query) isUserRequest(fieldName string) bool {
+	if fieldName == "status" || fieldName == "created_at" ||
+		fieldName == "keyword" || fieldName == "order_uuid" || fieldName == "payment_method" {
+		return true
+	}
+	return false
 }
 
 func (q *Query) ParseQueryParams() (map[string]string, error) {

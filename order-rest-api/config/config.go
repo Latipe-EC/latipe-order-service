@@ -21,6 +21,7 @@ type Config struct {
 }
 
 type Server struct {
+	KeyID               string
 	Name                string
 	AppVersion          string
 	Port                string

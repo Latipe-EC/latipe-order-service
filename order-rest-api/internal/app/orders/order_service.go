@@ -2,7 +2,9 @@ package orders
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
+	"order-rest-api/config"
 	"order-rest-api/internal/common/errors"
 	orderDTO "order-rest-api/internal/domain/dto/order"
 	"order-rest-api/internal/domain/dto/order/delivery"
@@ -19,6 +21,7 @@ import (
 	"order-rest-api/internal/message"
 	"order-rest-api/pkg/cache/redis"
 	"order-rest-api/pkg/util/mapper"
+	"strings"
 )
 
 type orderService struct {
@@ -28,9 +31,10 @@ type orderService struct {
 	userServ    userserv.Service
 	deliServ    deliveryserv.Service
 	voucherSer  voucherserv.Service
+	cfg         *config.Config
 }
 
-func NewOrderService(orderRepo order.Repository, productServ productserv.Service,
+func NewOrderService(cfg *config.Config, orderRepo order.Repository, productServ productserv.Service,
 	cacheEngine *redis.CacheEngine, userServ userserv.Service, deliServ deliveryserv.Service,
 	voucherServ voucherserv.Service) Usecase {
 	return orderService{
@@ -40,6 +44,7 @@ func NewOrderService(orderRepo order.Repository, productServ productserv.Service
 		userServ:    userServ,
 		deliServ:    deliServ,
 		voucherSer:  voucherServ,
+		cfg:         cfg,
 	}
 }
 
@@ -123,8 +128,9 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 	orderData.Amount = orderData.SubTotal + orderData.ShippingCost - orderData.Discount
 	orderData.Status = order.ORDER_SYSTEM_PROCESS
 	//gen key order
-	keyGen := uuid.NewString()
-	orderData.OrderUUID = keyGen
+
+	orderKey := o.genOrderKey(orderData.UserRequest.UserId)
+	orderData.OrderUUID = orderKey
 
 	if err := message.SendOrderMessage(orderData); err != nil {
 		return nil, err
@@ -135,7 +141,7 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 			UserId:   dto.UserRequest.UserId,
 			Username: dto.UserRequest.Username,
 		},
-		OrderKey:      keyGen,
+		OrderKey:      orderKey,
 		Amount:        orderData.Amount,
 		Discount:      orderData.Discount,
 		SubTotal:      orderData.SubTotal,
@@ -505,4 +511,11 @@ func (o orderService) CheckProductPurchased(ctx context.Context, dto *orderDTO.C
 	}
 
 	return &data, err
+}
+
+func (o orderService) genOrderKey(userId string) string {
+	keyGen := strings.ReplaceAll(uuid.NewString(), "-", "")[:10]
+	key := fmt.Sprintf("%v%v%v", o.cfg.Server.KeyID, userId[:4], keyGen)
+
+	return key
 }

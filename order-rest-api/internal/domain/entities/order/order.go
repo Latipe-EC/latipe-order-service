@@ -63,7 +63,7 @@ type Order struct {
 	CreatedAt        time.Time          `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
 	OrderItem        []*OrderItem       `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_items"`
 	OrderCommissions []*OrderCommission `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_commissions"`
-	OrderStatusLog   []*OrderStatusLog  `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_status_logs"`
+	OrderStatusLog   []*OrderStatusLog  `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_status"`
 	Delivery         *DeliveryOrder     `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"delivery"`
 }
 

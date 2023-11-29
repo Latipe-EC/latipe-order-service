@@ -50,6 +50,7 @@ func (g GormRepository) FindByUUID(uuid string) (*entity.Order, error) {
 	result := g.client.DB().Model(&entity.Order{}).
 		Preload("OrderItem").
 		Preload("Delivery").
+		Preload("OrderStatusLog").
 		First(&order, "order_uuid = ?", uuid).Error
 	if result != nil {
 		return nil, result
@@ -77,8 +78,12 @@ func (g GormRepository) FindAll(query *pagable.Query) ([]entity.Order, error) {
 
 func (g GormRepository) FindByUserId(userId string, query *pagable.Query) ([]entity.Order, error) {
 	var orders []entity.Order
+
+	whereState := query.UserORMConditions().(string)
+
 	result := g.client.DB().Model(&entity.Order{}).
 		Preload("Delivery").
+		Where(whereState).
 		Where("orders.user_id", userId).
 		Order("created_at desc").
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
@@ -159,19 +164,19 @@ func (g GormRepository) UpdateStatus(orderID int, status int) error {
 
 	updateLog := entity.OrderStatusLog{
 		OrderID:      orderID,
-		Message:      "",
+		OrderType:    "orders",
 		StatusChange: status,
 	}
 
 	switch status {
 	case entity.ORDER_PENDING:
-		updateLog.Message = "order-pending"
+		updateLog.Message = "Đơn hàng đang xử lý bởi nhà bán hàng"
 	case entity.ORDER_DELIVERY:
-		updateLog.Message = "order-delivery"
+		updateLog.Message = "Đơn hàng đang được vận chuyển"
 	case entity.ORDER_SHIPPING_FINISH:
-		updateLog.Message = "shipping-finish"
+		updateLog.Message = "Đơn hàng được giao thành công"
 	case entity.ORDER_CANCEL:
-		updateLog.Message = "shipping-cancel"
+		updateLog.Message = "Đơn hàng bị hủy"
 	}
 
 	result := g.client.Transaction(func(tx *gormF.DB) error {

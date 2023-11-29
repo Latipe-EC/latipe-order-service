@@ -7,16 +7,17 @@ type BaseHeader struct {
 }
 
 type OrderResponse struct {
-	OrderUUID     string           `json:"order_uuid"`
-	Amount        int              `json:"amount"`
-	Discount      int              `json:"discount"`
-	SubTotal      int              `json:"sub_total"`
-	Status        int              `json:"status"`
-	PaymentMethod int              `json:"payment_method"`
-	CreatedAt     time.Time        `json:"created_at"`
-	UpdatedAt     time.Time        `json:"updated-at"`
-	Delivery      DeliveryResp     `json:"delivery"`
-	OrderItems    []OrderItemsResp `json:"order_items,omitempty"`
+	OrderUUID     string            `json:"order_uuid"`
+	Amount        int               `json:"amount"`
+	Discount      int               `json:"discount"`
+	SubTotal      int               `json:"sub_total"`
+	Status        int               `json:"status"`
+	PaymentMethod int               `json:"payment_method"`
+	CreatedAt     time.Time         `json:"created_at"`
+	UpdatedAt     time.Time         `json:"updated_at"`
+	Delivery      DeliveryResp      `json:"delivery"`
+	OrderItems    []OrderItemsResp  `json:"order_items,omitempty"`
+	OrderStatus   []OrderStatusResp `json:"order_status,omitempty"`
 }
 
 type DeliveryResp struct {
@@ -32,7 +33,14 @@ type DeliveryResp struct {
 
 type OrderItemsResp struct {
 	ProductId string `json:"product_id" `
+	SubTotal  int    `json:"sub_total"`
 	OptionId  string `json:"option_id"`
 	Quantity  int    `json:"quantity" `
 	Price     int    `json:"price" `
+}
+
+type OrderStatusResp struct {
+	Message      string    `json:"message"`
+	StatusChange int       `json:"status_change"`
+	CreatedAt    time.Time `json:"created_at"`
 }

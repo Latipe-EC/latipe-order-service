@@ -76,7 +76,7 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 	var logs []*order.OrderStatusLog
 	orderLog := order.OrderStatusLog{
 		Order:        &orderDAO,
-		Message:      "order created",
+		Message:      "Đơn hàng được tạo thành công",
 		StatusChange: order.ORDER_CREATED,
 	}
 	orderDAO.OrderStatusLog = append(logs, &orderLog)
@@ -204,7 +204,7 @@ func (o orderService) createCommissionOfOrder(ctx context.Context, dao *order.Or
 
 		orderStatusLog := order.OrderStatusLog{
 			OrderID:      dao.Id,
-			Message:      "order complete",
+			Message:      "Đơn hàng hoàn thành",
 			StatusChange: order.ORDER_COMPLETED,
 		}
 
