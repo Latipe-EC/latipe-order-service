@@ -52,7 +52,8 @@ type Order struct {
 	Amount           int                `gorm:"not null;type:bigint" json:"amount"`
 	ShippingCost     int                `gorm:"not null;type:int" json:"shipping_cost"`
 	PaymentMethod    int                `json:"payment_method" gorm:"not null;type:int"`
-	Discount         int                `gorm:"not null;type:int" json:"discount"`
+	ShippingDiscount int                `gorm:"not null;type:int" json:"shipping_discount,omitempty"`
+	ItemDiscount     int                `gorm:"not null;type:int" json:"item_discount,omitempty"`
 	SubTotal         int                `gorm:"not null;type:int" json:"sub_total"`
 	Status           int                `gorm:"not null;type:int" json:"status"`
 	VoucherCode      string             `gorm:"not null;type:varchar(250)" json:"voucher_code"`

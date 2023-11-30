@@ -9,6 +9,7 @@ const (
 	ORDER_COMPLETED       = 5
 	ORDER_REFUND          = 6
 	ORDER_CANCEL          = 0
+	ORDER_FAILED          = -1
 )
 
 const (

@@ -32,7 +32,7 @@ func NewUserServHttpAdapter(config *config.Config) Service {
 	}
 }
 
-func (h httpAdapter) ApplyVoucher(ctx context.Context, req *dto.ApplyVoucherRequest) (*dto.UseVoucherResponse, error) {
+func (h httpAdapter) CheckingVoucher(ctx context.Context, req *dto.CheckingVoucherRequest) (*dto.UseVoucherResponse, error) {
 	resp, err := h.client.MakeRequest().
 		SetContext(ctx).
 		SetHeader("Authorization", fmt.Sprintf("Bearer %v", req.BearerToken)).

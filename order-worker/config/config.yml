@@ -72,6 +72,9 @@ AdapterService:
   StoreService:
     BaseURL: http://172.20.64.1:8118
     InternalKey:
+  PromotionService:
+    BaseURL: http://localhost:5010
+    InternalKey:
 
 CronJob:
   OrderCompleteScheduled: "@every 15m"

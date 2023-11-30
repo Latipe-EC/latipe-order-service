@@ -95,11 +95,11 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 	orderData := o.initOrderCacheData(products, userAddress, shippingDetail, dto)
 
 	if len(dto.VoucherCode) > 0 {
-		voucherReq := voucherDTO.ApplyVoucherRequest{}
+		voucherReq := voucherDTO.CheckingVoucherRequest{}
 		voucherReq.Vouchers = dto.VoucherCode
 		voucherReq.AuthorizationHeader.BearerToken = dto.Header.BearerToken
 
-		voucherDetail, err := o.voucherSer.ApplyVoucher(ctx, &voucherReq)
+		voucherDetail, err := o.voucherSer.CheckingVoucher(ctx, &voucherReq)
 		if err != nil {
 			return nil, err
 		}
@@ -110,13 +110,13 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 				switch v.VoucherType {
 				case voucherDTO.FREE_SHIP:
 					if shippingDetail.Cost < v.DiscountValue {
-						orderData.ShippingCost = 0
+						orderData.ShippingDiscount = shippingDetail.Cost
 					} else {
-						orderData.ShippingCost -= v.DiscountValue
+						orderData.ShippingDiscount = v.DiscountValue
 					}
 
 				case voucherDTO.DISCOUNT_ORDER:
-					orderData.Discount += v.DiscountValue
+					orderData.ItemDiscount = v.DiscountValue
 				}
 
 			}
@@ -125,7 +125,9 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 
 	}
 	//calculate amount order
-	orderData.Amount = orderData.SubTotal + orderData.ShippingCost - orderData.Discount
+
+	orderData.SubTotal += orderData.ShippingCost
+	orderData.Amount = orderData.SubTotal - (orderData.ItemDiscount + orderData.ShippingDiscount)
 	orderData.Status = order.ORDER_SYSTEM_PROCESS
 	//gen key order
 
@@ -141,11 +143,13 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 			UserId:   dto.UserRequest.UserId,
 			Username: dto.UserRequest.Username,
 		},
-		OrderKey:      orderKey,
-		Amount:        orderData.Amount,
-		Discount:      orderData.Discount,
-		SubTotal:      orderData.SubTotal,
-		PaymentMethod: orderData.PaymentMethod,
+		OrderKey:         orderKey,
+		ShippingCost:     orderData.ShippingCost,
+		Amount:           orderData.Amount,
+		ShippingDiscount: orderData.ShippingDiscount,
+		ItemDiscount:     orderData.ItemDiscount,
+		SubTotal:         orderData.SubTotal,
+		PaymentMethod:    orderData.PaymentMethod,
 	}
 
 	return &data, nil

@@ -1,6 +1,7 @@
 package productserv
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"order-worker/config"
@@ -25,117 +26,73 @@ func NewProductServAdapter(config *config.Config) Service {
 	restyClient := http.New()
 	restyClient.SetRestyClient(
 		restyClient.
-			Resty().SetDebug(true).
+			Resty().
 			SetBaseURL(config.AdapterService.ProductService.BaseURL).
-			SetHeader("X-INTERNAL-SERVICE", config.AdapterService.ProductService.InternalKey))
+			SetHeader("X-API-KEY", config.AdapterService.ProductService.InternalKey))
 	return httpAdapter{
 		client: restyClient,
 	}
 }
 
-func (h httpAdapter) GetProductOrderInfo(req *dto.OrderProductRequest) (*dto.OrderProductResponse, error) {
+func (h httpAdapter) GetProductOrderInfo(ctx context.Context, req *dto.OrderProductRequest) (*dto.OrderProductResponse, error) {
 	resp, err := h.client.MakeRequest().
+		SetContext(ctx).
 		SetBody(req.Items).
 		Post(req.URL())
 
 	if err != nil {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
+		log.Errorf("[Get product]: %s", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() >= 500 {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", resp.Body())
+		log.Errorf("[Get product]: %s", resp.Body())
 		return nil, errors.New("internal service request")
 	}
 
 	if resp.StatusCode() >= 400 {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", resp.Body())
+		log.Errorf("[Get product]: %s", resp.Body())
 		return nil, errors.New("service bad request")
 	}
 
 	var rawResp dto.BaseResponse
 	if err := json.Unmarshal(resp.Body(), &rawResp.Data); err != nil {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
+		log.Errorf(" [Get product]: %s", err)
 		return nil, err
 	}
 
-	/*	if rawResp.Code != 0 && resp.StatusCode() != 200 {
-		return nil, errors.ErrorMapping(baseResp.Code)
-	}*/
 	var regResp *dto.OrderProductResponse
 	err = mapper.BindingStruct(rawResp.Data, &regResp)
 	if err != nil {
-		log.Errorf("[%s] [Get product]: %s", "ERROR", err)
+		log.Errorf("[Get product]: %s", err)
 		return nil, err
 	}
 
 	return regResp, nil
 }
 
-func (h httpAdapter) ReduceProductQuantity(req *dto.ReduceProductRequest) (*dto.ReduceProductResponse, error) {
+func (h httpAdapter) UpdateProductQuantity(ctx context.Context, req *dto.ReduceProductRequest) error {
 	resp, err := h.client.MakeRequest().
-		SetBody(req).
+		SetBody(req.Items).
+		SetContext(ctx).
 		Patch(req.URL())
 
 	if err != nil {
-		log.Errorf("[Reduce Quantity]: %s", err)
-		return nil, err
+		log.Errorf("[Update Quantity]: %s", err)
+		return err
+	}
+
+	if resp.StatusCode() >= 400 {
+		log.Errorf("[Update Quantity: %s", resp.Body())
+		return errors.New("service bad request")
 	}
 
 	if resp.StatusCode() >= 500 {
-		log.Errorf("[Reduce Quantity]: %s", resp.Body())
-		return nil, err
+		log.Errorf("[Update Quantity]: %s", resp.Body())
+		return err
 	}
 
-	var rawResp dto.BaseResponse
-	if err := json.Unmarshal(resp.Body(), &rawResp); err != nil {
-		log.Errorf("[Reduce Quantity]: %s", err)
-		return nil, err
-	}
+	log.Infof("Update quantity:%v", req.Items)
 
-	/*	if rawResp.Code != 0 && resp.StatusCode() != 200 {
-		return nil, errors.ErrorMapping(baseResp.Code)
-	}*/
-	var regResp *dto.ReduceProductResponse
-	err = mapper.BindingStruct(rawResp.Data, &regResp)
-	if err != nil {
-		log.Errorf("[%s] [Reduce Quantity]: %s", "ERROR", err)
-		return nil, err
-	}
-
-	return regResp, nil
-}
-
-func (h httpAdapter) RollBackQuantityOrder(req *dto.RollbackQuantityRequest) (*dto.RollbackQuantityResponse, error) {
-	resp, err := h.client.MakeRequest().
-		SetBody(req).
-		Patch(req.URL())
-
-	if err != nil {
-		log.Errorf("[%s] [Reduce Quantity]: %s", "ERROR", err)
-		return nil, err
-	}
-
-	if resp.StatusCode() >= 500 {
-		log.Errorf("[%s] [Reduce Quantity]: %s", "ERROR", resp.Body())
-		return nil, err
-	}
-
-	var rawResp dto.BaseResponse
-	if err := json.Unmarshal(resp.Body(), &rawResp); err != nil {
-		log.Errorf("[%s] [Reduce Quantity]: %s", "ERROR", err)
-		return nil, err
-	}
-
-	/*	if rawResp.Code != 0 && resp.StatusCode() != 200 {
-		return nil, errors.ErrorMapping(baseResp.Code)
-	}*/
-	var regResp *dto.RollbackQuantityResponse
-	err = mapper.BindingStruct(rawResp.Data, &regResp)
-	if err != nil {
-		log.Errorf("[%s] [Reduce Quantity]: %s", "ERROR", err)
-		return nil, err
-	}
-
-	return regResp, nil
+	return nil
 }

@@ -6,5 +6,5 @@ import (
 )
 
 type Service interface {
-	ApplyVoucher(ctx context.Context, req *dto.ApplyVoucherRequest) (*dto.UseVoucherResponse, error)
+	CheckingVoucher(ctx context.Context, req *dto.CheckingVoucherRequest) (*dto.UseVoucherResponse, error)
 }

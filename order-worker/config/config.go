@@ -115,10 +115,11 @@ type BillingEvent struct {
 }
 
 type AdapterService struct {
-	UserService    UserService
-	ProductService ProductService
-	EmailService   EmailService
-	StoreService   StoreService
+	UserService      UserService
+	ProductService   ProductService
+	EmailService     EmailService
+	StoreService     StoreService
+	PromotionService PromotionService
 }
 
 type UserService struct {
@@ -128,6 +129,11 @@ type UserService struct {
 }
 
 type ProductService struct {
+	BaseURL     string
+	InternalKey string
+}
+
+type PromotionService struct {
 	BaseURL     string
 	InternalKey string
 }

@@ -6,6 +6,6 @@ import (
 )
 
 type Usecase interface {
-	CreateOrder(ctx context.Context, data *order.OrderMessage) error
+	CreateOrderTransaction(ctx context.Context, data *order.OrderMessage) error
 	CreateCommissionOrderComplete(ctx context.Context) error
 }

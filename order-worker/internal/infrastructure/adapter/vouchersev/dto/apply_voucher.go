@@ -1,8 +1,8 @@
 package dto
 
-const url = "/api/v1/vouchers/checking"
+const url = "/api/v1/vouchers/apply"
 
-type CheckingVoucherRequest struct {
+type ApplyVoucherRequest struct {
 	Vouchers []string `json:"vouchers"`
 	AuthorizationHeader
 }
@@ -30,6 +30,6 @@ type VoucherReqResp struct {
 	RequiredOwnerProdId string `json:"required_owner_prod_id,omitempty"`
 }
 
-func (CheckingVoucherRequest) URL() string {
+func (ApplyVoucherRequest) URL() string {
 	return url
 }

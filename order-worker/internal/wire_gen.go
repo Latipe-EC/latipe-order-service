@@ -13,6 +13,7 @@ import (
 	"order-worker/internal/app/orders"
 	"order-worker/internal/infrastructure/adapter/productserv"
 	"order-worker/internal/infrastructure/adapter/storeserv"
+	"order-worker/internal/infrastructure/adapter/vouchersev"
 	"order-worker/internal/infrastructure/persistence/db"
 	"order-worker/internal/infrastructure/persistence/order"
 	"order-worker/internal/order_cron"
@@ -31,8 +32,9 @@ func New() (*Server, error) {
 	repository := order.NewGormRepository(gorm)
 	service := productserv.NewProductServAdapter(configConfig)
 	storeservService := storeserv.NewStoreServiceAdapter(configConfig)
+	voucherservService := voucherserv.NewUserServHttpAdapter(configConfig)
 	messageProducer := publisher.InitWorkerProducer(configConfig)
-	usecase := orders.NewOrderService(repository, service, storeservService, messageProducer)
+	usecase := orders.NewOrderService(repository, service, storeservService, voucherservService, messageProducer)
 	consumerOrderMessage := worker.NewConsumerOrderMessage(configConfig, usecase)
 	cron := order_cron.NewCronInstance()
 	orderCompleteCronjob := order_cron.NewOrderCompleteCronjob(cron, configConfig, usecase)

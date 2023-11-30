@@ -11,12 +11,14 @@ type CreateOrderRequest struct {
 }
 
 type CreateOrderResponse struct {
-	UserOrder     UserRequest `json:"user_order"`
-	OrderKey      string      `json:"order_key"`
-	Amount        int         `json:"amount"`
-	Discount      int         `json:"discount"`
-	SubTotal      int         `json:"sub_total" `
-	PaymentMethod int         `json:"payment_method"`
+	UserOrder        UserRequest `json:"user_order"`
+	OrderKey         string      `json:"order_key"`
+	Amount           int         `json:"amount"`
+	ShippingCost     int         `json:"shipping_cost"`
+	ShippingDiscount int         ` json:"shipping_discount"`
+	ItemDiscount     int         ` json:"item_discount"`
+	SubTotal         int         `json:"sub_total" `
+	PaymentMethod    int         `json:"payment_method"`
 }
 
 type UserRequest struct {

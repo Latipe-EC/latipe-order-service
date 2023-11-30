@@ -10,6 +10,7 @@ import (
 	"order-worker/config"
 	"order-worker/internal/app"
 	"order-worker/internal/infrastructure/adapter/storeserv"
+	voucherserv "order-worker/internal/infrastructure/adapter/vouchersev"
 	"order-worker/internal/order_cron"
 	"order-worker/internal/publisher"
 	"order-worker/internal/worker"
@@ -36,6 +37,7 @@ func New() (*Server, error) {
 		userserv.Set,
 		productserv.Set,
 		storeserv.Set,
+		voucherserv.Set,
 		app.Set,
 		order_cron.Set,
 	)))

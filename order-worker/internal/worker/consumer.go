@@ -117,7 +117,7 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 		return nil
 	}
 
-	err := mq.orderUsecase.CreateOrder(ctx, &message)
+	err := mq.orderUsecase.CreateOrderTransaction(ctx, &message)
 	if err != nil {
 		return err
 	}

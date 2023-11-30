@@ -3,14 +3,16 @@ package orders
 import (
 	"context"
 	"fmt"
-	log2 "github.com/gofiber/fiber/v2/log"
-	"log"
+	"github.com/gofiber/fiber/v2/log"
 	messageDTO "order-worker/internal/domain/dto"
 	dto "order-worker/internal/domain/dto/order"
 	"order-worker/internal/domain/entities/order"
 	"order-worker/internal/infrastructure/adapter/productserv"
+	productDTO "order-worker/internal/infrastructure/adapter/productserv/dto"
 	"order-worker/internal/infrastructure/adapter/storeserv"
 	storeDTO "order-worker/internal/infrastructure/adapter/storeserv/dto"
+	voucherserv "order-worker/internal/infrastructure/adapter/vouchersev"
+	promotionDTO "order-worker/internal/infrastructure/adapter/vouchersev/dto"
 	"order-worker/internal/publisher"
 	"order-worker/pkg/util/mapper"
 )
@@ -19,27 +21,29 @@ type orderService struct {
 	orderRepo   order.Repository
 	productServ productserv.Service
 	storeServ   storeserv.Service
+	voucherServ voucherserv.Service
 	message     *publisher.MessageProducer
 }
 
 func NewOrderService(orderRepo order.Repository, productServ productserv.Service, storeServ storeserv.Service,
-	message *publisher.MessageProducer) Usecase {
+	voucherServ voucherserv.Service, message *publisher.MessageProducer) Usecase {
 	return orderService{
 		orderRepo:   orderRepo,
 		productServ: productServ,
 		storeServ:   storeServ,
+		voucherServ: voucherServ,
 		message:     message,
 	}
 }
 
-func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage) error {
+func (o orderService) CreateOrderTransaction(ctx context.Context, message *dto.OrderMessage) error {
 	orderDAO := order.Order{}
 	orderDAO.OrderUUID = message.OrderUUID
 	orderDAO.Username = message.UserRequest.Username
 	orderDAO.UserId = message.UserRequest.UserId
 
 	if err := mapper.BindingStruct(message, &orderDAO); err != nil {
-		log.Printf("[%s] Mapping value from dto to dao failed cause: %s", "ERROR", err)
+		log.Errorf("Mapping value from dto to dao failed cause: %s", err)
 		return err
 	}
 
@@ -71,16 +75,8 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 	//calculate order price
 	orderDAO.SubTotal = message.SubTotal
 	orderDAO.Amount = message.Amount
-	orderDAO.Discount = message.Discount
-
-	//create log
-	var logs []*order.OrderStatusLog
-	orderLog := order.OrderStatusLog{
-		Order:        &orderDAO,
-		Message:      "Đơn hàng được tạo thành công",
-		StatusChange: order.ORDER_CREATED,
-	}
-	orderDAO.OrderStatusLog = append(logs, &orderLog)
+	orderDAO.ItemDiscount = message.ItemDiscount
+	orderDAO.ShippingDiscount = message.ShippingDiscount
 
 	//create delivery
 	recvTime, err := order.ParseStringToDate(message.Delivery.ReceivingDate)
@@ -106,12 +102,50 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 	}
 	orderDAO.VoucherCode = vouchers
 	orderDAO.PaymentMethod = message.PaymentMethod
-
 	orderDAO.Status = order.ORDER_CREATED
+
+	tx := o.commitChangeOrderService(ctx, message)
+	if tx != 0 {
+		if err := o.rollBackOrderTransaction(ctx, message, tx); err != nil {
+			//create log
+			var logs []*order.OrderStatusLog
+			orderLog := order.OrderStatusLog{
+				Order:        &orderDAO,
+				StatusChange: order.ORDER_FAILED,
+			}
+
+			switch tx {
+			case 1:
+				orderLog.Message = "Đơn hàng bị hủy do sản phẩm không đủ số lượng"
+			case 2:
+				orderLog.Message = "Đơn hàng bị hủy do áp dụng voucher thất bại"
+			}
+			orderDAO.OrderStatusLog = append(logs, &orderLog)
+
+			//save order into db
+			orderDAO.Status = order.ORDER_FAILED
+			err = o.orderRepo.Save(&orderDAO)
+			if err != nil {
+				log.Errorf("the order created failed : %s", err)
+				return err
+			}
+			return err
+		}
+	}
+
+	//create log
+	var logs []*order.OrderStatusLog
+	orderLog := order.OrderStatusLog{
+		Order:        &orderDAO,
+		Message:      "Đơn hàng được tạo thành công",
+		StatusChange: order.ORDER_CREATED,
+	}
+	orderDAO.OrderStatusLog = append(logs, &orderLog)
+
+	//save order into db
 	err = o.orderRepo.Save(&orderDAO)
 	if err != nil {
-		//handle rollback
-		log.Printf("[%s] The order created failed : %s", "ERROR", err)
+		log.Errorf("the order created failed : %s", err)
 		return err
 	}
 
@@ -125,7 +159,7 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 
 	err = o.message.SendEmailMessage(email)
 	if err != nil {
-		log.Printf("[%s] sending message to email queue was failed : %s", "ERROR", err)
+		log.Errorf("sending message to email queue was failed : %s", err)
 		return err
 	}
 
@@ -141,13 +175,43 @@ func (o orderService) CreateOrder(ctx context.Context, message *dto.OrderMessage
 
 		err := o.message.SendCartServiceMessage(&msg)
 		if err != nil {
-			log.Printf("[%s] sending message to cart queue was failed : %s", "ERROR", err)
+			log.Errorf("sending message to cart queue was failed : %s", err)
 			return err
 		}
 	}
 	return nil
 }
 
+func (o orderService) rollBackOrderTransaction(ctx context.Context, data *dto.OrderMessage, level int) error {
+	log.Infof("rollback order transaction level[%v] id: %v", level, data.OrderUUID)
+	switch level {
+	case 1:
+		productReq := productDTO.ReduceProductRequest{Items: productDTO.MappingeRollbackProduct(data.OrderItems)}
+		if err := o.productServ.UpdateProductQuantity(ctx, &productReq); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (o orderService) commitChangeOrderService(ctx context.Context, data *dto.OrderMessage) int {
+	productReq := productDTO.ReduceProductRequest{Items: productDTO.MappingReduceProduct(data.OrderItems)}
+	if err := o.productServ.UpdateProductQuantity(ctx, &productReq); err != nil {
+		log.Errorf("rollback product quantity was failed cause: %v", err)
+		return 1
+	}
+
+	voucherReq := promotionDTO.ApplyVoucherRequest{
+		Vouchers:            data.Vouchers,
+		AuthorizationHeader: promotionDTO.AuthorizationHeader{BearerToken: data.Header.BearerToken},
+	}
+	if _, err := o.voucherServ.ApplyVoucher(ctx, &voucherReq); err != nil {
+		log.Errorf("rollback using voucher was failed cause: %v", err)
+		return 2
+	}
+
+	return 0
+}
 func (o orderService) CreateCommissionOrderComplete(ctx context.Context) error {
 	idStr := ""
 	rows := 0
@@ -171,8 +235,8 @@ func (o orderService) CreateCommissionOrderComplete(ctx context.Context) error {
 			}
 		}
 	}
-	log2.Infof("total rows was update [%v]", rows)
-	log2.Infof("order was update [%v]", idStr)
+	log.Infof("total rows was update [%v]", rows)
+	log.Infof("order was update [%v]", idStr)
 	return nil
 }
 

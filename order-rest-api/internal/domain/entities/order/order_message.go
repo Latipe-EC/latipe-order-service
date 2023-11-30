@@ -5,19 +5,20 @@ type BaseHeader struct {
 }
 
 type OrderMessage struct {
-	Header        BaseHeader
-	UserRequest   UserRequest       `json:"user_request,omitempty"`
-	Status        int               `json:"status"`
-	OrderUUID     string            `json:"order_uuid,omitempty"`
-	Amount        int               `json:"amount,omitempty" validate:"required"`
-	ShippingCost  int               `json:"shipping_cost,omitempty"`
-	Discount      int               `json:"discount,omitempty" validate:"required"`
-	SubTotal      int               `json:"sub_total,omitempty" validate:"required"`
-	PaymentMethod int               `json:"payment_method,omitempty" validate:"required"`
-	Vouchers      []string          `json:"vouchers,omitempty"`
-	Address       OrderAddress      `json:"address,omitempty" validate:"required"`
-	Delivery      Delivery          `json:"delivery,omitempty" validate:"required"`
-	OrderItems    []OrderItemsCache `json:"order_items,omitempty" validate:"required"`
+	Header           BaseHeader
+	UserRequest      UserRequest       `json:"user_request,omitempty"`
+	Status           int               `json:"status"`
+	OrderUUID        string            `json:"order_uuid,omitempty"`
+	Amount           int               `json:"amount,omitempty" validate:"required"`
+	ShippingCost     int               `json:"shipping_cost,omitempty"`
+	ShippingDiscount int               `json:"shipping_discount,omitempty" validate:"required"`
+	ItemDiscount     int               `json:"item_discount,omitempty" validate:"required"`
+	SubTotal         int               `json:"sub_total,omitempty" validate:"required"`
+	PaymentMethod    int               `json:"payment_method,omitempty" validate:"required"`
+	Vouchers         []string          `json:"vouchers,omitempty"`
+	Address          OrderAddress      `json:"address,omitempty" validate:"required"`
+	Delivery         Delivery          `json:"delivery,omitempty" validate:"required"`
+	OrderItems       []OrderItemsCache `json:"order_items,omitempty" validate:"required"`
 }
 
 type UserRequest struct {
