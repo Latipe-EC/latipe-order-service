@@ -4,6 +4,7 @@ import (
 	"context"
 	orderDTO "order-rest-api/internal/domain/dto/order"
 	"order-rest-api/internal/domain/dto/order/delivery"
+	internalDTO "order-rest-api/internal/domain/dto/order/internal-service"
 	"order-rest-api/internal/domain/dto/order/store"
 )
 
@@ -22,4 +23,7 @@ type Usecase interface {
 	CancelOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error
 	ViewDetailStoreOrder(ctx context.Context, dto *store.GetOrderOfStoreByIDRequest) (*store.GetOrderOfStoreByIDResponse, error)
 	UpdateOrderItem(ctx context.Context, dto *store.UpdateOrderItemRequest) (*store.UpdateOrderItemResponse, error)
+
+	// internal service
+	InternalGetOrderByUUID(ctx context.Context, dto *internalDTO.GetOrderRatingItemRequest) (*internalDTO.GetOrderRatingItemResponse, error)
 }

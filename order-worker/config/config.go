@@ -82,6 +82,7 @@ type RabbitMQ struct {
 	EmailEvent   EmailEvent
 	CartEvent    CartEvent
 	BillingEvent BillingEvent
+	RatingEvent  RatingEvent
 	ConsumerName string
 	ProducerName string
 }
@@ -108,6 +109,13 @@ type CartEvent struct {
 }
 
 type BillingEvent struct {
+	Connection string
+	Exchange   string
+	RoutingKey string
+	Queue      string
+}
+
+type RatingEvent struct {
 	Connection string
 	Exchange   string
 	RoutingKey string

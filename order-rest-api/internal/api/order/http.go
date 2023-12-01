@@ -8,6 +8,7 @@ import (
 	"order-rest-api/internal/common/errors"
 	dto "order-rest-api/internal/domain/dto/order"
 	"order-rest-api/internal/domain/dto/order/delivery"
+	internalDTO "order-rest-api/internal/domain/dto/order/internal-service"
 	"order-rest-api/internal/domain/dto/order/store"
 	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/internal/responses"
@@ -28,6 +29,7 @@ type OrderApiHandler interface {
 	UpdateOrderItemStatus(ctx *fiber.Ctx) error
 	UpdateStatusByDelivery(ctx *fiber.Ctx) error
 	GetOrdersByDelivery(ctx *fiber.Ctx) error
+	InternalGetOrderByUUID(ctx *fiber.Ctx) error
 }
 
 type orderApiHandler struct {
@@ -200,6 +202,28 @@ func (o orderApiHandler) GetOrderByUUID(ctx *fiber.Ctx) error {
 	}
 
 	result, err := o.orderUsecase.GetOrderByUUID(context, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return errors.ErrNotFound
+		}
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+	return resp.JSON(ctx)
+}
+
+func (o orderApiHandler) InternalGetOrderByUUID(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+	req := internalDTO.GetOrderRatingItemRequest{}
+
+	if err := ctx.ParamsParser(&req); err != nil {
+		return errors.ErrInternalServer
+	}
+
+	result, err := o.orderUsecase.InternalGetOrderByUUID(context, &req)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):

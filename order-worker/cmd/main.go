@@ -22,8 +22,10 @@ func main() {
 	go serv.ConsumerOrderMessage().ListenOrderEventQueue(&wg)
 
 	wg.Add(1)
-	go serv.OrderCompleteCJ().CheckOrderFinishShippingStatus(&wg)
+	go serv.ConsumerRatingMessage().ListenRatingEventQueue(&wg)
+
 	wg.Add(1)
+	go serv.OrderCompleteCJ().CheckOrderFinishShippingStatus(&wg)
 
 	wg.Wait()
 }

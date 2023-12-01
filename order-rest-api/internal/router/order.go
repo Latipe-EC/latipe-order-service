@@ -26,22 +26,44 @@ func (o orderRouter) Init(root *fiber.Router) {
 	orderRouter := (*root).Group("/orders")
 	{
 		//admin
-		orderRouter.Get("/admin", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
-		orderRouter.Patch("/admin/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
-		orderRouter.Patch("/admin/:id/complete", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
+		adminRouter := orderRouter.Group("/admin")
+		{
+			adminRouter.Get("/", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
+			adminRouter.Patch("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
+			adminRouter.Patch("/:id/complete", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
+		}
+
 		//user
-		orderRouter.Post("/user", o.middleware.Authentication.RequiredAuthentication(), o.handler.CreateOrder)
-		orderRouter.Patch("/user/cancel", o.middleware.Authentication.RequiredAuthentication(), o.handler.CancelOrder)
-		orderRouter.Get("/user", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetMyOrder)
-		orderRouter.Get("/user/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetOrderByUUID)
-		orderRouter.Patch("/:id/items", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
+		userRouter := orderRouter.Group("/user")
+		{
+			userRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetMyOrder)
+			userRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetOrderByUUID)
+			userRouter.Post("", o.middleware.Authentication.RequiredAuthentication(), o.handler.CreateOrder)
+			userRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.handler.CancelOrder)
+			userRouter.Patch("/:id/items", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
+		}
+
 		//store
-		orderRouter.Get("/store", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetMyStoreOrder)
-		orderRouter.Get("/store/:id", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetStoreOrderDetail)
-		orderRouter.Patch("/store/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.UpdateOrderItemStatus)
+		storeRouter := orderRouter.Group("/store")
+		{
+			storeRouter.Get("", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetMyStoreOrder)
+			storeRouter.Get("/:id", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetStoreOrderDetail)
+			storeRouter.Patch("/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.UpdateOrderItemStatus)
+		}
+
 		//delivery
-		orderRouter.Get("/delivery", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.GetOrdersByDelivery)
-		orderRouter.Patch("/delivery/:id", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.UpdateStatusByDelivery)
+		deliveryRouter := orderRouter.Group("/delivery")
+		{
+			deliveryRouter.Get("", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.GetOrdersByDelivery)
+			deliveryRouter.Patch("/:id", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.UpdateStatusByDelivery)
+		}
+
+		//internal
+		internalRouter := orderRouter.Group("/internal")
+		{
+			internalRouter.Get("/rating/:id", o.middleware.Authentication.RequiredInternalService(), o.handler.InternalGetOrderByUUID)
+		}
+
 	}
 
 }

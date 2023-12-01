@@ -18,7 +18,7 @@ type Repository interface {
 	Save(order *Order) error
 	Update(order Order) error
 	UpdateStatus(orderID int, status int) error
-	UpdateOrderItem(orderItem int, status int) error
+	UpdateOrderItem(orderItem string, status int) error
 	Total(query *pagable.Query) (int, error)
 
 	//custom_entity - admin

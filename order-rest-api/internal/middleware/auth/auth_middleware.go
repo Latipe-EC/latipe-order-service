@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"order-rest-api/config"
 	"order-rest-api/internal/common/errors"
 	"order-rest-api/internal/infrastructure/adapter/authserv"
 	"order-rest-api/internal/infrastructure/adapter/authserv/dto"
@@ -16,10 +17,17 @@ type AuthenticationMiddleware struct {
 	authServ  authserv.Service
 	storeServ storeserv.Service
 	delivery  deliveryserv.Service
+	cfg       *config.Config
 }
 
-func NewAuthMiddleware(authServ authserv.Service, storeServ storeserv.Service, deliServ deliveryserv.Service) *AuthenticationMiddleware {
-	return &AuthenticationMiddleware{authServ: authServ, storeServ: storeServ, delivery: deliServ}
+func NewAuthMiddleware(authServ authserv.Service, storeServ storeserv.Service,
+	deliServ deliveryserv.Service, config *config.Config) *AuthenticationMiddleware {
+	return &AuthenticationMiddleware{
+		authServ:  authServ,
+		storeServ: storeServ,
+		delivery:  deliServ,
+		cfg:       config,
+	}
 }
 
 func (a AuthenticationMiddleware) RequiredAuthentication() fiber.Handler {
@@ -143,6 +151,17 @@ func (a AuthenticationMiddleware) RequiredRole(roles []string) fiber.Handler {
 		ctx.Locals(USER_ID, resp.Id)
 		ctx.Locals(ROLE, resp.Role)
 		ctx.Locals(BEARER_TOKEN, bearToken)
+		return ctx.Next()
+	}
+}
+
+func (a AuthenticationMiddleware) RequiredInternalService() fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		token := ctx.Get("X-API-KEY")
+		if token == "" || token != a.cfg.Server.ApiHeaderKey {
+			return errors.ErrUnauthenticated
+		}
+
 		return ctx.Next()
 	}
 }

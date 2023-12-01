@@ -23,6 +23,7 @@ type Config struct {
 type Server struct {
 	KeyID               string
 	Name                string
+	ApiHeaderKey        string
 	AppVersion          string
 	Port                string
 	BaseURI             string

@@ -218,7 +218,7 @@ func (g GormRepository) Total(query *pagable.Query) (int, error) {
 	return int(count), result
 }
 
-func (g GormRepository) UpdateOrderItem(orderItemID int, status int) error {
+func (g GormRepository) UpdateOrderItem(orderItemID string, status int) error {
 	result := g.client.DB().Model(&entity.OrderItem{}).
 		Where("id = ?", orderItemID).Update("status", status)
 

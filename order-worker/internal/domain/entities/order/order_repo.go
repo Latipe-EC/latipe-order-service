@@ -12,6 +12,7 @@ type Repository interface {
 	Save(order *Order) error
 	FindById(Id string) (*Order, error)
 	FindByUserId(query *pagable.Query) ([]*Order, error)
+	UpdateOrderRating(itemId string, ratingId string) error
 	Update(order Order) error
 	Total(query *pagable.Query) (int, error)
 }

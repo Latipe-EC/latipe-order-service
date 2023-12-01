@@ -34,6 +34,16 @@ func (g GormRepository) Save(dao *order.Order) error {
 	return result.Error
 }
 
+func (g GormRepository) UpdateOrderRating(itemId string, ratingId string) error {
+	result := g.client.DB().Model(&order.OrderItem{}).
+		Where("id = ?", itemId).Update("rating_id", ratingId)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return result.Error
+	}
+	return nil
+}
+
 func (g GormRepository) GetOrderAmountOfStore(orderId int) ([]custom.AmountItemOfStoreInOrder, error) {
 	var result []custom.AmountItemOfStoreInOrder
 

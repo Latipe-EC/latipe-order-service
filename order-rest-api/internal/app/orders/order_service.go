@@ -8,6 +8,7 @@ import (
 	"order-rest-api/internal/common/errors"
 	orderDTO "order-rest-api/internal/domain/dto/order"
 	"order-rest-api/internal/domain/dto/order/delivery"
+	internalDTO "order-rest-api/internal/domain/dto/order/internal-service"
 	"order-rest-api/internal/domain/dto/order/store"
 	"order-rest-api/internal/domain/entities/order"
 	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
@@ -46,6 +47,20 @@ func NewOrderService(cfg *config.Config, orderRepo order.Repository, productServ
 		voucherSer:  voucherServ,
 		cfg:         cfg,
 	}
+}
+
+func (o orderService) InternalGetOrderByUUID(ctx context.Context, dto *internalDTO.GetOrderRatingItemRequest) (*internalDTO.GetOrderRatingItemResponse, error) {
+	resp := internalDTO.GetOrderRatingItemResponse{}
+	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = mapper.BindingStruct(orderDAO, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, err
 }
 
 func (o orderService) CancelOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error {

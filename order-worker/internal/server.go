@@ -21,10 +21,11 @@ import (
 )
 
 type Server struct {
-	app                 *fiber.App
-	cfg                 *config.Config
-	orderCreateConsumer *worker.ConsumerOrderMessage
-	orderCompleteCJ     *order_cron.OrderCompleteCronjob
+	app                  *fiber.App
+	cfg                  *config.Config
+	orderCreateConsumer  *worker.ConsumerOrderMessage
+	ratingUpdateConsumer *worker.ConsumerRatingMessage
+	orderCompleteCJ      *order_cron.OrderCompleteCronjob
 }
 
 func New() (*Server, error) {
@@ -46,6 +47,7 @@ func New() (*Server, error) {
 func NewServer(
 	cfg *config.Config,
 	orderSubscriber *worker.ConsumerOrderMessage,
+	ratingSubscriber *worker.ConsumerRatingMessage,
 	orderCompleteCron *order_cron.OrderCompleteCronjob) *Server {
 
 	app := fiber.New(fiber.Config{})
@@ -57,10 +59,11 @@ func NewServer(
 	})
 
 	return &Server{
-		cfg:                 cfg,
-		app:                 app,
-		orderCreateConsumer: orderSubscriber,
-		orderCompleteCJ:     orderCompleteCron,
+		cfg:                  cfg,
+		app:                  app,
+		ratingUpdateConsumer: ratingSubscriber,
+		orderCreateConsumer:  orderSubscriber,
+		orderCompleteCJ:      orderCompleteCron,
 	}
 }
 
@@ -74,6 +77,10 @@ func (serv Server) Config() *config.Config {
 
 func (serv Server) ConsumerOrderMessage() *worker.ConsumerOrderMessage {
 	return serv.orderCreateConsumer
+}
+
+func (serv Server) ConsumerRatingMessage() *worker.ConsumerRatingMessage {
+	return serv.ratingUpdateConsumer
 }
 
 func (serv Server) OrderCompleteCJ() *order_cron.OrderCompleteCronjob {

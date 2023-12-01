@@ -1,6 +1,8 @@
 package dto
 
-import "order-worker/internal/domain/dto/order"
+import (
+	"order-worker/internal/domain/dto/order"
+)
 
 func MappingReduceProduct(item []order.OrderItemsCache) []ReduceItem {
 	var data []ReduceItem

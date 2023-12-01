@@ -55,6 +55,10 @@ RabbitMQ:
     Exchange: store_exchange
     RoutingKey: store_routing_key
     Queue:
+  RatingEvent:
+    Exchange: rating_exchange
+    RoutingKey: rating_routing_key
+    Queue: internal.rating
   ConsumerName: create_orders_service
   ProducerName: billing&payment_service
 
@@ -75,6 +79,7 @@ AdapterService:
   PromotionService:
     BaseURL: http://localhost:5010
     InternalKey:
+
 
 CronJob:
   OrderCompleteScheduled: "@every 15m"

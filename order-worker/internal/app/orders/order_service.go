@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2/log"
 	messageDTO "order-worker/internal/domain/dto"
-	dto "order-worker/internal/domain/dto/order"
+	order2 "order-worker/internal/domain/dto/order"
 	"order-worker/internal/domain/entities/order"
 	"order-worker/internal/infrastructure/adapter/productserv"
 	productDTO "order-worker/internal/infrastructure/adapter/productserv/dto"
@@ -36,7 +36,16 @@ func NewOrderService(orderRepo order.Repository, productServ productserv.Service
 	}
 }
 
-func (o orderService) CreateOrderTransaction(ctx context.Context, message *dto.OrderMessage) error {
+func (o orderService) UpdateRatingItem(ctx context.Context, data *messageDTO.RatingMessage) error {
+	err := o.orderRepo.UpdateOrderRating(data.OrderItemId, data.RatingId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o orderService) CreateOrderTransaction(ctx context.Context, message *order2.OrderMessage) error {
 	orderDAO := order.Order{}
 	orderDAO.OrderUUID = message.OrderUUID
 	orderDAO.Username = message.UserRequest.Username
@@ -182,7 +191,7 @@ func (o orderService) CreateOrderTransaction(ctx context.Context, message *dto.O
 	return nil
 }
 
-func (o orderService) rollBackOrderTransaction(ctx context.Context, data *dto.OrderMessage, level int) error {
+func (o orderService) rollBackOrderTransaction(ctx context.Context, data *order2.OrderMessage, level int) error {
 	log.Infof("rollback order transaction level[%v] id: %v", level, data.OrderUUID)
 	switch level {
 	case 1:
@@ -194,7 +203,7 @@ func (o orderService) rollBackOrderTransaction(ctx context.Context, data *dto.Or
 	return nil
 }
 
-func (o orderService) commitChangeOrderService(ctx context.Context, data *dto.OrderMessage) int {
+func (o orderService) commitChangeOrderService(ctx context.Context, data *order2.OrderMessage) int {
 	productReq := productDTO.ReduceProductRequest{Items: productDTO.MappingReduceProduct(data.OrderItems)}
 	if err := o.productServ.UpdateProductQuantity(ctx, &productReq); err != nil {
 		log.Errorf("rollback product quantity was failed cause: %v", err)

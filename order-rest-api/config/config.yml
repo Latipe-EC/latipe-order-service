@@ -2,6 +2,7 @@ Server:
   KeyID: ordvn
   Name: "Order Service APIs"
   AppVersion: 1.0.0
+  ApiHeaderKey: ccfe5596a56098c7a38b06dc42d0ec409bbab643bce1ea4007b4201d26fd056d
   BaseURI: 127.0.0.1:5000
   Port: :5000
   Mode: local

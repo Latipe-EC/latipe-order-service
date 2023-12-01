@@ -1,6 +1,9 @@
 package order
 
 import (
+	"fmt"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -11,7 +14,7 @@ const (
 
 type OrderItem struct {
 	OrderType   string
-	Id          int       `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
+	Id          string    `gorm:"not null;type:varchar(10);primary_key" json:"item_id"`
 	OrderID     int       `gorm:"not null;type:bigint" json:"order_id"`
 	Order       *Order    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	ProductID   string    `gorm:"not null;type:varchar(255)" json:"product_id"`
@@ -28,6 +31,12 @@ type OrderItem struct {
 	SubTotal    int       `gorm:"not null;type:bigint" json:"sub_total"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
 	CreatedAt   time.Time `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
+}
+
+func (o *OrderItem) BeforeCreate(tx *gorm.DB) (err error) {
+	keyGen := uuid.NewString()
+	o.Id = fmt.Sprintf("%v%v", o.Order.OrderUUID[15:], keyGen[30:])
+	return nil
 }
 
 func (OrderItem) TableName() string {

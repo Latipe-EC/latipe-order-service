@@ -6,7 +6,7 @@ import (
 	"log"
 	"order-worker/config"
 	"order-worker/internal/app/orders"
-	dto "order-worker/internal/domain/dto/order"
+	order2 "order-worker/internal/domain/dto/order"
 	"order-worker/internal/domain/entities/order"
 	"sync"
 	"time"
@@ -106,7 +106,7 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	message := dto.OrderMessage{}
+	message := order2.OrderMessage{}
 
 	if err := json.Unmarshal(msg.Body, &message); err != nil {
 		log.Printf("[%s] Parse message to order failed cause: %s", "ERROR", err)
