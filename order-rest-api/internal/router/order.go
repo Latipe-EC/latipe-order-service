@@ -28,7 +28,8 @@ func (o orderRouter) Init(root *fiber.Router) {
 		//admin
 		adminRouter := orderRouter.Group("/admin")
 		{
-			adminRouter.Get("/", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
+			adminRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
+			adminRouter.Get("/count", o.middleware.Authentication.RequiredAuthentication(), o.handler.AdminCountingOrder)
 			adminRouter.Patch("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
 			adminRouter.Patch("/:id/complete", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
 		}
@@ -37,16 +38,17 @@ func (o orderRouter) Init(root *fiber.Router) {
 		userRouter := orderRouter.Group("/user")
 		{
 			userRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetMyOrder)
+			userRouter.Get("/count", o.middleware.Authentication.RequiredAuthentication(), o.handler.UserCountingOrder)
 			userRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetOrderByUUID)
 			userRouter.Post("", o.middleware.Authentication.RequiredAuthentication(), o.handler.CreateOrder)
 			userRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.handler.CancelOrder)
-			userRouter.Patch("/:id/items", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
 		}
 
 		//store
 		storeRouter := orderRouter.Group("/store")
 		{
 			storeRouter.Get("", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetMyStoreOrder)
+			storeRouter.Get("/count", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.StoreCountingOrder)
 			storeRouter.Get("/:id", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.GetStoreOrderDetail)
 			storeRouter.Patch("/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.handler.UpdateOrderItemStatus)
 		}
@@ -55,6 +57,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 		deliveryRouter := orderRouter.Group("/delivery")
 		{
 			deliveryRouter.Get("", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.GetOrdersByDelivery)
+			deliveryRouter.Get("/count", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.DeliveryCountingOrder)
 			deliveryRouter.Patch("/:id", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.UpdateStatusByDelivery)
 		}
 

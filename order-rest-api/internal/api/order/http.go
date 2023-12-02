@@ -30,6 +30,10 @@ type OrderApiHandler interface {
 	UpdateStatusByDelivery(ctx *fiber.Ctx) error
 	GetOrdersByDelivery(ctx *fiber.Ctx) error
 	InternalGetOrderByUUID(ctx *fiber.Ctx) error
+	AdminCountingOrder(ctx *fiber.Ctx) error
+	UserCountingOrder(ctx *fiber.Ctx) error
+	StoreCountingOrder(ctx *fiber.Ctx) error
+	DeliveryCountingOrder(ctx *fiber.Ctx) error
 }
 
 type orderApiHandler struct {

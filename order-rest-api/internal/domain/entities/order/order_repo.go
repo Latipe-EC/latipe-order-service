@@ -33,4 +33,9 @@ type Repository interface {
 	GetTotalOrderInSystemInYearOfStore(year int, storeId string) ([]custom_entity.TotalOrderInSystemInMonth, error)
 	GetTotalCommissionOrderInYearOfStore(month int, year int, count int, storeId string) ([]custom_entity.OrderCommissionDetail, error)
 	ListOfProductSelledOnMonthStore(month int, year int, count int, storeId string) ([]custom_entity.TopOfProductSold, error)
+
+	UserCountingOrder(userId string) (int, error)
+	StoreCountingOrder(storeId string) (int, error)
+	DeliveryCountingOrder(deliveryId string) (int, error)
+	AdminCountingOrder() (int, error)
 }

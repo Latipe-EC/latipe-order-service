@@ -1,9 +1,14 @@
 package statistic
 
-type OrderCommissionDetail struct {
-	Month         int `json:"month"`
-	Amount        int `json:"amount"`
-	TotalReceived int `json:"total_received"`
-	TotalFee      int `json:"total_fee"`
-	Count         int `json:"count"`
+import "order-rest-api/internal/domain/dto/custom_entity"
+
+type OrderCommissionDetailRequest struct {
+	Date    string `json:"date"`
+	Count   int    `json:"count"`
+	StoreId string
+}
+
+type OrderCommissionDetailResponse struct {
+	StoreID string                                `json:"store_id,omitempty"`
+	Items   []custom_entity.OrderCommissionDetail `json:"items"`
 }
