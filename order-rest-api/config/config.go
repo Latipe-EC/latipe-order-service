@@ -31,7 +31,7 @@ type Server struct {
 	ReadTimeout         time.Duration
 	WriteTimeout        time.Duration
 	SSL                 bool
-	CtxDefaultTimeout   time.Duration
+	CtxDefaultTimeout   int
 	CSRF                bool
 	Debug               bool
 	MaxCountRequest     int           // max count of connections
@@ -78,12 +78,24 @@ type Mongodb struct {
 }
 
 type RabbitMQ struct {
+	OrderEvent   OrderEvent
+	PaymentEvent PaymentEvent
 	Connection   string
-	Exchange     string
-	RoutingKey   string
-	Queue        string
 	ConsumerName string
 	ProducerName string
+}
+type OrderEvent struct {
+	Connection string
+	Exchange   string
+	RoutingKey string
+	Queue      string
+}
+
+type PaymentEvent struct {
+	Connection string
+	Exchange   string
+	RoutingKey string
+	Queue      string
 }
 
 type AdapterService struct {

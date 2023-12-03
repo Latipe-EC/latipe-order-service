@@ -28,6 +28,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 		//admin
 		adminRouter := orderRouter.Group("/admin")
 		{
+			adminRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetOrderByUUID)
 			adminRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.handler.ListOfOrder)
 			adminRouter.Get("/count", o.middleware.Authentication.RequiredAuthentication(), o.handler.AdminCountingOrder)
 			adminRouter.Patch("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.UpdateOrderStatus)
@@ -39,7 +40,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 		{
 			userRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetMyOrder)
 			userRouter.Get("/count", o.middleware.Authentication.RequiredAuthentication(), o.handler.UserCountingOrder)
-			userRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.GetOrderByUUID)
+			userRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.handler.UserGetOrderByUUID)
 			userRouter.Post("", o.middleware.Authentication.RequiredAuthentication(), o.handler.CreateOrder)
 			userRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.handler.CancelOrder)
 		}
@@ -57,6 +58,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 		deliveryRouter := orderRouter.Group("/delivery")
 		{
 			deliveryRouter.Get("", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.GetOrdersByDelivery)
+			deliveryRouter.Get("/:id", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.DeliveryGetOrderByUUID)
 			deliveryRouter.Get("/count", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.DeliveryCountingOrder)
 			deliveryRouter.Patch("/:id", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.handler.UpdateStatusByDelivery)
 		}

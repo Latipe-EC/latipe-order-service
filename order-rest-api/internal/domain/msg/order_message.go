@@ -1,4 +1,4 @@
-package order
+package msg
 
 type BaseHeader struct {
 	BearerToken string `reqHeader:"Authorization"`

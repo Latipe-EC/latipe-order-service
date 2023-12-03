@@ -34,6 +34,8 @@ type OrderApiHandler interface {
 	UserCountingOrder(ctx *fiber.Ctx) error
 	StoreCountingOrder(ctx *fiber.Ctx) error
 	DeliveryCountingOrder(ctx *fiber.Ctx) error
+	UserGetOrderByUUID(ctx *fiber.Ctx) error
+	DeliveryGetOrderByUUID(ctx *fiber.Ctx) error
 }
 
 type orderApiHandler struct {
@@ -219,6 +221,76 @@ func (o orderApiHandler) GetOrderByUUID(ctx *fiber.Ctx) error {
 	return resp.JSON(ctx)
 }
 
+func (o orderApiHandler) UserGetOrderByUUID(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+	req := new(dto.GetOrderByUUIDRequest)
+
+	if err := ctx.ParamsParser(req); err != nil {
+		return errors.ErrInternalServer
+	}
+
+	role := fmt.Sprintf("%v", ctx.Locals(auth.ROLE))
+	if role == "" {
+		return errors.ErrPermissionDenied
+	}
+
+	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
+	if userId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.OwnerId = userId
+	req.Role = role
+
+	result, err := o.orderUsecase.GetOrderByUUID(context, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return errors.ErrNotFound
+		}
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+	return resp.JSON(ctx)
+}
+
+func (o orderApiHandler) DeliveryGetOrderByUUID(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+	req := new(dto.GetOrderByUUIDRequest)
+
+	if err := ctx.ParamsParser(req); err != nil {
+		return errors.ErrInternalServer
+	}
+
+	role := fmt.Sprintf("%v", ctx.Locals(auth.ROLE))
+	if role == "" {
+		return errors.ErrPermissionDenied
+	}
+
+	deliID := fmt.Sprintf("%v", ctx.Locals(auth.DELIVERY_ID))
+	if deliID == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.OwnerId = deliID
+	req.Role = role
+
+	result, err := o.orderUsecase.GetOrderByUUID(context, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return errors.ErrNotFound
+		}
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	resp.Data = result
+	return resp.JSON(ctx)
+}
+
 func (o orderApiHandler) InternalGetOrderByUUID(ctx *fiber.Ctx) error {
 	context := ctx.Context()
 	req := internalDTO.GetOrderRatingItemRequest{}
@@ -227,7 +299,7 @@ func (o orderApiHandler) InternalGetOrderByUUID(ctx *fiber.Ctx) error {
 		return errors.ErrInternalServer
 	}
 
-	result, err := o.orderUsecase.InternalGetOrderByUUID(context, &req)
+	result, err := o.orderUsecase.InternalGetRatingID(context, &req)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):

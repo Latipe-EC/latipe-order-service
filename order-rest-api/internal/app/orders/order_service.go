@@ -11,6 +11,7 @@ import (
 	internalDTO "order-rest-api/internal/domain/dto/order/internal-service"
 	"order-rest-api/internal/domain/dto/order/store"
 	"order-rest-api/internal/domain/entities/order"
+	"order-rest-api/internal/domain/msg"
 	"order-rest-api/internal/infrastructure/adapter/deliveryserv"
 	deliDto "order-rest-api/internal/infrastructure/adapter/deliveryserv/dto"
 	"order-rest-api/internal/infrastructure/adapter/productserv"
@@ -20,6 +21,7 @@ import (
 	voucherserv "order-rest-api/internal/infrastructure/adapter/vouchersev"
 	voucherDTO "order-rest-api/internal/infrastructure/adapter/vouchersev/dto"
 	"order-rest-api/internal/message"
+	"order-rest-api/internal/middleware/auth"
 	"order-rest-api/pkg/cache/redis"
 	"order-rest-api/pkg/util/mapper"
 	"strings"
@@ -49,9 +51,9 @@ func NewOrderService(cfg *config.Config, orderRepo order.Repository, productServ
 	}
 }
 
-func (o orderService) InternalGetOrderByUUID(ctx context.Context, dto *internalDTO.GetOrderRatingItemRequest) (*internalDTO.GetOrderRatingItemResponse, error) {
+func (o orderService) InternalGetRatingID(ctx context.Context, dto *internalDTO.GetOrderRatingItemRequest) (*internalDTO.GetOrderRatingItemResponse, error) {
 	resp := internalDTO.GetOrderRatingItemResponse{}
-	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	orderDAO, err := o.orderRepo.FindByItemId(ctx, dto.ItemID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,15 +66,31 @@ func (o orderService) InternalGetOrderByUUID(ctx context.Context, dto *internalD
 }
 
 func (o orderService) CancelOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error {
-	dao, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	dao, err := o.orderRepo.FindByUUID(ctx, dto.OrderUUID)
 	if err != nil {
 		return err
 	}
 
-	if dao.Status == order.ORDER_CREATED && dao.UserId == dto.UserId {
-		if err := o.orderRepo.UpdateStatus(dao.Id, order.ORDER_CANCEL); err != nil {
-			return err
-		}
+	if dao.Status != order.ORDER_CREATED {
+		return errors.OrderCannotCancel
+	}
+
+	if dao.UserId != dto.UserId {
+		return errors.ErrNotFoundRecord
+	}
+
+	if err := o.orderRepo.UpdateStatus(ctx, dao.Id, order.ORDER_CANCEL); err != nil {
+		return err
+	}
+
+	mess := msg.OrderMessage{
+		OrderUUID:     dao.OrderUUID,
+		Status:        order.ORDER_CANCEL,
+		PaymentMethod: dao.PaymentMethod,
+	}
+
+	if err := message.SendOrderMessage(&mess); err != nil {
+		return err
 	}
 
 	return nil
@@ -173,9 +191,20 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 func (o orderService) GetOrderById(ctx context.Context, dto *orderDTO.GetOrderByIDRequest) (*orderDTO.GetOrderResponse, error) {
 	orderResp := orderDTO.OrderResponse{}
 
-	orderDAO, err := o.orderRepo.FindById(dto.OrderId)
+	orderDAO, err := o.orderRepo.FindById(ctx, dto.OrderId)
 	if err != nil {
 		return nil, err
+	}
+
+	switch dto.Role {
+	case auth.ROLE_USER:
+		if orderDAO.UserId != dto.OwnerId {
+			return nil, errors.ErrNotFound
+		}
+	case auth.ROLE_STORE:
+		if !CheckStoreHaveOrder(*orderDAO, dto.OwnerId) {
+			return nil, errors.ErrNotFound
+		}
 	}
 
 	if err = mapper.BindingStruct(orderDAO, &orderResp); err != nil {
@@ -190,9 +219,24 @@ func (o orderService) GetOrderById(ctx context.Context, dto *orderDTO.GetOrderBy
 func (o orderService) GetOrderByUUID(ctx context.Context, dto *orderDTO.GetOrderByUUIDRequest) (*orderDTO.GetOrderResponse, error) {
 	orderResp := orderDTO.OrderResponse{}
 
-	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderId)
+	orderDAO, err := o.orderRepo.FindByUUID(ctx, dto.OrderId)
 	if err != nil {
 		return nil, err
+	}
+
+	switch dto.Role {
+	case auth.ROLE_USER:
+		if orderDAO.UserId != dto.OwnerId {
+			return nil, errors.ErrNotFound
+		}
+	case auth.ROLE_STORE:
+		if !CheckStoreHaveOrder(*orderDAO, dto.OwnerId) {
+			return nil, errors.ErrNotFound
+		}
+	case auth.ROLE_DELIVERY:
+		if orderDAO.Delivery.DeliveryId != dto.OwnerId {
+			return nil, errors.ErrNotFound
+		}
 	}
 
 	if err = mapper.BindingStruct(orderDAO, &orderResp); err != nil {
@@ -207,12 +251,12 @@ func (o orderService) GetOrderByUUID(ctx context.Context, dto *orderDTO.GetOrder
 func (o orderService) GetOrderList(ctx context.Context, dto *orderDTO.GetOrderListRequest) (*orderDTO.GetOrderListResponse, error) {
 	var dataResp []orderDTO.OrderResponse
 
-	orders, err := o.orderRepo.FindAll(dto.Query)
+	orders, err := o.orderRepo.FindAll(ctx, dto.Query)
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := o.orderRepo.Total(dto.Query)
+	total, err := o.orderRepo.Total(ctx, dto.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -234,12 +278,12 @@ func (o orderService) GetOrderList(ctx context.Context, dto *orderDTO.GetOrderLi
 func (o orderService) GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByUserIdRequest) (*orderDTO.GetByUserIdResponse, error) {
 	var dataResp []orderDTO.OrderResponse
 
-	orders, err := o.orderRepo.FindByUserId(dto.UserId, dto.Query)
+	orders, err := o.orderRepo.FindByUserId(ctx, dto.UserId, dto.Query)
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := o.orderRepo.Total(dto.Query)
+	total, err := o.orderRepo.Total(ctx, dto.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -261,12 +305,12 @@ func (o orderService) GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByU
 func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreOrderRequest) (*orderDTO.GetOrderListResponse, error) {
 	var dataResp []store.StoreOrderResponse
 
-	orders, err := o.orderRepo.FindOrderByStoreID(dto.StoreID, dto.Query)
+	orders, err := o.orderRepo.FindOrderByStoreID(ctx, dto.StoreID, dto.Query)
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := o.orderRepo.Total(dto.Query)
+	total, err := o.orderRepo.Total(ctx, dto.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -288,12 +332,12 @@ func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreO
 func (o orderService) GetOrdersOfDelivery(ctx context.Context, dto *delivery.GetOrderListRequest) (*delivery.GetOrderListResponse, error) {
 	var dataResp []store.StoreOrderResponse
 
-	orders, err := o.orderRepo.FindOrderByDelivery(dto.DeliveryID, dto.Query)
+	orders, err := o.orderRepo.FindOrderByDelivery(ctx, dto.DeliveryID, dto.Query)
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := o.orderRepo.Total(dto.Query)
+	total, err := o.orderRepo.Total(ctx, dto.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -315,9 +359,13 @@ func (o orderService) GetOrdersOfDelivery(ctx context.Context, dto *delivery.Get
 func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOrderOfStoreByIDRequest) (*store.GetOrderOfStoreByIDResponse, error) {
 	orderResp := store.GetOrderOfStoreByIDResponse{}
 
-	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	orderDAO, err := o.orderRepo.FindByUUID(ctx, dto.OrderUUID)
 	if err != nil {
 		return nil, err
+	}
+
+	if !CheckStoreHaveOrder(*orderDAO, dto.StoreID) {
+		return nil, errors.ErrNotFound
 	}
 
 	if err = mapper.BindingStruct(orderDAO, &orderResp); err != nil {
@@ -353,7 +401,7 @@ func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOr
 
 func (o orderService) UpdateStatusOrder(ctx context.Context, dto *orderDTO.UpdateOrderStatusRequest) error {
 
-	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	orderDAO, err := o.orderRepo.FindByUUID(ctx, dto.OrderUUID)
 	if err != nil {
 		return err
 	}
@@ -364,7 +412,7 @@ func (o orderService) UpdateStatusOrder(ctx context.Context, dto *orderDTO.Updat
 
 	orderDAO.Status = dto.Status
 
-	if err := o.orderRepo.Update(*orderDAO); err != nil {
+	if err := o.orderRepo.Update(ctx, *orderDAO); err != nil {
 		return err
 	}
 
@@ -372,13 +420,13 @@ func (o orderService) UpdateStatusOrder(ctx context.Context, dto *orderDTO.Updat
 }
 
 func (o orderService) DeliveryUpdateStatusOrder(ctx context.Context, dto delivery.UpdateOrderStatusRequest) (*delivery.UpdateOrderStatusResponse, error) {
-	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	orderDAO, err := o.orderRepo.FindByUUID(ctx, dto.OrderUUID)
 	if err != nil {
 		return nil, err
 	}
 
 	if orderDAO.Status != order.ORDER_DELIVERY {
-		return nil, errors.ErrBadRequest
+		return nil, errors.OrderStatusNotValid
 	}
 
 	if orderDAO.Delivery.DeliveryId != dto.DeliveryID {
@@ -388,13 +436,13 @@ func (o orderService) DeliveryUpdateStatusOrder(ctx context.Context, dto deliver
 	orderDAO.Status = dto.Status
 
 	if dto.Status == order.ORDER_CANCEL || dto.Status == order.ORDER_SHIPPING_FINISH {
-		if err := o.orderRepo.UpdateStatus(orderDAO.Id, dto.Status); err != nil {
+		if err := o.orderRepo.UpdateStatus(ctx, orderDAO.Id, dto.Status); err != nil {
 			return nil, err
 		}
 	}
 
-	msg := order.OrderMessage{
-		Status:    order.ORDER_SHIPPING_FINISH,
+	msg := msg.OrderMessage{
+		Status:    dto.Status,
 		OrderUUID: orderDAO.OrderUUID,
 	}
 
@@ -404,11 +452,17 @@ func (o orderService) DeliveryUpdateStatusOrder(ctx context.Context, dto deliver
 		}
 	}
 
+	if dto.Status == order.ORDER_CANCEL {
+		if err := message.SendOrderMessage(&msg); err != nil {
+			return nil, err
+		}
+	}
+
 	return nil, nil
 }
 
 func (o orderService) UpdateOrderItem(ctx context.Context, dto *store.UpdateOrderItemRequest) (*store.UpdateOrderItemResponse, error) {
-	orderDAO, err := o.orderRepo.FindByUUID(dto.OrderUUID)
+	orderDAO, err := o.orderRepo.FindByUUID(ctx, dto.OrderUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -419,7 +473,7 @@ func (o orderService) UpdateOrderItem(ctx context.Context, dto *store.UpdateOrde
 	for _, i := range orderDAO.OrderItem {
 		if i.Status != order.OI_PREPARED && i.Id == dto.ItemID {
 			notFound = false
-			if err := o.orderRepo.UpdateOrderItem(i.Id, order.OI_PREPARED); err != nil {
+			if err := o.orderRepo.UpdateOrderItem(ctx, i.Id, order.OI_PREPARED); err != nil {
 				return nil, err
 			}
 			i.Status = order.OI_PREPARED
@@ -435,13 +489,13 @@ func (o orderService) UpdateOrderItem(ctx context.Context, dto *store.UpdateOrde
 	}
 
 	if orderDAO.Status == order.ORDER_CREATED {
-		if err := o.orderRepo.UpdateStatus(orderDAO.Id, order.ORDER_PENDING); err != nil {
+		if err := o.orderRepo.UpdateStatus(ctx, orderDAO.Id, order.ORDER_PENDING); err != nil {
 			return nil, err
 		}
 	}
 
 	if len(orderDAO.OrderItem) == itemPreparedCount {
-		if err := o.orderRepo.UpdateStatus(orderDAO.Id, order.ORDER_DELIVERY); err != nil {
+		if err := o.orderRepo.UpdateStatus(ctx, orderDAO.Id, order.ORDER_DELIVERY); err != nil {
 			return nil, err
 		}
 	}
@@ -461,25 +515,25 @@ func (o orderService) UpdateOrder(ctx context.Context, dto *orderDTO.UpdateOrder
 }
 
 func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductResponse,
-	address *userDTO.GetDetailAddressResponse, deli *deliDto.GetShippingCostResponse, dto *orderDTO.CreateOrderRequest) *order.OrderMessage {
+	address *userDTO.GetDetailAddressResponse, deli *deliDto.GetShippingCostResponse, dto *orderDTO.CreateOrderRequest) *msg.OrderMessage {
 
-	orderCache := order.OrderMessage{
+	orderCache := msg.OrderMessage{
 		Status: order.ORDER_SYSTEM_PROCESS,
-		Header: order.BaseHeader{dto.Header.BearerToken},
-		UserRequest: order.UserRequest{
+		Header: msg.BaseHeader{dto.Header.BearerToken},
+		UserRequest: msg.UserRequest{
 			UserId:   dto.UserRequest.UserId,
 			Username: dto.UserRequest.Username,
 		},
 		SubTotal:      products.TotalPrice,
 		PaymentMethod: dto.PaymentMethod,
 		Vouchers:      nil,
-		Address: order.OrderAddress{
+		Address: msg.OrderAddress{
 			AddressId:       address.Id,
 			ShippingName:    address.ContactName,
 			ShippingPhone:   address.Phone,
 			ShippingAddress: address.DetailAddress,
 		},
-		Delivery: order.Delivery{
+		Delivery: msg.Delivery{
 			DeliveryId:    deli.DeliveryId,
 			Name:          deli.DeliveryName,
 			Cost:          deli.Cost,
@@ -489,11 +543,11 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 
 	discount := 0
 	//order detail
-	var orderItems []order.OrderItemsCache
+	var orderItems []msg.OrderItemsCache
 	for index, i := range products.Products {
-		item := order.OrderItemsCache{
+		item := msg.OrderItemsCache{
 			CartId: dto.OrderItems[index].CartId,
-			ProductItem: order.ProductItem{
+			ProductItem: msg.ProductItem{
 				ProductID:   i.ProductId,
 				ProductName: i.Name,
 				StoreID:     i.StoreId,
@@ -515,7 +569,7 @@ func (o orderService) initOrderCacheData(products *prodServDTO.OrderProductRespo
 }
 
 func (o orderService) CheckProductPurchased(ctx context.Context, dto *orderDTO.CheckUserOrderRequest) (*orderDTO.CheckUserOrderResponse, error) {
-	orders, err := o.orderRepo.FindOrderByUserAndProduct(dto.UserId, dto.ProductId)
+	orders, err := o.orderRepo.FindOrderByUserAndProduct(ctx, dto.UserId, dto.ProductId)
 	if err != nil {
 		return nil, err
 	}

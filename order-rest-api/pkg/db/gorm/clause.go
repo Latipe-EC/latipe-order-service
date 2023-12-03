@@ -1,13 +1,37 @@
 package gorm
 
 import (
+	"context"
 	"database/sql"
 	"gorm.io/gorm"
+	"time"
 )
 
 // SqlDB returns `*sql.DB`
 func (g *_gorm) SqlDB() *sql.DB {
 	return g.sqlDB
+}
+
+func (g *_gorm) Exec(fc func(tx *gorm.DB) error, ctx context.Context) (err error) {
+	panicked := true
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	tx := g.db.WithContext(ctx).Begin()
+	defer func() {
+		if panicked || err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	err = fc(tx)
+
+	if err == nil {
+		err = tx.Commit().Error
+	}
+
+	panicked = false
+	return
 }
 
 // DB returns `*gorm.DB`

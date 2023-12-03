@@ -1,11 +1,13 @@
 package gorm
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"order-rest-api/config"
 	"strings"
 	"time"
 )
@@ -14,6 +16,7 @@ import (
 type Gorm interface {
 	DB() *gorm.DB
 	SqlDB() *sql.DB
+	Exec(fc func(tx *gorm.DB) error, ctx context.Context) (err error)
 	Transaction(fc func(tx *gorm.DB) error) (err error)
 	Close() error
 	DropTableIfExists(value interface{}) error
@@ -35,6 +38,7 @@ type Config struct {
 type _gorm struct {
 	db    *gorm.DB
 	sqlDB *sql.DB
+	cfg   *config.Config
 }
 
 // New Create gorm.DB and  instance

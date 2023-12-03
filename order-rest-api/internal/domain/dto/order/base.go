@@ -14,6 +14,7 @@ type OrderResponse struct {
 	SubTotal         int               `json:"sub_total"`
 	Status           int               `json:"status"`
 	PaymentMethod    int               `json:"payment_method"`
+	VoucherCode      string            `json:"voucher_code"`
 	CreatedAt        time.Time         `json:"created_at"`
 	UpdatedAt        time.Time         `json:"updated_at"`
 	Delivery         DeliveryResp      `json:"delivery"`

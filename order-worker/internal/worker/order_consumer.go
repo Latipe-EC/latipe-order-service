@@ -103,6 +103,7 @@ func (mq ConsumerOrderMessage) ListenOrderEventQueue(wg *sync.WaitGroup) {
 }
 
 func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
+	startTime := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -122,6 +123,7 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 		return err
 	}
 
-	log.Printf("[%s] The order created successfully: %s", "INFO", msg.RoutingKey)
+	endTime := time.Now()
+	log.Printf("[%s] [%v] The order created successfully :", "INFO", endTime.Sub(startTime))
 	return nil
 }

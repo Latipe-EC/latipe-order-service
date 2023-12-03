@@ -2,6 +2,7 @@ package orders
 
 import (
 	"order-rest-api/internal/domain/dto/order"
+	enitites "order-rest-api/internal/domain/entities/order"
 	"order-rest-api/internal/infrastructure/adapter/productserv/dto"
 )
 
@@ -16,6 +17,15 @@ func MappingOrderItemForReduce(request *order.CreateOrderRequest) []dto.ReduceIt
 		items = append(items, product)
 	}
 	return items
+}
+
+func CheckStoreHaveOrder(entities enitites.Order, storeId string) bool {
+	for _, i := range entities.OrderItem {
+		if i.StoreID == storeId {
+			return true
+		}
+	}
+	return false
 }
 
 func MappingOrderItemToGetInfo(request *order.CreateOrderRequest) []dto.ValidateItems {

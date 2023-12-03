@@ -46,7 +46,7 @@ func (h httpAdapter) CheckingVoucher(ctx context.Context, req *dto.CheckingVouch
 
 	if resp.StatusCode() >= 400 {
 		log.Errorf("[Apply voucher]: %s", resp.Body())
-		return nil, errors.ErrUnauthenticated
+		return nil, errors.ErrBadRequest
 	}
 
 	if resp.StatusCode() >= 500 {
