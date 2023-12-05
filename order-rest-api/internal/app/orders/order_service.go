@@ -131,6 +131,9 @@ func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.Creat
 		voucherReq := voucherDTO.CheckingVoucherRequest{}
 		voucherReq.Vouchers = dto.VoucherCode
 		voucherReq.AuthorizationHeader.BearerToken = dto.Header.BearerToken
+		voucherReq.OrderTotalAmount = orderData.SubTotal - orderData.ShippingCost
+		voucherReq.PaymentMethod = orderData.PaymentMethod
+		voucherReq.UserId = orderData.UserRequest.UserId
 
 		voucherDetail, err := o.voucherSer.CheckingVoucher(ctx, &voucherReq)
 		if err != nil {

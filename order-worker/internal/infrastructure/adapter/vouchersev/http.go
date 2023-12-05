@@ -10,6 +10,7 @@ import (
 	"order-worker/config"
 	"order-worker/internal/infrastructure/adapter/vouchersev/dto"
 	http "order-worker/pkg/internal_http"
+	"order-worker/pkg/util/mapper"
 )
 
 var Set = wire.NewSet(
@@ -53,9 +54,16 @@ func (h httpAdapter) ApplyVoucher(ctx context.Context, req *dto.ApplyVoucherRequ
 		return nil, errors.New("internal server")
 	}
 
+	var baseResp dto.BaseResponse
+	err = json.Unmarshal(resp.Body(), &baseResp)
+	if err != nil {
+		log.Errorf("[Apply voucher]: %s", err)
+		return nil, errors.New("internal server")
+	}
+
 	var regResp *dto.UseVoucherResponse
 
-	if err := json.Unmarshal(resp.Body(), &regResp); err != nil {
+	if err := mapper.BindingStruct(baseResp.Data, &regResp); err != nil {
 		log.Errorf("[Apply voucher]: %s", err)
 		return nil, err
 	}
@@ -86,10 +94,17 @@ func (h httpAdapter) Rollback(ctx context.Context, req *dto.RollbackVoucherReque
 		return nil, errors.New("internal server")
 	}
 
+	var baseResp dto.BaseResponse
+	err = json.Unmarshal(resp.Body(), &baseResp)
+	if err != nil {
+		log.Errorf("[Apply voucher]: %s", err)
+		return nil, errors.New("internal server")
+	}
+
 	var regResp *dto.UseVoucherResponse
 
-	if err := json.Unmarshal(resp.Body(), &regResp); err != nil {
-		log.Errorf("[rollback voucher]: %s", err)
+	if err := mapper.BindingStruct(baseResp.Data, &regResp); err != nil {
+		log.Errorf("[Apply voucher]: %s", err)
 		return nil, err
 	}
 

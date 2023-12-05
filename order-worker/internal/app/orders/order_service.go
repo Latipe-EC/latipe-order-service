@@ -211,6 +211,7 @@ func (o orderService) commitChangeOrderService(ctx context.Context, data *order2
 	}
 
 	voucherReq := promotionDTO.ApplyVoucherRequest{
+		OrderUUID:           data.OrderUUID,
 		Vouchers:            data.Vouchers,
 		AuthorizationHeader: promotionDTO.AuthorizationHeader{BearerToken: data.Header.BearerToken},
 	}

@@ -9,6 +9,7 @@ import (
 	"order-rest-api/config"
 	"order-rest-api/internal/common/errors"
 	"order-rest-api/internal/infrastructure/adapter/vouchersev/dto"
+	"order-rest-api/pkg/util/mapper"
 
 	http "order-rest-api/pkg/internal_http"
 )
@@ -40,25 +41,31 @@ func (h httpAdapter) CheckingVoucher(ctx context.Context, req *dto.CheckingVouch
 		Post(req.URL())
 
 	if err != nil {
-		log.Errorf("[Apply voucher]: %s", err)
+		log.Errorf("[Checking voucher]: %s", err)
 		return nil, errors.ErrBadRequest
 	}
 
 	if resp.StatusCode() >= 400 {
-		log.Errorf("[Apply voucher]: %s", resp.Body())
+		log.Errorf("[Checking voucher]: %s", resp.Body())
 		return nil, errors.ErrBadRequest
 	}
 
 	if resp.StatusCode() >= 500 {
-		log.Errorf("[Apply voucher]: %s", resp.Body())
+		log.Errorf("[Checking voucher]: %s", resp.Body())
 		return nil, errors.ErrInternalServer
 	}
 
+	var baseResp dto.BaseResponse
+	err = json.Unmarshal(resp.Body(), &baseResp)
+	if err != nil {
+		log.Errorf("[Checking voucher]: %s", err)
+		return nil, errors.New("internal server")
+	}
 	var regResp *dto.UseVoucherResponse
 
-	if err := json.Unmarshal(resp.Body(), &regResp); err != nil {
-		log.Errorf("[%s] [Apply voucher]: %s", "ERROR", err)
-		return nil, errors.ErrInternalServer
+	if err := mapper.BindingStruct(baseResp.Data, &regResp); err != nil {
+		log.Errorf("[Checking voucher]: %s", err)
+		return nil, err
 	}
 
 	return regResp, nil

@@ -3,7 +3,8 @@ package dto
 const url = "/api/v1/vouchers/apply"
 
 type ApplyVoucherRequest struct {
-	Vouchers []string `json:"vouchers"`
+	OrderUUID string   `json:"order_uuid"`
+	Vouchers  []string `json:"vouchers"`
 	AuthorizationHeader
 }
 

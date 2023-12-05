@@ -3,7 +3,10 @@ package dto
 const url = "/api/v1/vouchers/checking"
 
 type CheckingVoucherRequest struct {
-	Vouchers []string `json:"vouchers"`
+	OrderTotalAmount int      `json:"order_total_amount"`
+	PaymentMethod    int      `json:"payment_method"`
+	UserId           string   `json:"user_id"`
+	Vouchers         []string `json:"vouchers"`
 	AuthorizationHeader
 }
 

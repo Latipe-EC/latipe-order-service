@@ -12,3 +12,9 @@ const (
 	ACTIVE    = 1
 	IN_ACTIVE = 2
 )
+
+type BaseResponse struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
