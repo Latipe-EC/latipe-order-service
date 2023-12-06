@@ -2,6 +2,8 @@ package pagable
 
 import (
 	"fmt"
+	"github.com/gofiber/fiber/v2/log"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -26,13 +28,29 @@ type FilterMapValue struct {
 	Operation Operation `json:"operation"`
 }
 
+func decodeFilterURL(encodedUrl string) (string, error) {
+	decodedUrl, err := url.QueryUnescape(encodedUrl)
+	if err != nil {
+		return "", err
+	}
+
+	log.Info("url:%v", decodedUrl)
+	return decodedUrl, nil
+}
+
 func FilterBinding(uri string) ([]Filter, error) {
+
+	urlDecode, err := decodeFilterURL(uri)
+	if err != nil {
+		return nil, err
+	}
+
 	var filters []Filter
 	var keyArr []string
 	filterMap := make(map[string]FilterMapValue)
 
 	// Find all matches in the uri
-	matches := filterRegex.FindAllStringSubmatch(uri, -1)
+	matches := filterRegex.FindAllStringSubmatch(urlDecode, -1)
 	for _, match := range matches {
 		comp, err := OperationMapping(match[2])
 		if err != nil {

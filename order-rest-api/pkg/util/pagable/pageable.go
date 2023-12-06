@@ -116,8 +116,7 @@ func (q *Query) ORMConditions() interface{} {
 
 		// Type assertion to convert interface{} to []string
 		if strSlice, ok := filter.Value.([]string); ok {
-			// Now, strSlice is of type []string
-			fmt.Println("Converted slice:", strSlice)
+			value = ArrayToString(strSlice)
 		} else {
 			if filter.Field == "status" {
 				value, _ = strconv.Atoi(fmt.Sprintf("%v", filter.Value))
