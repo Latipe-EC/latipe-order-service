@@ -27,7 +27,7 @@ type Query struct {
 }
 
 type ListResponse struct {
-	Data    interface{} `json:"data"`
+	Items   interface{} `json:"items"`
 	Total   int         `json:"total"`
 	Page    int         `json:"page"`
 	Size    int         `json:"size"`
@@ -112,13 +112,18 @@ func (q *Query) ORMConditions() interface{} {
 	}
 	var conditions []string
 	for _, filter := range q.ExpressionFilters {
-
 		var value interface{}
 
-		if filter.Field == "status" {
-			value, _ = strconv.Atoi(fmt.Sprintf("%v", filter.Value))
+		// Type assertion to convert interface{} to []string
+		if strSlice, ok := filter.Value.([]string); ok {
+			// Now, strSlice is of type []string
+			fmt.Println("Converted slice:", strSlice)
 		} else {
-			value = fmt.Sprintf("'%s'", filter.Value)
+			if filter.Field == "status" {
+				value, _ = strconv.Atoi(fmt.Sprintf("%v", filter.Value))
+			} else {
+				value = fmt.Sprintf("'%s'", filter.Value)
+			}
 		}
 
 		condition := q.ParseCondition(filter, value)
@@ -136,23 +141,23 @@ func (q *Query) ParseCondition(ft Filter, value interface{}) string {
 	case Equal:
 		condition = ft.Field + " = " + fmt.Sprintf("%v", value)
 	case NotEqual:
-		condition = ft.Field + " <> " + fmt.Sprintf("'%s'", value)
+		condition = ft.Field + " <> " + fmt.Sprintf("%s", value)
 	case LT:
-		condition = ft.Field + " < " + fmt.Sprintf("'%s'", value)
+		condition = ft.Field + " < " + fmt.Sprintf("%s", value)
 	case LTE:
-		condition = ft.Field + " <= " + fmt.Sprintf("'%s'", value)
+		condition = ft.Field + " <= " + fmt.Sprintf("%s", value)
 	case GT:
-		condition = ft.Field + " > " + fmt.Sprintf("'%s'", value)
+		condition = ft.Field + " > " + fmt.Sprintf("%s", value)
 	case GTE:
-		condition = ft.Field + " >= " + fmt.Sprintf("'%s'", value)
+		condition = ft.Field + " >= " + fmt.Sprintf("%s", value)
 	case In:
-		condition = ft.Field + " IN " + fmt.Sprintf("'%s'", value)
+		condition = ft.Field + " IN " + fmt.Sprintf("(%v)", value)
 	case NotIn:
-		condition = ft.Field + " NOT IN " + fmt.Sprintf("'%s'", value)
+		condition = ft.Field + " NOT IN " + fmt.Sprintf("%v", value)
 	case Contains:
-		condition = ft.Field + " LIKE " + "%" + fmt.Sprintf("'%s'", value) + "%"
+		condition = ft.Field + " LIKE " + "%" + fmt.Sprintf("%v", value) + "%"
 	case NotContains:
-		condition = ft.Field + " NOT LIKE " + "%" + fmt.Sprintf("'%s'", value) + "%"
+		condition = ft.Field + " NOT LIKE " + "%" + fmt.Sprintf("%v", value) + "%"
 	case IsNull:
 		condition = ft.Field + " IS NULL"
 	case IsNotNull:
@@ -172,13 +177,18 @@ func (q *Query) UserORMConditions() interface{} {
 	var conditions []string
 	for _, filter := range q.ExpressionFilters {
 
-		var value interface{}
-
 		if q.isUserRequest(filter.Field) {
-			if filter.Field == "status" {
-				value, _ = strconv.Atoi(fmt.Sprintf("%v", filter.Value))
+			var value interface{}
+
+			// Type assertion to convert interface{} to []string
+			if strSlice, ok := filter.Value.([]string); ok {
+				value = ArrayToString(strSlice)
 			} else {
-				value = fmt.Sprintf("'%s'", filter.Value)
+				if filter.Field == "status" {
+					value, _ = strconv.Atoi(fmt.Sprintf("%v", filter.Value))
+				} else {
+					value = fmt.Sprintf("'%s'", filter.Value)
+				}
 			}
 
 			condition := q.ParseCondition(filter, value)

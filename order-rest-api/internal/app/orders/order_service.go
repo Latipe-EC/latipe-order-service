@@ -269,7 +269,7 @@ func (o orderService) GetOrderList(ctx context.Context, dto *orderDTO.GetOrderLi
 	}
 
 	resp := orderDTO.GetOrderListResponse{}
-	resp.Data = dataResp
+	resp.Items = dataResp
 	resp.Size = dto.Query.Size
 	resp.Page = dto.Query.Page
 	resp.Total = dto.Query.GetTotalPages(total)
@@ -296,7 +296,7 @@ func (o orderService) GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByU
 	}
 
 	resp := orderDTO.GetByUserIdResponse{}
-	resp.Data = dataResp
+	resp.Items = dataResp
 	resp.Size = dto.Query.Size
 	resp.Page = dto.Query.Page
 	resp.Total = dto.Query.GetTotalPages(total)
@@ -323,7 +323,7 @@ func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreO
 	}
 
 	resp := orderDTO.GetOrderListResponse{}
-	resp.Data = dataResp
+	resp.Items = dataResp
 	resp.Size = dto.Query.Size
 	resp.Page = dto.Query.Page
 	resp.Total = dto.Query.GetTotalPages(total)
@@ -350,7 +350,7 @@ func (o orderService) GetOrdersOfDelivery(ctx context.Context, dto *delivery.Get
 	}
 
 	resp := delivery.GetOrderListResponse{}
-	resp.Data = dataResp
+	resp.Items = dataResp
 	resp.Size = dto.Query.Size
 	resp.Page = dto.Query.Page
 	resp.Total = dto.Query.GetTotalPages(total)

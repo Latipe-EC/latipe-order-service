@@ -1,7 +1,9 @@
 package pagable
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -19,21 +21,67 @@ type Filter struct {
 	Operation Operation   `json:"operation"`
 }
 
+type FilterMapValue struct {
+	Value     []string
+	Operation Operation `json:"operation"`
+}
+
 func FilterBinding(uri string) ([]Filter, error) {
 	var filters []Filter
+	var keyArr []string
+	filterMap := make(map[string]FilterMapValue)
+
 	// Find all matches in the uri
 	matches := filterRegex.FindAllStringSubmatch(uri, -1)
 	for _, match := range matches {
 		comp, err := OperationMapping(match[2])
 		if err != nil {
-			return nil, err
+
+			arrComp, err := OperationMapping(match[2][:len(match[2])-3])
+			if err != nil {
+				return nil, err
+			}
+			fieldName := fmt.Sprintf("%v", match[1])
+			_, ok := filterMap[fieldName]
+			if !ok {
+				keyArr = append(keyArr, fieldName)
+			}
+
+			newSlice := append(filterMap[fieldName].Value, match[3])
+			filterMap[fieldName] = FilterMapValue{
+				Value:     newSlice,
+				Operation: arrComp,
+			}
+
+		} else {
+
+			filter := Filter{
+				Field:     match[1],
+				Value:     match[3],
+				Operation: comp,
+			}
+			filters = append(filters, filter)
 		}
+	}
+
+	for _, i := range keyArr {
 		filter := Filter{
-			Field:     match[1],
-			Value:     match[3],
-			Operation: comp,
+			Field:     i,
+			Value:     filterMap[i].Value,
+			Operation: filterMap[i].Operation,
 		}
 		filters = append(filters, filter)
 	}
+
 	return filters, nil
+}
+
+func ArrayToString(arr []string) string {
+	var strArr []string
+
+	for _, value := range arr {
+		strArr = append(strArr, fmt.Sprintf("%v", value))
+	}
+
+	return strings.Join(strArr, ",")
 }

@@ -7,7 +7,7 @@ type DeliveryOrder struct {
 	OrderType       string
 	DeliveryId      string    `gorm:"not null;type:varchar(255)" json:"delivery_id"`
 	DeliveryName    string    `gorm:"not null;type:varchar(255)" json:"delivery_name"`
-	Cost            int       `gorm:"not null;type:int" json:"payment_type"`
+	Cost            int       `gorm:"not null;type:int" json:"cost"`
 	AddressId       string    `json:"address_id" gorm:"type:varchar(255)"`
 	ShippingName    string    `json:"shipping_name" gorm:"not null;type:varchar(255)"`
 	ShippingPhone   string    `json:"shipping_phone" gorm:"not null;type:varchar(255)"`

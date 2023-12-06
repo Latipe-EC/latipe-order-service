@@ -25,7 +25,7 @@ type OrderResponse struct {
 type DeliveryResp struct {
 	DeliveryId      string    `json:"delivery_id"`
 	DeliveryName    string    `json:"delivery_name"`
-	Cost            int       `json:"payment_type"`
+	Cost            int       `json:"cost"`
 	ReceivingDate   time.Time `json:"receiving_date"`
 	AddressId       string    `json:"address_id"`
 	ShippingName    string    `json:"shipping_name" `
