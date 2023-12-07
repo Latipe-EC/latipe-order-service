@@ -305,6 +305,33 @@ func (o orderService) GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByU
 	return &resp, err
 }
 
+func (o orderService) SearchStoreOrderId(ctx context.Context, dto *store.FindStoreOrderRequest) (*orderDTO.GetOrderListResponse, error) {
+	var dataResp []store.StoreOrderResponse
+
+	orders, err := o.orderRepo.SearchOrderByStoreID(ctx, dto.StoreID, dto.Keyword, dto.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := o.orderRepo.TotalSearchOrderByStoreID(ctx, dto.StoreID, dto.Keyword)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = mapper.BindingStruct(orders, &dataResp); err != nil {
+		return nil, err
+	}
+
+	resp := orderDTO.GetOrderListResponse{}
+	resp.Items = dataResp
+	resp.Size = dto.Query.Size
+	resp.Page = dto.Query.Page
+	resp.Total = dto.Query.GetTotalPages(total)
+	resp.HasMore = dto.Query.GetHasMore(total)
+
+	return &resp, err
+}
+
 func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreOrderRequest) (*orderDTO.GetOrderListResponse, error) {
 	var dataResp []store.StoreOrderResponse
 

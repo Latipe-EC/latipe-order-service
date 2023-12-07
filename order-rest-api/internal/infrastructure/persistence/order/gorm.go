@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+	"fmt"
 	gormF "gorm.io/gorm"
 	entity "order-rest-api/internal/domain/entities/order"
 	"order-rest-api/pkg/db/gorm"
@@ -120,23 +121,50 @@ func (g GormRepository) FindByUserId(ctx context.Context, userId string, query *
 
 func (g GormRepository) FindOrderByStoreID(ctx context.Context, storeId string, query *pagable.Query) ([]entity.Order, error) {
 	var orders []entity.Order
-	sql := `
-	select * from orders
-		inner join (SELECT distinct order_id as id
-		from orders
-		join order_items oi on orders.id = oi.order_id
-		where store_id = ?) as store_order
-		on orders.id = store_order.id
-		inner join delivery_orders d on orders.id = d.order_id
-		order by orders.created_at desc
-		limit ?,?
-	`
-	err := g.client.DB().Raw(sql, storeId, query.Page, query.Size).Scan(&orders).Error
+	err := g.client.DB().Model(&entity.Order{}).
+		Preload("Delivery").
+		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
+		Where("orders_commission.store_id=?", storeId).
+		Limit(query.GetLimit()).Offset(query.GetOffset()).
+		Find(&orders).Error
+
 	if err != nil {
 		return nil, err
 	}
 
 	return orders, err
+}
+
+func (g GormRepository) SearchOrderByStoreID(ctx context.Context, storeId string, keyword string, query *pagable.Query) ([]entity.Order, error) {
+	var orders []entity.Order
+	err := g.client.DB().Model(&entity.Order{}).
+		Preload("Delivery").
+		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
+		Where("orders_commission.store_id=?", storeId).
+		Where("orders.order_uuid like ?", fmt.Sprintf("%v%v%v", "%", keyword, "%")).
+		Limit(query.GetLimit()).Offset(query.GetOffset()).
+		Find(&orders).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, err
+}
+
+func (g GormRepository) TotalSearchOrderByStoreID(ctx context.Context, storeId string, keyword string) (int, error) {
+	var count int64
+
+	err := g.client.DB().Select("*").Model(&entity.Order{}).
+		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
+		Where("orders_commission.store_id=?", storeId).
+		Where("orders.order_uuid like ?", fmt.Sprintf("%v%v%v", "%", keyword, "%")).
+		Count(&count).Error
+
+	if err != nil {
+		return 0, err
+	}
+	return int(count), err
 }
 
 func (g GormRepository) FindOrderByDelivery(ctx context.Context, deliID string, query *pagable.Query) ([]entity.Order, error) {
@@ -247,6 +275,20 @@ func (g GormRepository) Total(ctx context.Context, query *pagable.Query) (int, e
 	}, ctx)
 
 	return int(count), result
+}
+
+func (g GormRepository) TotalStoreOrder(ctx context.Context, storeId string) (int, error) {
+	var count int64
+	err := g.client.DB().Select("*").Model(&entity.Order{}).
+		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
+		Where("orders_commission.store_id=?", storeId).
+		Count(&count).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return int(count), nil
 }
 
 func (g GormRepository) UpdateOrderItem(ctx context.Context, orderItemID string, status int) error {

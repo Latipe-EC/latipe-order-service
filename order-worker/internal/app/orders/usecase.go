@@ -8,6 +8,6 @@ import (
 
 type Usecase interface {
 	CreateOrderTransaction(ctx context.Context, data *order.OrderMessage) error
-	CreateCommissionOrderComplete(ctx context.Context) error
+	UpdateCommissionOrderComplete(ctx context.Context) error
 	UpdateRatingItem(ctx context.Context, data *dto.RatingMessage) error
 }

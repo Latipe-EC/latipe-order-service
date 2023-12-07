@@ -11,6 +11,13 @@ type GetStoreOrderRequest struct {
 	Query      *pagable.Query
 }
 
+type FindStoreOrderRequest struct {
+	Keyword    string `query:"keyword" validate:"required"`
+	BaseHeader order.BaseHeader
+	StoreID    string
+	Query      *pagable.Query
+}
+
 type GetStoreOrderResponse struct {
 	pagable.ListResponse
 }

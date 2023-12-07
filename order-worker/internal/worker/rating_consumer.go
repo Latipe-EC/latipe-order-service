@@ -37,7 +37,7 @@ func (mq ConsumerRatingMessage) ListenRatingEventQueue(wg *sync.WaitGroup) {
 	// Khai báo một Exchange loại "direct"
 	err = channel.ExchangeDeclare(
 		mq.config.RabbitMQ.RatingEvent.Exchange, // Tên Exchange
-		"topic",
+		"direct",
 		true,
 		false,
 		false,

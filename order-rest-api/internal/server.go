@@ -59,8 +59,6 @@ func NewServer(
 		JSONEncoder:  json.Marshal,
 		ErrorHandler: errors.CustomErrorHandler,
 	})
-	log.Info("Fiber read timeout:%v", cfg.Server.ReadTimeout)
-	log.Info("Fiber write timeout:%v", cfg.Server.WriteTimeout)
 
 	// Initialize default config
 	app.Use(logger.New())

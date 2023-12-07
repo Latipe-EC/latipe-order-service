@@ -32,7 +32,7 @@ func (oc OrderCompleteCronjob) CheckOrderFinishShippingStatus(wg *sync.WaitGroup
 	log.Infof("create new checking order status order_cron [schedule :%v]", oc.config.CronJob.OrderCompleteScheduled)
 	runCron, err := oc.cron.AddFunc(oc.config.CronJob.OrderCompleteScheduled, func() {
 		log.Info("Starting run function checking order status finish shipping")
-		if err := oc.orderServ.CreateCommissionOrderComplete(ctxTimeout); err != nil {
+		if err := oc.orderServ.UpdateCommissionOrderComplete(ctxTimeout); err != nil {
 			log.Errorf("[CronJob] error cause:%v", error.Error)
 		}
 	})

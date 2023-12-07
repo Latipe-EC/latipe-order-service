@@ -66,10 +66,10 @@ func (g GormRepository) GetTotalOrderInSystemInDay(ctx context.Context, date str
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
 		return tx.Table("orders").
-			Select("HOUR(created_at) as hour, SUM(amount) as amount, COUNT(*) as count").
-			Where("created_at > ?", date).
-			Group("HOUR(created_at)").
-			Order("HOUR(created_at) DESC").
+			Select("HOUR(orders.created_at) as hour, SUM(amount) as amount, COUNT(*) as count").
+			Where("orders.created_at > ?", date).
+			Group("HOUR(orders.created_at)").
+			Order("HOUR(orders.created_at) DESC").
 			Scan(&result).Error
 	}, ctx)
 	if err != nil {
@@ -84,10 +84,10 @@ func (g GormRepository) GetTotalOrderInSystemInMonth(ctx context.Context, month 
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
 		return tx.Table("orders").
-			Select("DAY(created_at) as day, SUM(amount) as amount, COUNT(*) as count").
-			Where("created_at > ?", fmt.Sprintf("%v-%v-01", year, month)).
-			Group("DAY(created_at)").
-			Order("DAY(created_at) DESC").
+			Select("DAY(orders.created_at) as day, SUM(amount) as amount, COUNT(*) as count").
+			Where("orders.created_at > ?", fmt.Sprintf("%v-%v-01", year, month)).
+			Group("DAY(orders.created_at)").
+			Order("DAY(orders.created_at) DESC").
 			Scan(&result).Error
 	}, ctx)
 	if err != nil {
@@ -102,10 +102,10 @@ func (g GormRepository) GetTotalOrderInSystemInYear(ctx context.Context, year in
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
 		return tx.Table("orders").
-			Select("YEAR(created_at) as month, SUM(amount) as amount, COUNT(*) as count").
-			Where("created_at > ?", fmt.Sprintf("%v-01-01", year)).
-			Group("YEAR(created_at)").
-			Order("YEAR(created_at) DESC").
+			Select("MONTH(orders.created_at) as month, SUM(amount) as amount, COUNT(*) as count").
+			Where("orders.created_at > ?", fmt.Sprintf("%v-01-01", year)).
+			Group("MONTH(orders.created_at)").
+			Order("MONTH(orders.created_at) DESC").
 			Scan(&result).Error
 	}, ctx)
 	if err != nil {
@@ -115,7 +115,7 @@ func (g GormRepository) GetTotalOrderInSystemInYear(ctx context.Context, year in
 	return result, err
 }
 
-func (g GormRepository) GetTotalCommissionOrderInYear(ctx context.Context, month int, year int, count int) ([]custom_entity.OrderCommissionDetail, error) {
+func (g GormRepository) GetTotalCommissionOrderInYear(ctx context.Context, date string, count int) ([]custom_entity.OrderCommissionDetail, error) {
 	var result []custom_entity.OrderCommissionDetail
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
@@ -125,7 +125,7 @@ func (g GormRepository) GetTotalCommissionOrderInYear(ctx context.Context, month
 				"SUM(orders_commission.amount_received) as total_store_received, "+
 				"SUM(orders_commission.system_fee) as total_fee").
 			Joins("INNER JOIN orders_commission ON orders.id = orders_commission.order_id").
-			Where("where orders.created_at >= ?", fmt.Sprintf("%v-%v-01", year, month)).
+			Where("orders.created_at >= ?", date).
 			Group("MONTH(orders.created_at)").
 			Order("MONTH(orders.created_at) DESC").
 			Limit(count).
@@ -138,14 +138,14 @@ func (g GormRepository) GetTotalCommissionOrderInYear(ctx context.Context, month
 	return result, err
 }
 
-func (g GormRepository) ListOfProductSelledOnMonth(ctx context.Context, month int, year int, count int) ([]custom_entity.TopOfProductSold, error) {
+func (g GormRepository) ListOfProductSelledOnMonth(ctx context.Context, date string, count int) ([]custom_entity.TopOfProductSold, error) {
 	var result []custom_entity.TopOfProductSold
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
 		return tx.Table("orders").
 			Select("oi.product_id as product_id, oi.product_name as product_name, SUM(oi.quantity) as total").
 			Joins("INNER JOIN order_items oi ON orders.id = oi.order_id").
-			Where("orders.created_at >= ?", fmt.Sprintf("%v-%v-01", year, month)).
+			Where("orders.created_at >= ?", date).
 			Group("oi.product_id, oi.product_name").
 			Limit(count).
 			Scan(&result).Error
@@ -157,17 +157,16 @@ func (g GormRepository) ListOfProductSelledOnMonth(ctx context.Context, month in
 	return result, err
 }
 
-func (g GormRepository) GetTotalOrderInSystemInMonthOfStore(ctx context.Context, month int, year int, storeId string) ([]custom_entity.TotalOrderInSystemInDay, error) {
+func (g GormRepository) GetTotalOrderInSystemInMonthOfStore(ctx context.Context, date string, storeId string) ([]custom_entity.TotalOrderInSystemInDay, error) {
 	var result []custom_entity.TotalOrderInSystemInDay
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
-		return tx.Table("orders").
-			Select("DAY(created_at) as day, SUM(amount) as amount, COUNT(*) as count").
-			Joins("INNER JOIN order_items ON orders.id = order_items.order_id").
-			Where("order_items.store_id = ?", storeId).
-			Where("created_at > ?", fmt.Sprintf("%v-%v-01", year, month)).
-			Group("DAY(created_at)").
-			Order("DAY(created_at) DESC").
+		return tx.Table("orders_commission").
+			Select("DAY(orders_commission.created_at) as day, SUM(amount_received) as amount, COUNT(*) as count").
+			Where("orders_commission.store_id = ?", storeId).
+			Where("orders_commission.created_at > ?", date).
+			Group("DAY(orders_commission.created_at)").
+			Order("DAY(orders_commission.created_at) DESC").
 			Scan(&result).Error
 	}, ctx)
 	if err != nil {
@@ -181,13 +180,12 @@ func (g GormRepository) GetTotalOrderInSystemInYearOfStore(ctx context.Context, 
 	var result []custom_entity.TotalOrderInSystemInMonth
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
-		return tx.Table("orders").
-			Select("YEAR(created_at) as month, SUM(amount) as amount, COUNT(*) as count").
-			Joins("INNER JOIN order_items ON orders.id = order_items.order_id").
-			Where("order_items.store_id = ?", storeId).
-			Where("created_at > ?", fmt.Sprintf("%v-01-01", year)).
-			Group("YEAR(created_at)").
-			Order("YEAR(created_at) DESC").
+		return tx.Table("orders_commission").
+			Select("MONTH(orders_commission.created_at) as month, SUM(amount_received) as amount, COUNT(*) as count").
+			Where("orders_commission.store_id = ?", storeId).
+			Where("orders_commission.created_at > ?", fmt.Sprintf("%v-01-01", year)).
+			Group("MONTH(orders_commission.created_at)").
+			Order("MONTH(orders_commission.created_at) DESC").
 			Scan(&result).Error
 	}, ctx)
 	if err != nil {
@@ -197,20 +195,20 @@ func (g GormRepository) GetTotalOrderInSystemInYearOfStore(ctx context.Context, 
 	return result, err
 }
 
-func (g GormRepository) GetTotalCommissionOrderInYearOfStore(ctx context.Context, month int, year int, count int, storeId string) ([]custom_entity.OrderCommissionDetail, error) {
+func (g GormRepository) GetTotalCommissionOrderInYearOfStore(ctx context.Context, date string, count int, storeId string) ([]custom_entity.OrderCommissionDetail, error) {
 	var result []custom_entity.OrderCommissionDetail
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
-		return tx.Table("orders").
-			Select("MONTH(orders.created_at) as month, COUNT(*) as total_orders, "+
-				"SUM(amount) as amount, "+
-				"SUM(orders_commission.amount_received) as total_store_received, "+
+		return tx.Table("orders_commission").
+			Select("MONTH(orders_commission.created_at) as month, "+
+				"COUNT(*) as total_orders, "+
+				"SUM(orders_commission.amount_received) as total_received, "+
 				"SUM(orders_commission.system_fee) as total_fee").
-			Joins("INNER JOIN orders_commission ON orders.id = orders_commission.order_id").
 			Where("orders_commission.store_id = ?", storeId).
-			Where("where orders.created_at >= ?", fmt.Sprintf("%v-%v-01", year, month)).
-			Group("MONTH(orders.created_at)").
-			Order("MONTH(orders.created_at) DESC").
+			Where("orders_commission.status >= ?", 1).
+			Where("orders_commission.created_at >= ?", date).
+			Group("MONTH(orders_commission.created_at)").
+			Order("MONTH(orders_commission.created_at) DESC").
 			Limit(count).
 			Scan(&result).Error
 	}, ctx)
@@ -221,16 +219,17 @@ func (g GormRepository) GetTotalCommissionOrderInYearOfStore(ctx context.Context
 	return result, err
 }
 
-func (g GormRepository) ListOfProductSelledOnMonthStore(ctx context.Context, month int, year int, count int, storeId string) ([]custom_entity.TopOfProductSold, error) {
+func (g GormRepository) ListOfProductSelledOnMonthStore(ctx context.Context, date string, count int, storeId string) ([]custom_entity.TopOfProductSold, error) {
 	var result []custom_entity.TopOfProductSold
 
 	err := g.client.Exec(func(tx *gormF.DB) error {
 		return tx.Table("orders").
-			Select("oi.product_id as product_id, oi.product_name as product_name, SUM(oi.quantity) as total").
-			Joins("INNER JOIN order_items oi ON orders.id = oi.order_id").
+			Select("order_items.product_id as product_id, order_items.product_name as product_name, "+
+				"SUM(order_items.quantity) as total").
+			Joins("INNER JOIN order_items ON orders.id = order_items.order_id").
 			Where("order_items.store_id = ?", storeId).
-			Where("orders.created_at >= ?", fmt.Sprintf("%v-%v-01", year, month)).
-			Group("oi.product_id, oi.product_name").
+			Where("orders.created_at >= ?", date).
+			Group("order_items.product_id, order_items.product_name").
 			Limit(count).
 			Scan(&result).Error
 	}, ctx)

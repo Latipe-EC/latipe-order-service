@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2/log"
 	messageDTO "order-worker/internal/domain/dto"
-	order2 "order-worker/internal/domain/dto/order"
+	mess "order-worker/internal/domain/dto/order"
 	"order-worker/internal/domain/entities/order"
 	"order-worker/internal/infrastructure/adapter/productserv"
 	productDTO "order-worker/internal/infrastructure/adapter/productserv/dto"
@@ -45,7 +45,7 @@ func (o orderService) UpdateRatingItem(ctx context.Context, data *messageDTO.Rat
 	return nil
 }
 
-func (o orderService) CreateOrderTransaction(ctx context.Context, message *order2.OrderMessage) error {
+func (o orderService) CreateOrderTransaction(ctx context.Context, message *mess.OrderMessage) error {
 	orderDAO := order.Order{}
 	orderDAO.OrderUUID = message.OrderUUID
 	orderDAO.Username = message.UserRequest.Username
@@ -158,6 +158,11 @@ func (o orderService) CreateOrderTransaction(ctx context.Context, message *order
 		return err
 	}
 
+	if err := o.createCommissionOfOrder(ctx, &orderDAO); err != nil {
+		log.Errorf("the order created failed : %s", err)
+		return err
+	}
+
 	//send notify email
 	email := messageDTO.EmailRequest{
 		EmailRecipient: message.UserRequest.Username,
@@ -191,7 +196,7 @@ func (o orderService) CreateOrderTransaction(ctx context.Context, message *order
 	return nil
 }
 
-func (o orderService) rollBackOrderTransaction(ctx context.Context, data *order2.OrderMessage, level int) error {
+func (o orderService) rollBackOrderTransaction(ctx context.Context, data *mess.OrderMessage, level int) error {
 	log.Infof("rollback order transaction level[%v] id: %v", level, data.OrderUUID)
 	switch level {
 	case 1:
@@ -203,7 +208,7 @@ func (o orderService) rollBackOrderTransaction(ctx context.Context, data *order2
 	return nil
 }
 
-func (o orderService) commitChangeOrderService(ctx context.Context, data *order2.OrderMessage) int {
+func (o orderService) commitChangeOrderService(ctx context.Context, data *mess.OrderMessage) int {
 	productReq := productDTO.ReduceProductRequest{Items: productDTO.MappingReduceProduct(data.OrderItems)}
 	if err := o.productServ.UpdateProductQuantity(ctx, &productReq); err != nil {
 		log.Errorf("rollback product quantity was failed cause: %v", err)
@@ -222,7 +227,8 @@ func (o orderService) commitChangeOrderService(ctx context.Context, data *order2
 
 	return 0
 }
-func (o orderService) CreateCommissionOrderComplete(ctx context.Context) error {
+
+func (o orderService) UpdateCommissionOrderComplete(ctx context.Context) error {
 	idStr := ""
 	rows := 0
 	orders, err := o.orderRepo.FindAllFinishShippingOrder()
@@ -236,7 +242,7 @@ func (o orderService) CreateCommissionOrderComplete(ctx context.Context) error {
 			//check time update after seven day
 			if IsAfterSevenDays(i.UpdatedAt) {
 				//handle commission
-				if err := o.createCommissionOfOrder(ctx, &i); err != nil {
+				if err := o.updateCompleteCommission(ctx, &i); err != nil {
 					break
 				}
 
@@ -247,6 +253,38 @@ func (o orderService) CreateCommissionOrderComplete(ctx context.Context) error {
 	}
 	log.Infof("total rows was update [%v]", rows)
 	log.Infof("order was update [%v]", idStr)
+	return nil
+}
+
+func (o orderService) updateCompleteCommission(ctx context.Context, dao *order.Order) error {
+	cm, err := o.orderRepo.FindCommissionByOrderId(dao.Id)
+	if err != nil {
+		return err
+	}
+	cm.Status = order.CMS_DONE
+	dao.Status = order.ORDER_COMPLETED
+	orderStatusLog := order.OrderStatusLog{
+		OrderType:    "orders",
+		OrderID:      dao.Id,
+		Message:      "Đơn hàng hoàn thành",
+		StatusChange: order.ORDER_COMPLETED,
+	}
+
+	if err := o.orderRepo.UpdateOrderCommissionTransaction(dao, cm, &orderStatusLog); err != nil {
+		return err
+	}
+
+	msg := messageDTO.StoreBillingMessage{
+		StoreID:        cm.StoreID,
+		OrderUUID:      dao.OrderUUID,
+		AmountReceived: cm.AmountReceived,
+		SystemFee:      cm.SystemFee,
+	}
+
+	if err := o.message.SendBillingServiceMessage(&msg); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -270,34 +308,16 @@ func (o orderService) createCommissionOfOrder(ctx context.Context, dao *order.Or
 		storeReceived := i.OrderAmount - systemFee
 		oc := order.OrderCommission{
 			OrderID:        dao.Id,
+			OrderType:      "orders",
+			Status:         order.CMS_PENDING,
 			StoreID:        storeCms.Id,
 			AmountReceived: storeReceived,
 			SystemFee:      systemFee,
 		}
 
-		dao.Status = order.ORDER_COMPLETED
-
-		orderStatusLog := order.OrderStatusLog{
-			OrderID:      dao.Id,
-			Message:      "Đơn hàng hoàn thành",
-			StatusChange: order.ORDER_COMPLETED,
-		}
-
-		if err := o.orderRepo.CreateOrderCommmsionTransaction(dao, &oc, &orderStatusLog); err != nil {
+		if err := o.orderRepo.CreateOrderCommissionTransaction(&oc); err != nil {
 			return err
 		}
-
-		msg := messageDTO.StoreBillingMessage{
-			StoreID:        oc.StoreID,
-			OrderUUID:      dao.OrderUUID,
-			AmountReceived: oc.AmountReceived,
-			SystemFee:      oc.SystemFee,
-		}
-
-		if err := o.message.SendBillingServiceMessage(&msg); err != nil {
-			return err
-		}
-
 	}
 
 	return nil

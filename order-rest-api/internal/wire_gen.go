@@ -47,11 +47,12 @@ func New() (*Server, error) {
 	voucherservService := voucherserv.NewUserServHttpAdapter(configConfig)
 	usecase := orders.NewOrderService(configConfig, repository, service, cacheEngine, userservService, deliveryservService, voucherservService)
 	orderApiHandler := order2.NewOrderHandler(usecase)
+	orderStatisticApiHandler := order2.NewStatisticHandler(usecase)
 	authservService := authserv.NewAuthServHttpAdapter(configConfig)
 	storeservService := storeserv.NewStoreServiceAdapter(configConfig)
 	authenticationMiddleware := auth.NewAuthMiddleware(authservService, storeservService, deliveryservService, configConfig)
 	middlewareMiddleware := middleware.NewMiddleware(authenticationMiddleware)
-	orderRouter := router.NewOrderRouter(orderApiHandler, middlewareMiddleware)
+	orderRouter := router.NewOrderRouter(orderApiHandler, orderStatisticApiHandler, middlewareMiddleware)
 	server := NewServer(configConfig, orderRouter)
 	return server, nil
 }

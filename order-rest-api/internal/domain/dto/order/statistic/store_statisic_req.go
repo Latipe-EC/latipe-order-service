@@ -8,7 +8,8 @@ type GetTotalStoreOrderInMonthRequest struct {
 }
 
 type GetTotalOrderInMonthResponse struct {
-	Items []custom_entity.TotalOrderInSystemInDay `json:"items"`
+	FilterDate string                                  `json:"filter_date,omitempty"`
+	Items      []custom_entity.TotalOrderInSystemInDay `json:"items"`
 }
 
 type GetTotalOrderInYearOfStoreRequest struct {
@@ -17,5 +18,6 @@ type GetTotalOrderInYearOfStoreRequest struct {
 }
 
 type GetTotalOrderInYearOfStoreResponse struct {
-	Items []custom_entity.TotalOrderInSystemInMonth `json:"items"`
+	FilterDate string                                    `json:"filter_date,omitempty"`
+	Items      []custom_entity.TotalOrderInSystemInMonth `json:"items"`
 }

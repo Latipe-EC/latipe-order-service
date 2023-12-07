@@ -9,6 +9,7 @@ type ListOfProductSoldRequest struct {
 }
 
 type ListOfProductSoldResponse struct {
-	StoreID string                           `json:"store_id,omitempty"`
-	Items   []custom_entity.TopOfProductSold `json:"items"`
+	StoreID    string                           `json:"store_id,omitempty"`
+	FilterDate string                           `json:"filter_date,omitempty"`
+	Items      []custom_entity.TopOfProductSold `json:"items"`
 }

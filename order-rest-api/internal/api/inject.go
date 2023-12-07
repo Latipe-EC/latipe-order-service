@@ -7,4 +7,5 @@ import (
 
 var Set = wire.NewSet(
 	order.NewOrderHandler,
+	order.NewStatisticHandler,
 )

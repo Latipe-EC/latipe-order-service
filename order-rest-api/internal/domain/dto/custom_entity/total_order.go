@@ -7,7 +7,7 @@ type TotalOrderInSystemInMonth struct {
 }
 
 type TotalOrderInSystemInHours struct {
-	Hours  int `json:"hour"`
+	Hour   int `json:"hour"`
 	Amount int `json:"amount"`
 	Count  int `json:"count"`
 }

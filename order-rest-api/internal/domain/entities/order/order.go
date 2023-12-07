@@ -89,6 +89,7 @@ type OrderCommission struct {
 	OrderID        int       `gorm:"not null;type:bigint" json:"order_id"`
 	Order          *Order    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	StoreID        string    `gorm:"not null;type:varchar(250)" json:"store_id"`
+	Status         int       `gorm:"not null;int" json:"status"`
 	AmountReceived int       `gorm:"not null;type:bigint" json:"amount_received"`
 	SystemFee      int       `gorm:"not null;type:bigint" json:"system_fee"`
 	CreatedAt      time.Time `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`

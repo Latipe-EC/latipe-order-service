@@ -61,6 +61,19 @@ func (g GormRepository) GetOrderAmountOfStore(orderId int) ([]custom.AmountItemO
 	return result, err
 }
 
+func (g GormRepository) PendingOrderShippingOrder() ([]order.Order, error) {
+	var data []order.Order
+
+	err := g.client.DB().
+		Where("orders.status =?", order.ORDER_PENDING).
+		Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
 func (g GormRepository) FindAllFinishShippingOrder() ([]order.Order, error) {
 	var data []order.Order
 
@@ -74,9 +87,10 @@ func (g GormRepository) FindAllFinishShippingOrder() ([]order.Order, error) {
 	return data, nil
 }
 
-func (g GormRepository) CreateOrderCommmsionTransaction(dao *order.Order, ocms *order.OrderCommission, log *order.OrderStatusLog) error {
+func (g GormRepository) UpdateOrderCommissionTransaction(dao *order.Order, ocms *order.OrderCommission, log *order.OrderStatusLog) error {
 	err := g.client.DB().Transaction(func(tx *gormF.DB) error {
-		if err := tx.Create(&ocms).Error; err != nil {
+		if err := tx.Model(&order.OrderCommission{}).Where("id=?", ocms.Id).
+			Update("status", ocms.Status).Error; err != nil {
 			return err
 		}
 
@@ -94,6 +108,31 @@ func (g GormRepository) CreateOrderCommmsionTransaction(dao *order.Order, ocms *
 	}
 
 	return nil
+}
+
+func (g GormRepository) CreateOrderCommissionTransaction(ocms *order.OrderCommission) error {
+	err := g.client.DB().Create(&ocms).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (g GormRepository) FindCommissionByOrderId(orderId int) (*order.OrderCommission, error) {
+	var data order.OrderCommission
+
+	err := g.client.DB().Model(&order.OrderCommission{}).Where("orders_commission.order_id =?", orderId).
+		Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+func (g GormRepository) UpdateCommission(Id string) (*order.Order, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (g GormRepository) FindById(Id string) (*order.Order, error) {

@@ -18,3 +18,9 @@ const (
 	PAYMENT_VIA_PAYPAL = 2
 	PAYMENT_VIA_WALLET = 3
 )
+
+const (
+	CMS_DONE    = 1
+	CMS_PENDING = 0
+	CMS_CANCEL  = -1
+)
