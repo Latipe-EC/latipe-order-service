@@ -297,7 +297,7 @@ func (g GormRepository) UpdateOrderItem(ctx context.Context, orderItemID string,
 			Where("id = ?", orderItemID).Update("status", status).Error
 	}, ctx)
 
-	if result.Error != nil {
+	if result != nil {
 		return result
 	}
 	return nil

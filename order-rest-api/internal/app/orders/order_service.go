@@ -501,6 +501,11 @@ func (o orderService) UpdateOrderItem(ctx context.Context, dto *store.UpdateOrde
 	itemPreparedCount := 0
 
 	for _, i := range orderDAO.OrderItem {
+
+		if i.StoreID != dto.StoreId {
+			continue
+		}
+
 		if i.Status != order.OI_PREPARED && i.Id == dto.ItemID {
 			notFound = false
 			if err := o.orderRepo.UpdateOrderItem(ctx, i.Id, order.OI_PREPARED); err != nil {
