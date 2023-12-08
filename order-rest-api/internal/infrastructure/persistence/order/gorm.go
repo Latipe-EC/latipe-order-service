@@ -69,6 +69,7 @@ func (g GormRepository) FindByUUID(ctx context.Context, uuid string) (*entity.Or
 			Preload("OrderItem").
 			Preload("Delivery").
 			Preload("OrderStatusLog").
+			Preload("OrderCommission").
 			First(&order, "order_uuid = ?", uuid).Error
 	}, ctx)
 	if result != nil {

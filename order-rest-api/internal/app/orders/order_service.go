@@ -420,6 +420,7 @@ func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOr
 				SubTotal:    o.SubTotal,
 				ProdImg:     o.ProdImg,
 				ProductName: o.ProductName,
+				NetPrice:    o.NetPrice,
 			}
 			items = append(items, i)
 			storeAmount += o.SubTotal
@@ -430,6 +431,8 @@ func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOr
 		return nil, errors.ErrNotFoundRecord
 	}
 
+	orderResp.CommissionDetail.SystemFee = orderDAO.OrderCommission.SystemFee
+	orderResp.CommissionDetail.AmountReceived = orderDAO.OrderCommission.AmountReceived
 	orderResp.StoreOrderAmount = storeAmount
 	orderResp.OrderItems = items
 

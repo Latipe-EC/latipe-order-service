@@ -54,24 +54,24 @@ func (OrderStatusLog) TableName() string {
 }
 
 type Order struct {
-	Id               int                `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
-	OrderUUID        string             `gorm:"column:order_uuid;not null;type:varchar(250)" json:"order_uuid"`
-	UserId           string             `gorm:"not null;type:varchar(250)" json:"user_id"`
-	Username         string             `gorm:"not null;type:varchar(250)" json:"email"`
-	Amount           int                `gorm:"not null;type:bigint" json:"amount"`
-	ShippingCost     int                `gorm:"not null;type:int" json:"shipping_cost"`
-	PaymentMethod    int                `json:"payment_method" gorm:"not null;type:int"`
-	ShippingDiscount int                `gorm:"not null;type:int" json:"shipping_discount,omitempty"`
-	ItemDiscount     int                `gorm:"not null;type:int" json:"item_discount,omitempty"`
-	SubTotal         int                `gorm:"not null;type:int" json:"sub_total"`
-	Status           int                `gorm:"not null;type:int" json:"status"`
-	VoucherCode      string             `gorm:"not null;type:varchar(250)" json:"voucher_code"`
-	UpdatedAt        time.Time          `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
-	CreatedAt        time.Time          `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
-	OrderItem        []*OrderItem       `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_items"`
-	OrderStatusLog   []*OrderStatusLog  `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_status_logs"`
-	OrderCommissions []*OrderCommission `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_commissions"`
-	Delivery         *DeliveryOrder     `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"delivery"`
+	Id               int               `gorm:"not null;autoIncrement;primaryKey;type:bigint" json:"id"`
+	OrderUUID        string            `gorm:"column:order_uuid;not null;type:varchar(250)" json:"order_uuid"`
+	UserId           string            `gorm:"not null;type:varchar(250)" json:"user_id"`
+	Username         string            `gorm:"not null;type:varchar(250)" json:"email"`
+	Amount           int               `gorm:"not null;type:bigint" json:"amount"`
+	ShippingCost     int               `gorm:"not null;type:int" json:"shipping_cost"`
+	PaymentMethod    int               `json:"payment_method" gorm:"not null;type:int"`
+	ShippingDiscount int               `gorm:"not null;type:int" json:"shipping_discount,omitempty"`
+	ItemDiscount     int               `gorm:"not null;type:int" json:"item_discount,omitempty"`
+	SubTotal         int               `gorm:"not null;type:int" json:"sub_total"`
+	Status           int               `gorm:"not null;type:int" json:"status"`
+	VoucherCode      string            `gorm:"not null;type:varchar(250)" json:"voucher_code"`
+	UpdatedAt        time.Time         `gorm:"autoUpdateTime;type:datetime(6)" json:"updated_at"`
+	CreatedAt        time.Time         `gorm:"autoCreateTime;type:datetime(6)" json:"created_at"`
+	OrderItem        []*OrderItem      `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_items"`
+	OrderStatusLog   []*OrderStatusLog `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_status_logs"`
+	OrderCommission  *OrderCommission  `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"order_commissions"`
+	Delivery         *DeliveryOrder    `gorm:"constraint:OnUpdate:CASCADE;polymorphic:Order;" json:"delivery"`
 }
 
 func (Order) TableName() string {

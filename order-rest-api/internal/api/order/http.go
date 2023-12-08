@@ -341,6 +341,8 @@ func (o orderApiHandler) GetStoreOrderDetail(ctx *fiber.Ctx) error {
 		switch {
 		case strings.Contains(err.Error(), "Unknown column"):
 			return errors.ErrBadRequest.WithInternalError(err)
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return errors.ErrNotFoundRecord
 		}
 		return err
 	}
