@@ -123,20 +123,22 @@ func (g GormRepository) FindByUserId(ctx context.Context, userId string, query *
 func (g GormRepository) FindOrderByStoreID(ctx context.Context, storeId string, query *pagable.Query, keyword string) ([]entity.Order, error) {
 	var orders []entity.Order
 	whereState := query.UserORMConditions().(string)
+	var likeState string
 
 	if strings.Contains(whereState, "status") {
 		whereState = strings.Replace(whereState, "status", "orders.status", 1)
 	}
 
-	if keyword != "" {
-		whereState = fmt.Sprintf("%v and orders.order_uuid like ?", whereState)
+	if len(keyword) > 2 {
+		likeState = fmt.Sprintf("orders.order_uuid like %v", fmt.Sprintf("'%%%v%%'", keyword))
 	}
 
 	err := g.client.DB().Model(&entity.Order{}).
 		Preload("Delivery").
 		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
 		Where("orders_commission.store_id=?", storeId).
-		Where(whereState, fmt.Sprintf("%v%v%v", "%", keyword, "%")).
+		Where(whereState).
+		Where(likeState).
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error
 
@@ -153,7 +155,7 @@ func (g GormRepository) SearchOrderByStoreID(ctx context.Context, storeId string
 		Preload("Delivery").
 		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
 		Where("orders_commission.store_id=?", storeId).
-		Where("orders.order_uuid like ?", fmt.Sprintf("%v%v%v", "%", keyword, "%")).
+		Where("orders.order_uuid like ?", fmt.Sprintf("'%%%v%%'", keyword)).
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error
 
@@ -170,7 +172,7 @@ func (g GormRepository) TotalSearchOrderByStoreID(ctx context.Context, storeId s
 	err := g.client.DB().Select("*").Model(&entity.Order{}).
 		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
 		Where("orders_commission.store_id=?", storeId).
-		Where("orders.order_uuid like ?", fmt.Sprintf("%v%v%v", "%", keyword, "%")).
+		Where("orders.order_uuid like ?", fmt.Sprintf("'%%%v%%'", keyword)).
 		Count(&count).Error
 
 	if err != nil {
@@ -295,20 +297,22 @@ func (g GormRepository) Total(ctx context.Context, query *pagable.Query) (int, e
 
 func (g GormRepository) TotalStoreOrder(ctx context.Context, storeId string, query *pagable.Query, keyword string) (int, error) {
 	var count int64
+	var likeState string
 
 	whereState := query.UserORMConditions().(string)
 	if strings.Contains(whereState, "status") {
 		whereState = strings.Replace(whereState, "status", "orders.status", 1)
 	}
 
-	if keyword != "" {
-		whereState = fmt.Sprintf("%v and orders.order_uuid like ?", whereState)
+	if len(keyword) > 2 {
+		likeState = fmt.Sprintf("orders.order_uuid like %v", fmt.Sprintf("'%%%v%%'", keyword))
 	}
 
 	err := g.client.DB().Select("*").Model(&entity.Order{}).
 		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
 		Where("orders_commission.store_id=?", storeId).
-		Where(whereState, fmt.Sprintf("%v%v%v", "%", keyword, "%")).
+		Where(whereState).
+		Where(likeState).
 		Count(&count).Error
 
 	if err != nil {
