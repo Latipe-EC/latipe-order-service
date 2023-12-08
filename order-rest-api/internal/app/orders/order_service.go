@@ -422,7 +422,7 @@ func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOr
 				ProductName: o.ProductName,
 			}
 			items = append(items, i)
-			storeAmount += o.Price
+			storeAmount += o.SubTotal
 		}
 	}
 
