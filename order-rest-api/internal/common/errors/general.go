@@ -19,6 +19,13 @@ var (
 		Message:   "Bad request",
 	}
 
+	ErrNotChange = &Error{
+		Status:    200,
+		Code:      enum.OK,
+		ErrorCode: "GE002",
+		Message:   "Not change",
+	}
+
 	ErrPermissionDenied = &Error{
 		Status:    403,
 		Code:      enum.PERMISSION_DENIED,

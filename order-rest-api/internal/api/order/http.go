@@ -116,7 +116,7 @@ func (o orderApiHandler) CancelOrder(ctx *fiber.Ctx) error {
 
 	err := o.orderUsecase.CancelOrder(context, req)
 	if err != nil {
-		return errors.ErrInternalServer
+		return err
 	}
 
 	resp := responses.DefaultSuccess
@@ -300,13 +300,17 @@ func (o orderApiHandler) GetMyStoreOrder(ctx *fiber.Ctx) error {
 		return errors.ErrBadRequest.WithInternalError(err)
 	}
 
-	req := new(store.GetStoreOrderRequest)
+	req := store.GetStoreOrderRequest{}
 	req.Query = query
+
+	if err := ctx.QueryParser(&req); err != nil {
+		return errors.ErrInvalidParameters
+	}
 
 	storeID := fmt.Sprintf("%v", ctx.Locals(auth.STORE_ID))
 	req.StoreID = storeID
 
-	result, err := o.orderUsecase.GetOrdersOfStore(context, req)
+	result, err := o.orderUsecase.GetOrdersOfStore(context, &req)
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "Unknown column"):
@@ -368,7 +372,38 @@ func (o orderApiHandler) UpdateOrderItemStatus(ctx *fiber.Ctx) error {
 
 	resp, err := o.orderUsecase.UpdateOrderItem(context, &req)
 	if err != nil {
-		return errors.ErrInternalServer
+		return err
+	}
+
+	data := responses.DefaultSuccess
+	data.Data = resp
+
+	return data.JSON(ctx)
+}
+
+func (o orderApiHandler) CancelOrderItemStatus(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	req := store.UpdateOrderItemRequest{}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	if err := ctx.ParamsParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	storeId := fmt.Sprintf("%v", ctx.Locals(auth.STORE_ID))
+	if storeId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.StoreId = storeId
+
+	resp, err := o.orderUsecase.CancelOrderItem(context, &req)
+	if err != nil {
+		return err
 	}
 
 	data := responses.DefaultSuccess

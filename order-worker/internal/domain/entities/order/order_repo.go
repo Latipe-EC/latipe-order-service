@@ -12,7 +12,8 @@ type Repository interface {
 
 	UpdateCommission(Id string) (*Order, error)
 	Save(order *Order) error
-	FindById(Id string) (*Order, error)
+	FindByUUID(Id string) (*Order, error)
+	FindByID(Id int) (*Order, error)
 	FindByUserId(query *pagable.Query) ([]*Order, error)
 	UpdateOrderRating(itemId string, ratingId string) error
 	Update(order Order) error

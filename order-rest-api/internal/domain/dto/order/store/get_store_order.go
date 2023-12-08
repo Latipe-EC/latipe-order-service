@@ -8,6 +8,7 @@ import (
 type GetStoreOrderRequest struct {
 	BaseHeader order.BaseHeader
 	StoreID    string
+	Keyword    string `query:"keyword" validate:"required"`
 	Query      *pagable.Query
 }
 

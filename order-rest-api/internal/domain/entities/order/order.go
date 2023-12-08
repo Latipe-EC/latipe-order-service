@@ -10,6 +10,7 @@ import (
 const (
 	OI_PENDING  = 0
 	OI_PREPARED = 1
+	OI_CANCEL   = -1
 )
 
 type OrderItem struct {
@@ -22,7 +23,7 @@ type OrderItem struct {
 	ProdImg     string    `gorm:"not null;type:TEXT" json:"image"`
 	StoreID     string    `gorm:"not null;type:varchar(255)" json:"store_id"`
 	RatingID    string    `gorm:"not null;type:varchar(255)" json:"rating_id"`
-	Status      int       `gorm:"not null;type:int" json:"status"`
+	Status      int       `gorm:"not null;type:int" json:"is_prepared"`
 	OptionID    string    `gorm:"not null;type:varchar(250)" json:"option_id"`
 	NameOption  string    `gorm:"not null;type:varchar(250)" json:"name_option"`
 	Quantity    int       `gorm:"not null;type:int" json:"quantity"`

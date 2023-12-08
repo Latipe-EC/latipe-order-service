@@ -3,7 +3,7 @@ package worker
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"github.com/gofiber/fiber/v2/log"
 	"order-worker/config"
 	"order-worker/internal/app/orders"
 	order2 "order-worker/internal/domain/dto/order"
@@ -29,7 +29,7 @@ func NewConsumerOrderMessage(config *config.Config, orderService orders.Usecase)
 func (mq ConsumerOrderMessage) ListenOrderEventQueue(wg *sync.WaitGroup) {
 	conn, err := amqp.Dial(mq.config.RabbitMQ.Connection)
 	failOnError(err, "Failed to connect to RabbitMQ")
-	log.Printf("[%s] Comsumer has been connected", "INFO")
+	log.Info("Comsumer has been connected")
 
 	channel, err := conn.Channel()
 	defer channel.Close()
@@ -89,16 +89,15 @@ func (mq ConsumerOrderMessage) ListenOrderEventQueue(wg *sync.WaitGroup) {
 	defer wg.Done()
 	// handle consumed messages from queue
 	for msg := range msgs {
-		log.Printf("[%s] received order message from: %s", "INFO", msg.RoutingKey)
-
+		log.Infof("received order message from: %s", msg.RoutingKey)
 		if err := mq.orderHandler(msg); err != nil {
-			log.Printf("[%s] The order creation failed cause %s", "ERROR", err)
+			log.Infof("The order creation failed cause %s", err)
 		}
 
 	}
 
-	log.Printf("[%s] message queue has started", "INFO")
-	log.Printf("[%s] waiting for messages...", "INFO")
+	log.Infof("message queue has started")
+	log.Infof("waiting for messages...")
 
 }
 
@@ -110,20 +109,27 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 	message := order2.OrderMessage{}
 
 	if err := json.Unmarshal(msg.Body, &message); err != nil {
-		log.Printf("[%s] Parse message to order failed cause: %s", "ERROR", err)
+		log.Infof("Parse message to order failed cause: %s", err)
 		return err
 	}
 
-	if message.Status == order.ORDER_SHIPPING_FINISH {
+	switch message.Status {
+
+	case order.ORDER_SYSTEM_PROCESS:
+		err := mq.orderUsecase.CreateOrderTransaction(ctx, &message)
+		if err != nil {
+			return err
+		}
+	case order.ORDER_CANCEL:
+		err := mq.orderUsecase.RollBackCancelOrder(ctx, message.OrderUUID)
+		if err != nil {
+			return err
+		}
+	case order.ORDER_SHIPPING_FINISH:
 		return nil
 	}
 
-	err := mq.orderUsecase.CreateOrderTransaction(ctx, &message)
-	if err != nil {
-		return err
-	}
-
 	endTime := time.Now()
-	log.Printf("[%s] [%v] The order created successfully :", "INFO", endTime.Sub(startTime))
+	log.Infof("The order is processed successfully - duration:%v", endTime.Sub(startTime))
 	return nil
 }

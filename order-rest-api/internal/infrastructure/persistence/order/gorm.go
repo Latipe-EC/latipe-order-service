@@ -7,6 +7,7 @@ import (
 	entity "order-rest-api/internal/domain/entities/order"
 	"order-rest-api/pkg/db/gorm"
 	"order-rest-api/pkg/util/pagable"
+	"strings"
 )
 
 type GormRepository struct {
@@ -119,12 +120,23 @@ func (g GormRepository) FindByUserId(ctx context.Context, userId string, query *
 	return orders, nil
 }
 
-func (g GormRepository) FindOrderByStoreID(ctx context.Context, storeId string, query *pagable.Query) ([]entity.Order, error) {
+func (g GormRepository) FindOrderByStoreID(ctx context.Context, storeId string, query *pagable.Query, keyword string) ([]entity.Order, error) {
 	var orders []entity.Order
+	whereState := query.UserORMConditions().(string)
+
+	if strings.Contains(whereState, "status") {
+		whereState = strings.Replace(whereState, "status", "orders.status", 1)
+	}
+
+	if keyword != "" {
+		whereState = fmt.Sprintf("%v and orders.order_uuid like ?", whereState)
+	}
+
 	err := g.client.DB().Model(&entity.Order{}).
 		Preload("Delivery").
 		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
 		Where("orders_commission.store_id=?", storeId).
+		Where(whereState, fmt.Sprintf("%v%v%v", "%", keyword, "%")).
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error
 
@@ -214,7 +226,7 @@ func (g GormRepository) Save(ctx context.Context, dao *entity.Order) error {
 	return result
 }
 
-func (g GormRepository) UpdateStatus(ctx context.Context, orderID int, status int) error {
+func (g GormRepository) UpdateStatus(ctx context.Context, orderID int, status int, message ...string) error {
 
 	updateLog := entity.OrderStatusLog{
 		OrderID:      orderID,
@@ -222,15 +234,19 @@ func (g GormRepository) UpdateStatus(ctx context.Context, orderID int, status in
 		StatusChange: status,
 	}
 
-	switch status {
-	case entity.ORDER_PENDING:
-		updateLog.Message = "Đơn hàng đang xử lý bởi nhà bán hàng"
-	case entity.ORDER_DELIVERY:
-		updateLog.Message = "Đơn hàng đang được vận chuyển"
-	case entity.ORDER_SHIPPING_FINISH:
-		updateLog.Message = "Đơn hàng được giao thành công"
-	case entity.ORDER_CANCEL:
-		updateLog.Message = "Đơn hàng bị hủy"
+	if len(message) == 0 {
+		switch status {
+		case entity.ORDER_PENDING:
+			updateLog.Message = "Đơn hàng đang xử lý bởi nhà bán hàng"
+		case entity.ORDER_DELIVERY:
+			updateLog.Message = "Đơn hàng đang được vận chuyển"
+		case entity.ORDER_SHIPPING_FINISH:
+			updateLog.Message = "Đơn hàng được giao thành công"
+		case entity.ORDER_CANCEL:
+			updateLog.Message = "Đơn hàng bị hủy"
+		}
+	} else {
+		updateLog.Message = message[0]
 	}
 
 	result := g.client.Exec(func(tx *gormF.DB) error {
@@ -277,11 +293,22 @@ func (g GormRepository) Total(ctx context.Context, query *pagable.Query) (int, e
 	return int(count), result
 }
 
-func (g GormRepository) TotalStoreOrder(ctx context.Context, storeId string) (int, error) {
+func (g GormRepository) TotalStoreOrder(ctx context.Context, storeId string, query *pagable.Query, keyword string) (int, error) {
 	var count int64
+
+	whereState := query.UserORMConditions().(string)
+	if strings.Contains(whereState, "status") {
+		whereState = strings.Replace(whereState, "status", "orders.status", 1)
+	}
+
+	if keyword != "" {
+		whereState = fmt.Sprintf("%v and orders.order_uuid like ?", whereState)
+	}
+
 	err := g.client.DB().Select("*").Model(&entity.Order{}).
 		Joins("inner join orders_commission on orders_commission.order_id = orders.id").
 		Where("orders_commission.store_id=?", storeId).
+		Where(whereState, fmt.Sprintf("%v%v%v", "%", keyword, "%")).
 		Count(&count).Error
 
 	if err != nil {

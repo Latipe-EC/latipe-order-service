@@ -10,7 +10,7 @@ type Repository interface {
 	FindById(ctx context.Context, Id int) (*Order, error)
 	FindByItemId(ctx context.Context, itemId string) (*OrderItem, error)
 	FindByUUID(ctx context.Context, uuid string) (*Order, error)
-	FindOrderByStoreID(ctx context.Context, storeId string, query *pagable.Query) ([]Order, error)
+	FindOrderByStoreID(ctx context.Context, storeId string, query *pagable.Query, keyword string) ([]Order, error)
 	FindOrderByDelivery(ctx context.Context, deliID string, query *pagable.Query) ([]Order, error)
 	FindAll(ctx context.Context, query *pagable.Query) ([]Order, error)
 	FindByUserId(ctx context.Context, userId string, query *pagable.Query) ([]Order, error)
@@ -20,10 +20,10 @@ type Repository interface {
 	GetOrderAmountOfStore(ctx context.Context, orderId int) ([]custom_entity.AmountItemOfStoreInOrder, error)
 	Save(ctx context.Context, order *Order) error
 	Update(ctx context.Context, order Order) error
-	UpdateStatus(ctx context.Context, orderID int, status int) error
+	UpdateStatus(ctx context.Context, orderID int, status int, message ...string) error
 	UpdateOrderItem(ctx context.Context, orderItem string, status int) error
 	Total(ctx context.Context, query *pagable.Query) (int, error)
-	TotalStoreOrder(ctx context.Context, storeId string) (int, error)
+	TotalStoreOrder(ctx context.Context, storeId string, query *pagable.Query, keyword string) (int, error)
 	TotalSearchOrderByStoreID(ctx context.Context, storeId string, keyword string) (int, error)
 	//custom_entity - admin
 	GetTotalOrderInSystemInDay(ctx context.Context, date string) ([]custom_entity.TotalOrderInSystemInHours, error)

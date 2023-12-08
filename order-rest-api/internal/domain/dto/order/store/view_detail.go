@@ -27,10 +27,13 @@ type StoreOrderResponse struct {
 }
 
 type OrderStoreItem struct {
-	Id        string `json:"item_id,omitempty"`
-	ProductId string `json:"product_id" `
-	OptionId  string `json:"option_id"`
-	Quantity  int    `json:"quantity" `
-	Price     int    `json:"price" `
-	Status    int    `json:"status"`
+	Id          string `json:"item_id,omitempty"`
+	ProductId   string `json:"product_id" `
+	OptionId    string `json:"option_id"`
+	Quantity    int    `json:"quantity" `
+	Price       int    `json:"price" `
+	Status      int    `json:"is_prepared"`
+	SubTotal    int    `json:"sub_total"`
+	ProductName string `json:"product_name"`
+	ProdImg     string `json:"image"`
 }

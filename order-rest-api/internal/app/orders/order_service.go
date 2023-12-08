@@ -71,12 +71,16 @@ func (o orderService) CancelOrder(ctx context.Context, dto *orderDTO.CancelOrder
 		return err
 	}
 
-	if dao.Status != order.ORDER_CREATED {
-		return errors.OrderCannotCancel
-	}
-
 	if dao.UserId != dto.UserId {
 		return errors.ErrNotFoundRecord
+	}
+
+	if dao.Status == order.ORDER_CANCEL {
+		return errors.ErrNotChange
+	}
+
+	if dao.Status != order.ORDER_CREATED {
+		return errors.OrderCannotCancel
 	}
 
 	if err := o.orderRepo.UpdateStatus(ctx, dao.Id, order.ORDER_CANCEL); err != nil {
@@ -335,12 +339,12 @@ func (o orderService) SearchStoreOrderId(ctx context.Context, dto *store.FindSto
 func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreOrderRequest) (*orderDTO.GetOrderListResponse, error) {
 	var dataResp []store.StoreOrderResponse
 
-	orders, err := o.orderRepo.FindOrderByStoreID(ctx, dto.StoreID, dto.Query)
+	orders, err := o.orderRepo.FindOrderByStoreID(ctx, dto.StoreID, dto.Query, dto.Keyword)
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := o.orderRepo.Total(ctx, dto.Query)
+	total, err := o.orderRepo.TotalStoreOrder(ctx, dto.StoreID, dto.Query, dto.Keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -407,12 +411,15 @@ func (o orderService) ViewDetailStoreOrder(ctx context.Context, dto *store.GetOr
 	for _, o := range orderDAO.OrderItem {
 		if o.StoreID == dto.StoreID {
 			i := store.OrderStoreItem{
-				ProductId: o.ProductID,
-				OptionId:  o.OptionID,
-				Quantity:  o.Quantity,
-				Price:     o.Price,
-				Status:    o.Status,
-				Id:        o.Id,
+				ProductId:   o.ProductID,
+				OptionId:    o.OptionID,
+				Quantity:    o.Quantity,
+				Price:       o.Price,
+				Status:      o.Status,
+				Id:          o.Id,
+				SubTotal:    o.SubTotal,
+				ProdImg:     o.ProdImg,
+				ProductName: o.ProductName,
 			}
 			items = append(items, i)
 			storeAmount += o.Price
@@ -506,12 +513,16 @@ func (o orderService) UpdateOrderItem(ctx context.Context, dto *store.UpdateOrde
 			continue
 		}
 
-		if i.Status != order.OI_PREPARED && i.Id == dto.ItemID {
+		if i.Id == dto.ItemID {
 			notFound = false
-			if err := o.orderRepo.UpdateOrderItem(ctx, i.Id, order.OI_PREPARED); err != nil {
-				return nil, err
+			if i.Status != order.OI_PREPARED && i.Status != order.OI_CANCEL {
+				if err := o.orderRepo.UpdateOrderItem(ctx, i.Id, order.OI_PREPARED); err != nil {
+					return nil, err
+				}
+				i.Status = order.OI_PREPARED
+			} else {
+				return nil, errors.ErrNotChange
 			}
-			i.Status = order.OI_PREPARED
 		}
 
 		if i.Status == order.OI_PREPARED {
@@ -539,6 +550,48 @@ func (o orderService) UpdateOrderItem(ctx context.Context, dto *store.UpdateOrde
 		OrderUUID: dto.OrderUUID,
 		ItemID:    dto.ItemID,
 		Status:    order.OI_PREPARED,
+	}
+
+	return &resp, nil
+}
+
+func (o orderService) CancelOrderItem(ctx context.Context, dto *store.UpdateOrderItemRequest) (*store.UpdateOrderItemResponse, error) {
+	orderDAO, err := o.orderRepo.FindByUUID(ctx, dto.OrderUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	notFound := true
+
+	for _, i := range orderDAO.OrderItem {
+
+		if i.StoreID != dto.StoreId {
+			continue
+		}
+
+		if i.Status != order.OI_PREPARED && i.Id == dto.ItemID {
+			notFound = false
+			if err := o.orderRepo.UpdateOrderItem(ctx, i.Id, order.ORDER_CANCEL); err != nil {
+				return nil, err
+			}
+			i.Status = order.OI_PREPARED
+		}
+
+	}
+
+	if notFound {
+		return nil, errors.ErrNotFoundRecord
+	}
+
+	if err := o.orderRepo.UpdateStatus(ctx, orderDAO.Id, order.ORDER_CANCEL,
+		"Đơn hàng bị hủy do nhà cung cấp không thể chuẩn bị sản phẩm"); err != nil {
+		return nil, err
+	}
+
+	resp := store.UpdateOrderItemResponse{
+		OrderUUID: dto.OrderUUID,
+		ItemID:    dto.ItemID,
+		Status:    order.ORDER_CANCEL,
 	}
 
 	return &resp, nil

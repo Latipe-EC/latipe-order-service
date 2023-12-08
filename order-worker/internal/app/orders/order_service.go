@@ -15,6 +15,7 @@ import (
 	promotionDTO "order-worker/internal/infrastructure/adapter/vouchersev/dto"
 	"order-worker/internal/publisher"
 	"order-worker/pkg/util/mapper"
+	"strings"
 )
 
 type orderService struct {
@@ -105,10 +106,7 @@ func (o orderService) CreateOrderTransaction(ctx context.Context, message *mess.
 	}
 	orderDAO.Delivery = &deli
 
-	vouchers := ""
-	for _, i := range message.Vouchers {
-		vouchers += fmt.Sprintf("%v;", i)
-	}
+	vouchers := strings.Join(message.Vouchers, ";")
 	orderDAO.VoucherCode = vouchers
 	orderDAO.PaymentMethod = message.PaymentMethod
 	orderDAO.Status = order.ORDER_CREATED
@@ -193,6 +191,27 @@ func (o orderService) CreateOrderTransaction(ctx context.Context, message *mess.
 			return err
 		}
 	}
+	return nil
+}
+
+func (o orderService) RollBackCancelOrder(ctx context.Context, orderUuid string) error {
+	dao, err := o.orderRepo.FindByUUID(orderUuid)
+	if err != nil {
+		return err
+	}
+
+	productReq := productDTO.ReduceProductRequest{Items: productDTO.MappingDAORollbackProduct(dao.OrderItem)}
+	if err := o.productServ.UpdateProductQuantity(ctx, &productReq); err != nil {
+		return err
+	}
+
+	vouchers := strings.Split(dao.VoucherCode, ";")
+	req := promotionDTO.RollbackVoucherRequest{Vouchers: vouchers}
+	if _, err := o.voucherServ.Rollback(ctx, &req); err != nil {
+		return nil
+	}
+
+	log.Infof("the order was rollback [id: %v]", dao.OrderUUID)
 	return nil
 }
 

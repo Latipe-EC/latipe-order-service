@@ -56,6 +56,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 			storeRouter.Get("/count", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.StoreCountingOrder)
 			storeRouter.Get("/:id", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.GetStoreOrderDetail)
 			storeRouter.Patch("/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.UpdateOrderItemStatus)
+			storeRouter.Delete("/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.CancelOrderItemStatus)
 		}
 
 		//delivery

@@ -16,6 +16,7 @@ type OrderApiHandler interface {
 	GetStoreOrderDetail(ctx *fiber.Ctx) error
 	UpdateOrderItemStatus(ctx *fiber.Ctx) error
 	UpdateStatusByDelivery(ctx *fiber.Ctx) error
+	CancelOrderItemStatus(ctx *fiber.Ctx) error
 
 	GetOrdersByDelivery(ctx *fiber.Ctx) error
 

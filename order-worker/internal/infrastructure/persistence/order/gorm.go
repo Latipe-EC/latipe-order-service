@@ -1,6 +1,7 @@
 package order
 
 import (
+	"errors"
 	gormF "gorm.io/gorm"
 	"order-worker/internal/domain/entities/custom"
 	"order-worker/internal/domain/entities/order"
@@ -29,6 +30,32 @@ func NewGormRepository(client gorm.Gorm) order.Repository {
 	}
 }
 
+func (g GormRepository) FindByID(Id int) (*order.Order, error) {
+	var result order.Order
+
+	err := g.client.DB().Model(&order.Order{}).
+		Preload("OrderItem").
+		Where("id=?", Id).First(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, err
+}
+
+func (g GormRepository) FindByUUID(Id string) (*order.Order, error) {
+	var result order.Order
+
+	err := g.client.DB().Model(&order.Order{}).
+		Preload("OrderItem").
+		Where("order_uuid=?", Id).First(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, err
+}
+
 func (g GormRepository) Save(dao *order.Order) error {
 	result := g.client.DB().Model(&order.Order{}).Create(&dao)
 	return result.Error
@@ -38,8 +65,12 @@ func (g GormRepository) UpdateOrderRating(itemId string, ratingId string) error 
 	result := g.client.DB().Model(&order.OrderItem{}).
 		Where("id = ?", itemId).Update("rating_id", ratingId)
 
-	if result.Error != nil || result.RowsAffected == 0 {
+	if result.Error != nil {
 		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("not change")
 	}
 	return nil
 }
@@ -131,11 +162,6 @@ func (g GormRepository) FindCommissionByOrderId(orderId int) (*order.OrderCommis
 	return &data, nil
 }
 func (g GormRepository) UpdateCommission(Id string) (*order.Order, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (g GormRepository) FindById(Id string) (*order.Order, error) {
 	//TODO implement me
 	panic("implement me")
 }
