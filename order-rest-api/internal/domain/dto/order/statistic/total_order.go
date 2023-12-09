@@ -11,8 +11,7 @@ type AdminTotalOrderInDayResponse struct {
 }
 
 type AdminTotalOrderInMonthRequest struct {
-	Date  string `query:"date"`
-	Count int    `json:"count"`
+	Date string `query:"date"`
 }
 
 type AdminTotalOrderInMonthResponse struct {
@@ -21,7 +20,8 @@ type AdminTotalOrderInMonthResponse struct {
 }
 
 type AdminGetTotalOrderInYearRequest struct {
-	Year int `query:"year"`
+	Year  int `query:"year"`
+	Count int `query:"count"`
 }
 
 type AdminGetTotalOrderInYearResponse struct {

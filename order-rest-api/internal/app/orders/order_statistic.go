@@ -70,7 +70,7 @@ func (o orderService) AdminGetTotalOrderInSystemInMonth(ctx context.Context, dto
 }
 
 func (o orderService) AdminGetTotalOrderInSystemInYear(ctx context.Context, dto *statistic.AdminGetTotalOrderInYearRequest) (*statistic.AdminGetTotalOrderInYearResponse, error) {
-	items, err := o.orderRepo.GetTotalOrderInSystemInYear(ctx, dto.Year)
+	items, err := o.orderRepo.GetTotalOrderInSystemInYear(ctx, dto.Year, dto.Count)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (o orderService) AdminGetTotalOrderInSystemInYear(ctx context.Context, dto 
 
 func (o orderService) AdminGetTotalCommissionOrderInYear(ctx context.Context, dto *statistic.OrderCommissionDetailRequest) (*statistic.OrderCommissionDetailResponse, error) {
 
-	items, err := o.orderRepo.GetTotalCommissionOrderInYear(ctx, dto.Date, dto.Count)
+	items, err := o.orderRepo.GetTotalCommissionOrderInYear(ctx, dto.Date)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (o orderService) GetTotalOrderInMonthOfStore(ctx context.Context, dto *stat
 	return &dataResp, nil
 }
 func (o orderService) GetTotalOrderInYearOfStore(ctx context.Context, dto *statistic.GetTotalOrderInYearOfStoreRequest) (*statistic.GetTotalOrderInYearOfStoreResponse, error) {
-	items, err := o.orderRepo.GetTotalOrderInSystemInYearOfStore(ctx, dto.Year, dto.StoreID)
+	items, err := o.orderRepo.GetTotalOrderInSystemInYearOfStore(ctx, dto.Year, dto.StoreID, dto.Count)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (o orderService) GetTotalOrderInYearOfStore(ctx context.Context, dto *stati
 	return &dataResp, nil
 }
 func (o orderService) GetTotalStoreCommissionInYear(ctx context.Context, dto *statistic.OrderCommissionDetailRequest) (*statistic.OrderCommissionDetailResponse, error) {
-	items, err := o.orderRepo.GetTotalCommissionOrderInYearOfStore(ctx, dto.Date, dto.Count, dto.StoreId)
+	items, err := o.orderRepo.GetTotalCommissionOrderInYearOfStore(ctx, dto.Date, dto.StoreId)
 	if err != nil {
 		return nil, err
 	}

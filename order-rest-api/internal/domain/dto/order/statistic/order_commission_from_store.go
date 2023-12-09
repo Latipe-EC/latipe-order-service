@@ -4,7 +4,6 @@ import "order-rest-api/internal/domain/dto/custom_entity"
 
 type OrderCommissionDetailRequest struct {
 	Date    string `json:"date" query:"date"`
-	Count   int    `json:"count" query:"count"`
 	StoreId string
 }
 

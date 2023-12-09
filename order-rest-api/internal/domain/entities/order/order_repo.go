@@ -28,14 +28,14 @@ type Repository interface {
 	//custom_entity - admin
 	GetTotalOrderInSystemInDay(ctx context.Context, date string) ([]custom_entity.TotalOrderInSystemInHours, error)
 	GetTotalOrderInSystemInMonth(ctx context.Context, month int, year int) ([]custom_entity.TotalOrderInSystemInDay, error)
-	GetTotalOrderInSystemInYear(ctx context.Context, year int) ([]custom_entity.TotalOrderInSystemInMonth, error)
-	GetTotalCommissionOrderInYear(ctx context.Context, date string, count int) ([]custom_entity.OrderCommissionDetail, error)
+	GetTotalOrderInSystemInYear(ctx context.Context, year int, count int) ([]custom_entity.TotalOrderInSystemInMonth, error)
+	GetTotalCommissionOrderInYear(ctx context.Context, date string) ([]custom_entity.OrderCommissionDetail, error)
 	ListOfProductSelledOnMonth(ctx context.Context, date string, count int) ([]custom_entity.TopOfProductSold, error)
 
 	//custom_entity - store
 	GetTotalOrderInSystemInMonthOfStore(ctx context.Context, date string, storeId string) ([]custom_entity.TotalOrderInSystemInDay, error)
-	GetTotalOrderInSystemInYearOfStore(ctx context.Context, year int, storeId string) ([]custom_entity.TotalOrderInSystemInMonth, error)
-	GetTotalCommissionOrderInYearOfStore(ctx context.Context, date string, count int, storeId string) ([]custom_entity.OrderCommissionDetail, error)
+	GetTotalOrderInSystemInYearOfStore(ctx context.Context, year int, storeId string, count int) ([]custom_entity.TotalOrderInSystemInMonth, error)
+	GetTotalCommissionOrderInYearOfStore(ctx context.Context, date string, storeId string) ([]custom_entity.OrderCommissionDetail, error)
 	ListOfProductSelledOnMonthStore(ctx context.Context, date string, count int, storeId string) ([]custom_entity.TopOfProductSold, error)
 
 	UserCountingOrder(ctx context.Context, userId string) (int, error)
