@@ -165,6 +165,8 @@ func (q *Query) ParseCondition(ft Filter, value interface{}) string {
 		condition = ft.Field + " LIKE " + fmt.Sprintf(`'%s%s'`, ft.Value, "%")
 	case EndsWith:
 		condition = ft.Field + " LIKE " + fmt.Sprintf("'%s%s'", "%", ft.Value)
+	case Search:
+		condition = ft.Field + " LIKE " + fmt.Sprintf("'%%%v%%'", ft.Value)
 	}
 	return condition
 }

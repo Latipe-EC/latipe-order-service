@@ -20,6 +20,7 @@ const (
 	IsNotNull             = "$notNull"
 	StartsWith            = "$startsWith"
 	EndsWith              = "$endsWith"
+	Search                = "$search"
 )
 
 var operationMap = map[string]Operation{

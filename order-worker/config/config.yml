@@ -11,10 +11,10 @@ Server:
   ExpirationLimitTime: 30s
 DB:
   Mysql:
-    Host: 172.20.74.176
-    Port: 3306
-    UserName: root
-    Password: 123123@Dat
+    Host: db-mysql-sgp1-49255-do-user-15346065-0.c.db.ondigitalocean.com
+    Port: 25060
+    UserName: doadmin
+    Password: AVNS_luX0kN7Y3hnklC56Z59
     Database: backend_orders_service
     MaxOpenConns: 30
     MaxIdleConns: 10
