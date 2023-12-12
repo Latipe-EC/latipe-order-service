@@ -11,7 +11,7 @@ type Repository interface {
 	FindByItemId(ctx context.Context, itemId string) (*OrderItem, error)
 	FindByUUID(ctx context.Context, uuid string) (*Order, error)
 	FindOrderByStoreID(ctx context.Context, storeId string, query *pagable.Query, keyword string) ([]Order, error)
-	FindOrderByDelivery(ctx context.Context, deliID string, query *pagable.Query) ([]Order, error)
+	FindOrderByDelivery(ctx context.Context, deliID string, keyword string, query *pagable.Query) ([]Order, error)
 	FindAll(ctx context.Context, query *pagable.Query) ([]Order, error)
 	FindByUserId(ctx context.Context, userId string, query *pagable.Query) ([]Order, error)
 	SearchOrderByStoreID(ctx context.Context, storeId string, keyword string, query *pagable.Query) ([]Order, error)

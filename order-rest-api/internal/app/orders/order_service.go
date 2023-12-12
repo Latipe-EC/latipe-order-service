@@ -427,7 +427,7 @@ func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreO
 func (o orderService) GetOrdersOfDelivery(ctx context.Context, dto *delivery.GetOrderListRequest) (*delivery.GetOrderListResponse, error) {
 	var dataResp []store.StoreOrderResponse
 
-	orders, err := o.orderRepo.FindOrderByDelivery(ctx, dto.DeliveryID, dto.Query)
+	orders, err := o.orderRepo.FindOrderByDelivery(ctx, dto.DeliveryID, dto.Keyword, dto.Query)
 	if err != nil {
 		return nil, err
 	}

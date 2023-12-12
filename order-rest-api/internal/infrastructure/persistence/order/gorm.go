@@ -182,12 +182,19 @@ func (g GormRepository) TotalSearchOrderByStoreID(ctx context.Context, storeId s
 	return int(count), err
 }
 
-func (g GormRepository) FindOrderByDelivery(ctx context.Context, deliID string, query *pagable.Query) ([]entity.Order, error) {
+func (g GormRepository) FindOrderByDelivery(ctx context.Context, deliID string, keyword string, query *pagable.Query) ([]entity.Order, error) {
 	var orders []entity.Order
+	var searchState string
+
+	if len(keyword) > 2 {
+		searchState = fmt.Sprintf("orders.order_uuid like %v", fmt.Sprintf("'%%%v%%'", keyword))
+	}
+
 	err := g.client.DB().Model(&entity.Order{}).Preload("Delivery").
 		Joins("inner join delivery_orders ON orders.id = delivery_orders.order_id").
 		Where("delivery_orders.delivery_id=?", deliID).
 		Order("orders.created_at DESC").
+		Where(searchState).
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error
 	if err != nil {
