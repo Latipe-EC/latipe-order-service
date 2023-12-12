@@ -39,6 +39,7 @@ var operationMap = map[string]Operation{
 	"$notNull":     IsNotNull,
 	"$startsWith":  StartsWith,
 	"$endsWith":    EndsWith,
+	"$search":      Search,
 }
 
 func OperationMapping(key string) (Operation, error) {

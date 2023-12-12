@@ -490,7 +490,7 @@ func (o orderApiHandler) UpdateStatusByDelivery(ctx *fiber.Ctx) error {
 
 	resp, err := o.orderUsecase.DeliveryUpdateStatusOrder(context, req)
 	if err != nil {
-		return errors.ErrInternalServer
+		return err
 	}
 
 	data := responses.DefaultSuccess
