@@ -295,6 +295,11 @@ func (g GormRepository) TotalOrdersOfDelivery(ctx context.Context, deliveryId st
 	var count int64
 	var searchState string
 
+	whereState := query.UserORMConditions().(string)
+	if strings.Contains(whereState, "status") {
+		whereState = strings.Replace(whereState, "status", "orders.status", 1)
+	}
+
 	if len(keyword) > 2 {
 		searchState = fmt.Sprintf("orders.order_uuid like %v", fmt.Sprintf("'%%%v%%'", keyword))
 	}
@@ -302,6 +307,7 @@ func (g GormRepository) TotalOrdersOfDelivery(ctx context.Context, deliveryId st
 	err := g.client.DB().Select("*").Model(&entity.Order{}).
 		Joins("inner join delivery_orders ON orders.id = delivery_orders.order_id").
 		Where(searchState).
+		Where(whereState).
 		Where("delivery_orders.delivery_id=?", deliveryId).
 		Order("orders.created_at DESC").
 		Count(&count).Error
