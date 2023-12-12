@@ -17,6 +17,7 @@ type Usecase interface {
 	CheckProductPurchased(ctx context.Context, dto *orderDTO.CheckUserOrderRequest) (*orderDTO.CheckUserOrderResponse, error)
 	UpdateOrder(ctx context.Context, dto *orderDTO.UpdateOrderRequest) error
 	AdminCountingOrderAmount(ctx context.Context, dto *orderDTO.CountingOrderAmountRequest) (*orderDTO.CountingOrderAmountResponse, error)
+	AdminCancelOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error
 
 	// internal service
 	InternalGetRatingID(ctx context.Context, dto *internalDTO.GetOrderRatingItemRequest) (*internalDTO.GetOrderRatingItemResponse, error)
@@ -25,6 +26,7 @@ type Usecase interface {
 	ProcessCacheOrder(ctx context.Context, dto *orderDTO.CreateOrderRequest) (*orderDTO.CreateOrderResponse, error)
 	GetOrderByUUID(ctx context.Context, dto *orderDTO.GetOrderByUUIDRequest) (*orderDTO.GetOrderResponse, error)
 	CancelOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error
+	UserRefundOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error
 	GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByUserIdRequest) (*orderDTO.GetByUserIdResponse, error)
 	UserCountingOrder(ctx context.Context, dto *orderDTO.CountingOrderAmountRequest) (*orderDTO.CountingOrderAmountResponse, error)
 

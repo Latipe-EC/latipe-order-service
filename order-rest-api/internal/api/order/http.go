@@ -98,7 +98,7 @@ func (o orderApiHandler) GetMyOrder(ctx *fiber.Ctx) error {
 	return resp.JSON(ctx)
 }
 
-func (o orderApiHandler) CancelOrder(ctx *fiber.Ctx) error {
+func (o orderApiHandler) UserCancelOrder(ctx *fiber.Ctx) error {
 	context := ctx.Context()
 
 	req := new(dto.CancelOrderRequest)
@@ -115,6 +115,56 @@ func (o orderApiHandler) CancelOrder(ctx *fiber.Ctx) error {
 	req.UserId = userId
 
 	err := o.orderUsecase.CancelOrder(context, req)
+	if err != nil {
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	return resp.JSON(ctx)
+}
+
+func (o orderApiHandler) UserRefundOrder(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	req := new(dto.CancelOrderRequest)
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
+	if userId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.UserId = userId
+
+	err := o.orderUsecase.CancelOrder(context, req)
+	if err != nil {
+		return err
+	}
+
+	resp := responses.DefaultSuccess
+	return resp.JSON(ctx)
+}
+
+func (o orderApiHandler) AdminCancelOrder(ctx *fiber.Ctx) error {
+	context := ctx.Context()
+
+	req := new(dto.CancelOrderRequest)
+
+	if err := ctx.BodyParser(&req); err != nil {
+		return errors.ErrInternalServer.WithInternalError(err)
+	}
+
+	userId := fmt.Sprintf("%v", ctx.Locals(auth.USER_ID))
+	if userId == "" {
+		return errors.ErrUnauthenticated
+	}
+
+	req.UserId = userId
+
+	err := o.orderUsecase.AdminCancelOrder(context, req)
 	if err != nil {
 		return err
 	}
@@ -459,6 +509,10 @@ func (o orderApiHandler) GetOrdersByDelivery(ctx *fiber.Ctx) error {
 
 	req := delivery.GetOrderListRequest{}
 	req.Query = query
+
+	if err := ctx.QueryParser(&req); err != nil {
+		return errors.ErrInvalidParameters
+	}
 
 	deliId := fmt.Sprintf("%v", ctx.Locals(auth.DELIVERY_ID))
 	req.DeliveryID = deliId

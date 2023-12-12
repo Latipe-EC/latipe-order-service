@@ -34,7 +34,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 			adminRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.GetOrderByUUID)
 			adminRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.ListOfOrder)
 			adminRouter.Get("/count", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.AdminCountingOrder)
-			adminRouter.Patch("/:id", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UpdateOrderStatus)
+			adminRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.AdminCancelOrder)
 			adminRouter.Patch("/:id/complete", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UpdateOrderStatus)
 		}
 
@@ -45,7 +45,8 @@ func (o orderRouter) Init(root *fiber.Router) {
 			userRouter.Get("/count", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCountingOrder)
 			userRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserGetOrderByUUID)
 			userRouter.Post("", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.CreateOrder)
-			userRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.CancelOrder)
+			userRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCancelOrder)
+			userRouter.Patch("/refund", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCancelOrder)
 		}
 
 		//store

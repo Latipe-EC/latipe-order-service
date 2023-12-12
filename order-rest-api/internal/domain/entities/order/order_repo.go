@@ -24,6 +24,7 @@ type Repository interface {
 	UpdateOrderItem(ctx context.Context, orderItem string, status int) error
 	Total(ctx context.Context, query *pagable.Query) (int, error)
 	TotalStoreOrder(ctx context.Context, storeId string, query *pagable.Query, keyword string) (int, error)
+	TotalOrdersOfDelivery(ctx context.Context, deliveryId string, keyword string, query *pagable.Query) (int, error)
 	TotalSearchOrderByStoreID(ctx context.Context, storeId string, keyword string) (int, error)
 	//custom_entity - admin
 	GetTotalOrderInSystemInDay(ctx context.Context, date string) ([]custom_entity.TotalOrderInSystemInHours, error)

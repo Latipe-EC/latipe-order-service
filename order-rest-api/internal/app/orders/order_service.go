@@ -100,6 +100,67 @@ func (o orderService) CancelOrder(ctx context.Context, dto *orderDTO.CancelOrder
 	return nil
 }
 
+func (o orderService) UserRefundOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error {
+	dao, err := o.orderRepo.FindByUUID(ctx, dto.OrderUUID)
+	if err != nil {
+		return err
+	}
+
+	if dao.UserId != dto.UserId {
+		return errors.ErrNotFoundRecord
+	}
+
+	if dao.Status == order.ORDER_REFUND {
+		return errors.ErrNotChange
+	}
+
+	if dao.Status != order.ORDER_SHIPPING_FINISH {
+		return errors.OrderCannotCancel
+	}
+
+	if err := o.orderRepo.UpdateStatus(ctx, dao.Id, order.ORDER_REFUND); err != nil {
+		return err
+	}
+
+	mess := msg.OrderMessage{
+		OrderUUID:     dao.OrderUUID,
+		Status:        order.ORDER_REFUND,
+		PaymentMethod: dao.PaymentMethod,
+	}
+
+	if err := message.SendOrderMessage(&mess); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o orderService) AdminCancelOrder(ctx context.Context, dto *orderDTO.CancelOrderRequest) error {
+	dao, err := o.orderRepo.FindByUUID(ctx, dto.OrderUUID)
+	if err != nil {
+		return err
+	}
+
+	if dao.Status == order.ORDER_CANCEL {
+		return errors.ErrNotChange
+	}
+
+	if err := o.orderRepo.UpdateStatus(ctx, dao.Id, order.ORDER_CANCEL); err != nil {
+		return err
+	}
+
+	mess := msg.OrderMessage{
+		OrderUUID:     dao.OrderUUID,
+		Status:        order.ORDER_CANCEL,
+		PaymentMethod: dao.PaymentMethod,
+	}
+
+	if err := message.SendOrderMessage(&mess); err != nil {
+		return err
+	}
+
+	return nil
+}
 func (o orderService) ProcessCacheOrder(ctx context.Context, dto *orderDTO.CreateOrderRequest) (*orderDTO.CreateOrderResponse, error) {
 
 	productReq := prodServDTO.OrderProductRequest{
@@ -371,7 +432,7 @@ func (o orderService) GetOrdersOfDelivery(ctx context.Context, dto *delivery.Get
 		return nil, err
 	}
 
-	total, err := o.orderRepo.Total(ctx, dto.Query)
+	total, err := o.orderRepo.TotalOrdersOfDelivery(ctx, dto.DeliveryID, dto.Keyword, dto.Query)
 	if err != nil {
 		return nil, err
 	}

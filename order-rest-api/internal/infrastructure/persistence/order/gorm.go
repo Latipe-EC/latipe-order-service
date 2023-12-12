@@ -284,6 +284,28 @@ func (g GormRepository) Update(ctx context.Context, order entity.Order) error {
 	return nil
 }
 
+func (g GormRepository) TotalOrdersOfDelivery(ctx context.Context, deliveryId string, keyword string, query *pagable.Query) (int, error) {
+	var count int64
+	var searchState string
+
+	if len(keyword) > 2 {
+		searchState = fmt.Sprintf("orders.order_uuid like %v", fmt.Sprintf("'%%%v%%'", keyword))
+	}
+
+	err := g.client.DB().Select("*").Model(&entity.Order{}).
+		Joins("inner join delivery_orders ON orders.id = delivery_orders.order_id").
+		Where(searchState).
+		Where("delivery_orders.delivery_id=?", deliveryId).
+		Order("orders.created_at DESC").
+		Count(&count).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return int(count), nil
+}
+
 func (g GormRepository) Total(ctx context.Context, query *pagable.Query) (int, error) {
 	var count int64
 	whereState := query.ORMConditions().(string)

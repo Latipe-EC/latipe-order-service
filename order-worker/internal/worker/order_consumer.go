@@ -125,6 +125,11 @@ func (mq ConsumerOrderMessage) orderHandler(msg amqp.Delivery) error {
 		if err != nil {
 			return err
 		}
+	case order.ORDER_REFUND:
+		err := mq.orderUsecase.RollBackCancelOrder(ctx, message.OrderUUID)
+		if err != nil {
+			return err
+		}
 	case order.ORDER_SHIPPING_FINISH:
 		return nil
 	}

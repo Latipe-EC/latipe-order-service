@@ -10,7 +10,9 @@ type OrderApiHandler interface {
 	ListOfOrder(ctx *fiber.Ctx) error
 	GetOrderByUUID(ctx *fiber.Ctx) error
 	GetMyOrder(ctx *fiber.Ctx) error
-	CancelOrder(ctx *fiber.Ctx) error
+	UserCancelOrder(ctx *fiber.Ctx) error
+	UserRefundOrder(ctx *fiber.Ctx) error
+	AdminCancelOrder(ctx *fiber.Ctx) error
 
 	GetMyStoreOrder(ctx *fiber.Ctx) error
 	GetStoreOrderDetail(ctx *fiber.Ctx) error
