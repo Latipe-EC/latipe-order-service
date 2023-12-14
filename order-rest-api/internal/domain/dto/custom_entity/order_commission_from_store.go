@@ -7,6 +7,13 @@ type OrderCommissionDetail struct {
 	TotalOrders   int `json:"total_orders"`
 }
 
+type SystemOrderCommissionDetail struct {
+	Month          int `json:"month"`
+	StoreReceived  int `json:"store_received"`
+	SystemReceived int `json:"system_received"`
+	TotalOrders    int `json:"total_orders"`
+}
+
 type AmountItemOfStoreInOrder struct {
 	StoreId string `json:"store_id"`
 	Total   int    `json:"total"`

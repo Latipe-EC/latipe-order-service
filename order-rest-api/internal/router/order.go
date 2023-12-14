@@ -33,8 +33,8 @@ func (o orderRouter) Init(root *fiber.Router) {
 		{
 			adminRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.GetOrderByUUID)
 			adminRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.ListOfOrder)
-			adminRouter.Get("/count", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.AdminCountingOrder)
-			adminRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.AdminCancelOrder)
+			adminRouter.Get("/total/count", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.AdminCountingOrder)
+			adminRouter.Patch("/status/cancel", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.AdminCancelOrder)
 			adminRouter.Patch("/:id/complete", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UpdateOrderStatus)
 		}
 
@@ -42,7 +42,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 		userRouter := orderRouter.Group("/user")
 		{
 			userRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.GetMyOrder)
-			userRouter.Get("/count", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCountingOrder)
+			userRouter.Get("/total/count", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCountingOrder)
 			userRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserGetOrderByUUID)
 			userRouter.Post("", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.CreateOrder)
 			userRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCancelOrder)
@@ -54,7 +54,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 		{
 			storeRouter.Get("", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.GetMyStoreOrder)
 			storeRouter.Get("/search", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.SearchOrderIdByKeyword)
-			storeRouter.Get("/count", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.StoreCountingOrder)
+			storeRouter.Get("/total/count", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.StoreCountingOrder)
 			storeRouter.Get("/:id", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.GetStoreOrderDetail)
 			storeRouter.Patch("/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.UpdateOrderItemStatus)
 			storeRouter.Delete("/:id/items", o.middleware.Authentication.RequiredStoreAuthentication(), o.orderHandler.CancelOrderItemStatus)
@@ -65,7 +65,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 		{
 			deliveryRouter.Get("", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.orderHandler.GetOrdersByDelivery)
 			deliveryRouter.Get("/:id", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.orderHandler.DeliveryGetOrderByUUID)
-			deliveryRouter.Get("/count", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.orderHandler.DeliveryCountingOrder)
+			deliveryRouter.Get("/total/count", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.orderHandler.DeliveryCountingOrder)
 			deliveryRouter.Patch("/:id", o.middleware.Authentication.RequiredDeliveryAuthentication(), o.orderHandler.UpdateStatusByDelivery)
 		}
 
@@ -83,7 +83,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 			statisticRouter.Get("/admin/total-order/month",
 				o.middleware.Authentication.RequiredRole([]string{auth.ROLE_ADMIN}), o.statisticHandler.AdminGetTotalOrderInSystemInMonth)
 			statisticRouter.Get("/admin/total-order/year",
-				o.middleware.Authentication.RequiredRole([]string{auth.ROLE_ADMIN}), o.statisticHandler.AdminGetTotalCommissionOrderInYear)
+				o.middleware.Authentication.RequiredRole([]string{auth.ROLE_ADMIN}), o.statisticHandler.AdminGetTotalOrderInSystemInYear)
 			statisticRouter.Get("/admin/total-commission",
 				o.middleware.Authentication.RequiredRole([]string{auth.ROLE_ADMIN}), o.statisticHandler.AdminGetTotalCommissionOrderInYear)
 			statisticRouter.Get("/admin/list-of-product",

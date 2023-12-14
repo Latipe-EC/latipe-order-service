@@ -14,7 +14,6 @@ type GetTotalOrderInMonthResponse struct {
 
 type GetTotalOrderInYearOfStoreRequest struct {
 	Year    int `query:"year"`
-	Count   int `query:"count"`
 	StoreID string
 }
 

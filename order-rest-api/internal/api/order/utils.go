@@ -7,5 +7,5 @@ import (
 
 func InitDateValue() string {
 	now := time.Now()
-	return fmt.Sprintf("%v-%v-%v", now.Year(), int(now.Month()), "01")
+	return fmt.Sprintf("%v-%v-%v", now.Year(), int(now.Month()), now.Day())
 }

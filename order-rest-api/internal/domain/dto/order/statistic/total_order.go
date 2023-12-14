@@ -20,8 +20,7 @@ type AdminTotalOrderInMonthResponse struct {
 }
 
 type AdminGetTotalOrderInYearRequest struct {
-	Year  int `query:"year"`
-	Count int `query:"count"`
+	Year int `query:"year"`
 }
 
 type AdminGetTotalOrderInYearResponse struct {
