@@ -186,6 +186,11 @@ func (g GormRepository) FindOrderByDelivery(ctx context.Context, deliID string, 
 	var orders []entity.Order
 	var searchState string
 
+	whereState := query.UserORMConditions().(string)
+	if strings.Contains(whereState, "status") {
+		whereState = strings.Replace(whereState, "status", "orders.status", 1)
+	}
+
 	if len(keyword) > 2 {
 		searchState = fmt.Sprintf("orders.order_uuid like %v", fmt.Sprintf("'%%%v%%'", keyword))
 	}
@@ -195,6 +200,7 @@ func (g GormRepository) FindOrderByDelivery(ctx context.Context, deliID string, 
 		Where("delivery_orders.delivery_id=?", deliID).
 		Order("orders.created_at DESC").
 		Where(searchState).
+		Where(whereState).
 		Limit(query.GetLimit()).Offset(query.GetOffset()).
 		Find(&orders).Error
 	if err != nil {
