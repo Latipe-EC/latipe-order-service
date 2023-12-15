@@ -27,6 +27,17 @@ type StoreOrderResponse struct {
 	OrderItems       []OrderStoreItem   `json:"order_items,omitempty"`
 }
 
+type DeliveryOrderResponse struct {
+	OrderUUID        string             `json:"order_uuid"`
+	StoreOrderAmount int                `json:"store_order_amount,omitempty"`
+	Status           int                `json:"status"`
+	PaymentMethod    int                `json:"payment_method"`
+	CreatedAt        time.Time          `json:"created_at"`
+	UpdatedAt        time.Time          `json:"updated_at"`
+	Delivery         order.DeliveryResp `json:"delivery"`
+	OrderItems       []OrderStoreItem   `json:"order_items,omitempty"`
+}
+
 type CommissionDetail struct {
 	AmountReceived int `json:"amount_received"`
 	SystemFee      int `json:"system_fee"`

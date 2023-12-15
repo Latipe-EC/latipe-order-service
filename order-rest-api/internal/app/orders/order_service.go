@@ -425,7 +425,7 @@ func (o orderService) GetOrdersOfStore(ctx context.Context, dto *store.GetStoreO
 }
 
 func (o orderService) GetOrdersOfDelivery(ctx context.Context, dto *delivery.GetOrderListRequest) (*delivery.GetOrderListResponse, error) {
-	var dataResp []store.StoreOrderResponse
+	var dataResp []store.DeliveryOrderResponse
 
 	orders, err := o.orderRepo.FindOrderByDelivery(ctx, dto.DeliveryID, dto.Keyword, dto.Query)
 	if err != nil {
@@ -534,12 +534,13 @@ func (o orderService) DeliveryUpdateStatusOrder(ctx context.Context, dto deliver
 		return nil, errors.ErrNotFoundRecord
 	}
 
-	orderDAO.Status = dto.Status
-
 	if dto.Status == order.ORDER_CANCEL || dto.Status == order.ORDER_SHIPPING_FINISH {
+		orderDAO.Status = dto.Status
 		if err := o.orderRepo.UpdateStatus(ctx, orderDAO.Id, dto.Status); err != nil {
 			return nil, err
 		}
+	} else {
+		return nil, errors.ErrBadRequest
 	}
 
 	msg := msg.OrderMessage{
@@ -547,13 +548,7 @@ func (o orderService) DeliveryUpdateStatusOrder(ctx context.Context, dto deliver
 		OrderUUID: orderDAO.OrderUUID,
 	}
 
-	if dto.Status == order.ORDER_SHIPPING_FINISH {
-		if err := message.SendOrderMessage(&msg); err != nil {
-			return nil, err
-		}
-	}
-
-	if dto.Status == order.ORDER_CANCEL {
+	if dto.Status == order.ORDER_CANCEL || dto.Status == order.ORDER_SHIPPING_FINISH {
 		if err := message.SendOrderMessage(&msg); err != nil {
 			return nil, err
 		}
