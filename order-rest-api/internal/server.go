@@ -5,6 +5,7 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/google/wire"
@@ -60,11 +61,22 @@ func NewServer(
 		ErrorHandler: errors.CustomErrorHandler,
 	})
 
+	prometheus := fiberprometheus.New("order-rest-api")
+	prometheus.RegisterAt(app, "/metrics")
+	app.Use(prometheus.Middleware)
+
 	// Initialize default config
 	app.Use(logger.New())
 
 	app.Get("", func(ctx *fiber.Ctx) error {
-		return ctx.JSON("Orders service developed by Tien Dat")
+		s := struct {
+			Message string `json:"message"`
+			Version string `json:"version"`
+		}{
+			Message: "Order rest-api was developed by TienDat",
+			Version: "v0.0.1",
+		}
+		return ctx.JSON(s)
 	})
 
 	api := app.Group("/api")

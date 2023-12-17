@@ -16,7 +16,7 @@ DB:
     Host: db-mysql-sgp1-49255-do-user-15346065-0.c.db.ondigitalocean.com
     Port: 25060
     UserName: doadmin
-    Password: AVNS_luX0kN7Y3hnklC56Z59
+    Password: AVNS_OjDxDk5n-tEVrBVY_Wo
     Database: backend_orders_service
     MaxOpenConns: 30
     MaxIdleConns: 10
@@ -54,19 +54,19 @@ RabbitMQ:
 
 AdapterService:
   AuthService:
-    BaseURL: http://localhost::8081
+    BaseURL: http://172.20.64.1:8081
     InternalKey:
   UserService:
-    UserURL: http://localhost::8181
+    UserURL: http://172.20.64.1:8181
     InternalKey:
   ProductService:
-    BaseURL: http://localhost::8645
+    BaseURL: http://172.20.64.1:8645
     InternalKey: fsf1AQOu6TVn+gNyjv22v9Cu/lW3HDF8QsSweKl5R6Me+rDO2Twyqkdbr8lZpRXkPL0MAcMA8AtgTrJAmSV5yA==
   StoreService:
-    BaseURL: http://localhost::8118
+    BaseURL: http://172.20.64.1:8118
     InternalKey:
   EmailService:
-    BaseURL: http://localhost::8181
+    BaseURL: http://172.20.64.1:8181
     InternalKey:
   DeliveryService:
     BaseURL: http://localhost:5005

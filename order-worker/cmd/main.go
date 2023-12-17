@@ -18,6 +18,15 @@ func main() {
 
 	//order handle worker
 	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := serv.App().Listen(serv.Config().Server.Port); err != nil {
+			fmt.Printf("%s", err)
+		}
+	}()
+
 	wg.Add(1)
 	go serv.ConsumerOrderMessage().ListenOrderEventQueue(&wg)
 

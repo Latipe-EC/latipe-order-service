@@ -7,6 +7,7 @@
 package server
 
 import (
+	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"order-worker/config"
@@ -63,8 +64,19 @@ func NewServer(
 
 	app.Use(logger.New())
 
+	prometheus := fiberprometheus.New("order-worker")
+	prometheus.RegisterAt(app, "/metrics")
+	app.Use(prometheus.Middleware)
+
 	app.Get("", func(ctx *fiber.Ctx) error {
-		return ctx.JSON("Orders service developed by Tien Dat")
+		s := struct {
+			Message string `json:"message"`
+			Version string `json:"version"`
+		}{
+			Message: "Order worker was developed by TienDat",
+			Version: "v0.0.1",
+		}
+		return ctx.JSON(s)
 	})
 
 	return &Server{
