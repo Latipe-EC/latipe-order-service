@@ -163,7 +163,7 @@ type CronJob struct {
 
 // Get config path for local or docker
 func getDefaultConfig() string {
-	return "./config/config"
+	return "../config/config"
 }
 
 // Load config file from given path
