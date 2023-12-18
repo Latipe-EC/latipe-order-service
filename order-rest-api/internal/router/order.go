@@ -44,7 +44,7 @@ func (o orderRouter) Init(root *fiber.Router) {
 			userRouter.Get("", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.GetMyOrder)
 			userRouter.Get("/total/count", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCountingOrder)
 			userRouter.Get("/:id", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserGetOrderByUUID)
-			userRouter.Post("", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.CreateOrder)
+			userRouter.Post("", o.middleware.Authentication.RequiredRole([]string{auth.ROLE_USER}), o.orderHandler.CreateOrder)
 			userRouter.Patch("/cancel", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCancelOrder)
 			userRouter.Patch("/refund", o.middleware.Authentication.RequiredAuthentication(), o.orderHandler.UserCancelOrder)
 		}
