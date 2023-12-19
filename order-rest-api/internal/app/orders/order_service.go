@@ -351,7 +351,7 @@ func (o orderService) GetOrderByUserId(ctx context.Context, dto *orderDTO.GetByU
 		return nil, err
 	}
 
-	total, err := o.orderRepo.Total(ctx, dto.Query)
+	total, err := o.orderRepo.UserQueryTotal(ctx, dto.UserId, dto.Query)
 	if err != nil {
 		return nil, err
 	}

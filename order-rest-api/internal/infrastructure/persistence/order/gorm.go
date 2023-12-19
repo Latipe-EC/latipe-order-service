@@ -337,6 +337,19 @@ func (g GormRepository) Total(ctx context.Context, query *pagable.Query) (int, e
 	return int(count), result
 }
 
+func (g GormRepository) UserQueryTotal(ctx context.Context, userId string, query *pagable.Query) (int, error) {
+	var count int64
+	whereState := query.UserORMConditions().(string)
+	result := g.client.Exec(func(tx *gormF.DB) error {
+		return tx.Select("*").Table(entity.Order{}.TableName()).
+			Where("orders.user_id", userId).
+			Where(whereState).
+			Count(&count).Error
+	}, ctx)
+
+	return int(count), result
+}
+
 func (g GormRepository) TotalStoreOrder(ctx context.Context, storeId string, query *pagable.Query, keyword string) (int, error) {
 	var count int64
 	var likeState string
