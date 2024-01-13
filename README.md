@@ -1,5 +1,4 @@
-# Order Service RESTful API
-
+# Order Service
 > - Programming Language: Go 1.20
 > - Web Framework: Fiber v2
 > - ORM: Gorm
