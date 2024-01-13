@@ -291,7 +291,7 @@ func (g GormRepository) Update(ctx context.Context, order entity.Order) error {
 		return tx.Updates(order).Error
 	}, ctx)
 
-	if result.Error != nil {
+	if result != nil {
 		return result
 	}
 	return nil

@@ -9,11 +9,11 @@ import (
 
 func main() {
 	fmt.Println("Init application")
-	defer log.Fatalf("[%s] Application has closed")
+	defer log.Fatalf("[Info] Application has closed")
 
 	serv, err := server.New()
 	if err != nil {
-		fmt.Printf("%s", err)
+		log.Fatalf("%s", err)
 	}
 
 	//order handle worker
