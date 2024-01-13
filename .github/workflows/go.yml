@@ -26,10 +26,7 @@ jobs:
 
     - name: Test rest-service
       run: cd order-rest-api && go test -v ./...
-
    # order-worker
-    - name: Build worker
-      run: cd order-worker && go build -v ./...
-
+    
     - name: Test rest-service
       run: cd order-worker && go test -v ./...
